@@ -1,0 +1,46 @@
+{
+  "name": "blast/orm",
+  "description": "Framework agnostic orm",
+  "keywords": [
+    "sql",
+    "database",
+    "orm"
+  ],
+  "homepage": "https://github.com/phpthinktank/blast-orm",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Marco Bunge",
+      "email": "mjls@web.de",
+      "homepage": "http://www.marco-bunge.com",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "4.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Blast\\Orm\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Blast\\Tests\\Orm": "tests"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.x-dev"
+    }
+  },
+  "scripts": {
+    "test": [
+      "cd vendor/phpunit/phpunit",
+      "phpunit --configuration phpunit.xml"
+    ]
+  }
+}
