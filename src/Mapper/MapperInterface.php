@@ -7,13 +7,13 @@
 * file that was distributed with this source code.
 *
 * Date: 22.11.2015
-* Time: 12:44
+* Time: 14:20
 */
 
-namespace Blast\Orm;
+namespace Blast\Orm\Mapper;
 
 
-class Repository
+interface MapperInterface
 {
 
 }
