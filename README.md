@@ -87,32 +87,32 @@ $posts->save();
 If a definition exists for an field, ORM will automatically validate, cast and transform field data.
 
 ```php
-    <?php
-    
-    class Posts extends Blast\Orm\Model
-    {
-        public function fields(){
-            [
-                'id' => [
-                    'type' => 'int',
-                    'auto_increment' => true,
-                    'primary' => 'true',
-                ],
-                'text' => [
-                    'type' => 'text'
-                    'default' => null
-                ],
-                'meta' => [
-                    'type' => 'json'
-                    'default' => '[]'
-                ],
-                'created_at' => [
-                    'type' => 'timestamp',
-                    'default' => 'datetime'
-                ]
+<?php
+
+class Posts extends Blast\Orm\Model
+{
+    public function fields(){
+        [
+            'id' => [
+                'type' => 'int',
+                'auto_increment' => true,
+                'primary' => 'true',
+            ],
+            'text' => [
+                'type' => 'text'
+                'default' => null
+            ],
+            'meta' => [
+                'type' => 'json'
+                'default' => '[]'
+            ],
+            'created_at' => [
+                'type' => 'timestamp',
+                'default' => 'datetime'
             ]
-        }
+        ]
     }
+}
 ```
 
 ### Relations
@@ -124,7 +124,6 @@ Configuring relations is easy.
 
 class Posts extends Blast\Orm\Model
 {
-
     public function relations(){
         return [
             //belongs to another model or table: local key, target model or table, foreign key, foreign key index
@@ -150,27 +149,27 @@ class Posts extends Blast\Orm\Model
 If a definition exists for an field, ORM will automatically validate, cast and transform field data.
 
 ```php
-    <?php
-    
-    //model version
-    class Version1Migration extends Blast\Orm\Migration
-    {   
-        public function migrate($db){
-            $schema->createTable(Acme\Models\Posts::class, false);
-            $schema->createTable(Acme\Models\Tags::class, false);
-            $schema->createTable('posts_tags', [
-                'post_id' => [
-                    'type' => 'int',
-                ],
-                'tag_id' => [
-                    'type' => 'int',
-                ]
-            ]);
-            
-            //writes schema
-            $this->publish($schema);
-        }
+<?php
+
+//model version
+class Version1Migration extends Blast\Orm\Migration
+{   
+    public function migrate($db){
+        $schema->createTable(Acme\Models\Posts::class, false);
+        $schema->createTable(Acme\Models\Tags::class, false);
+        $schema->createTable('posts_tags', [
+            'post_id' => [
+                'type' => 'int',
+            ],
+            'tag_id' => [
+                'type' => 'int',
+            ]
+        ]);
+        
+        //writes schema
+        $this->publish($schema);
     }
+}
 ```
 
 ## Further development
