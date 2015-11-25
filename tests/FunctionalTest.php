@@ -40,11 +40,25 @@ class FunctionalTest extends PHPUnit_Framework_TestCase
         $comments = $this->model->reveal();
         $tags = $this->model->reveal();
 
+        //configure repository
         $repository = new Repository([
             'posts' => $posts,
-            'comments' => $comments,
-            'tags' => $tags,
         ]);
+
+        //add entity to repository
+        $repository->add('tags', $tags);
+
+        //get mapper and add automatically
+        $repository->mapper($comments, 'comments');
+
+        //get mapper from locator
+        //locator
+        $locator = Locator::create([]);
+        $locator->mapper($entity);
+
+        $locator->repository();
+
+
 
 
 
