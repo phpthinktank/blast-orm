@@ -50,8 +50,6 @@ class MapperTest extends \PHPUnit_Framework_TestCase
             'id' => 2,
             'pk' => 2
         ]);
-
-        var_dump($connection->fetchAll('select * from test'));
     }
 
     public function testCreatingMapper()
@@ -59,8 +57,9 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $entity = $this->entity;
         $mapper = new Mapper($entity);
 
-        var_dump($mapper->getConnection()->fetchAll('select * from test where pk = 1'));
+        $result = $mapper->findBy('pk', 1);
 
-        var_dump($mapper->findBy('pk', 1));
+        $this->assertCount(1, $result);
+        $this->assertEquals(1, $result[0]['pk']);
     }
 }
