@@ -9,6 +9,7 @@
 namespace Blast\Orm;
 
 
+use Doctrine\DBAL\Connection;
 use Interop\Container\ContainerInterface;
 
 class Factory implements FactoryInterface
@@ -19,12 +20,19 @@ class Factory implements FactoryInterface
      */
     protected $config;
 
+    /**
+     * @var ContainerInterface
+     */
     protected $container;
 
+    /**
+     * @var
+     */
     protected static $instance;
-    protected static $booted = false;
 
     /**
+     * @var bool
+     */
     protected static $booted = false;
 
     /**
@@ -41,7 +49,15 @@ class Factory implements FactoryInterface
 
         static::$instance = new self($container, $connection);
 
+        static::$booted = true;
+
         return static::$instance;
+    }
+
+    public function __destruct(){
+
+        $this->shutdown();
+
     }
 
     /**
@@ -73,9 +89,7 @@ class Factory implements FactoryInterface
     private function __construct(ContainerInterface $container, $connection)
     {
         $this->container = $container;
-
         $this->setContainer($container);
-        $this->setConfig($container->get(ConfigInterface::class));
         $this->getConfig()->addConnection(self::DEFAULT_CONNECTION, $connection);
     }
 
@@ -84,6 +98,19 @@ class Factory implements FactoryInterface
      */
     public function getConfig()
     {
+        $config = $this->config;
+        if(!($config instanceof ConfigInterface)){
+            $container = $this->container;
+            if($container->has(ConfigInterface::class)){
+                $reflection = new \ReflectionClass($container->get(ConfigInterface::class));
+                $config = $reflection->newInstance();
+            }else{
+                $config = new Config();
+            }
+
+            $this->setConfig($config);
+        }
+
         return $this->config;
     }
 
@@ -93,10 +120,7 @@ class Factory implements FactoryInterface
      */
     public function setConfig(ConfigInterface $config)
     {
-
-        if (!($config instanceof ConfigInterface)) {
-            throw new \RuntimeException(sprintf('config needs to be an instance of %s', ConfigInterface::class));
-        }
+        $this->config = $config;
         return $this;
     }
 
@@ -110,9 +134,30 @@ class Factory implements FactoryInterface
 
     /**
      * @param mixed $container
+     * @return $this
      */
     public function setContainer($container)
     {
         $this->container = $container;
+        return $this;
+    }
+
+    public function shutdown()
+    {
+        $connections = $this->getConfig()->getConnections();
+
+        foreach ($connections as $connection) {
+            if (!($connection instanceof Connection)) {
+                continue;
+            }
+
+            //@todo persistent connections should not disconnected while destruct
+            if ($connection->isConnected()) {
+                $connection->close();
+            }
+        }
+
+        static::$instance = null;
+        static::$booted = false;
     }
 }

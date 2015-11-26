@@ -21,17 +21,6 @@ class Config implements ConfigInterface
      */
     protected $connections = [];
 
-    protected $factory = null;
-
-    /**
-     * Config constructor.
-     * @param Factory|FactoryInterface $factory
-     */
-    public function __construct(FactoryInterface $factory)
-    {
-        $this->factory = $factory;
-    }
-
     /**
      *
      * Params a related to configuration
@@ -39,9 +28,8 @@ class Config implements ConfigInterface
      * @see http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/configuration.html#getting-a-connection
      *
      * @param $name
-     * @param array|\Doctrine\DBAL\Connection $connection
+     * @param array|\Doctrine\DBAL\Connection|string $connection
      * @return $this
-     * @internal param array $params
      */
     public function addConnection($name, $connection)
     {
@@ -76,18 +64,23 @@ class Config implements ConfigInterface
     }
 
     /**
+     * @return \Doctrine\DBAL\Connection[]
+     */
+    public function getConnections()
+    {
+        return $this->connections;
+    }
+
+    /**
      * @param $connection
      * @return Connection
      * @throws \Doctrine\DBAL\DBALException
      */
     protected function determineConnection($connection)
     {
-        //if connection is already a connection object use it
-        if (is_string($connection) && class_exists($connection)) {
-            $connection = $this->factory->getContainer()->get($connection);
-        } else {
-            //assume a valid dsn and convert to connection array
-            if (is_string($connection) && !class_exists($connection)) {
+        //assume a valid dsn and convert to connection array
+        if(is_array($connection) || is_string($connection)){
+            if (is_string($connection)) {
                 $connection = [
                     'url' => $connection
                 ];

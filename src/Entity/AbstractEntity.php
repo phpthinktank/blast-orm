@@ -9,12 +9,14 @@
 namespace Blast\Orm\Entity;
 
 
-abstract class AbstractEntity implements EntityInterface
+abstract class AbstractEntity extends \ArrayObject implements EntityInterface
 {
 
     protected $table = null;
 
-    protected $new = false;
+    private $new = true;
+
+    protected $primaryKeyField = null;
 
     /**
      * @return null
@@ -48,6 +50,15 @@ abstract class AbstractEntity implements EntityInterface
         $this->new = $new;
     }
 
+    public function primaryKeyField()
+    {
+        return $this->primaryKeyField;
+    }
+
+    public function primaryKey()
+    {
+        // TODO: Implement primaryKey() method.
+    }
 
 
 }

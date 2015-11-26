@@ -9,7 +9,7 @@
 namespace Blast\Orm\Entity;
 
 
-interface EntityInterface
+interface EntityInterface extends \IteratorAggregate, \ArrayAccess, \Serializable, \Countable
 {
 
     /**
@@ -21,5 +21,15 @@ interface EntityInterface
      * @return boolean
      */
     public function isNew();
+
+    /**
+     * @return mixed
+     */
+    public function primaryKey();
+
+    /**
+     * @return string
+     */
+    public function primaryKeyField();
 
 }
