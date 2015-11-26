@@ -8,13 +8,11 @@
 
 namespace Blast\Tests\Orm;
 
-
-use Blast\Orm\Config;
 use Blast\Orm\Entity\EntityInterface;
 use Blast\Orm\Factory;
 use Blast\Orm\Mapper;
+use Blast\Tests\Orm\Entities\AnyEntity;
 use Interop\Container\ContainerInterface;
-use Mocks\AnyEntity;
 use Prophecy\Prophecy\ObjectProphecy;
 
 class MapperTest extends \PHPUnit_Framework_TestCase

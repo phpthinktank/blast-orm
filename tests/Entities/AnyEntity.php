@@ -6,7 +6,7 @@
  * Time: 17:04
  */
 
-namespace Mocks;
+namespace Blast\Tests\Orm\Entities;
 
 
 use Blast\Orm\Entity\AbstractEntity;
