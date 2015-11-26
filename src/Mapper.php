@@ -14,6 +14,7 @@ use Aura\SqlQuery\Common\SubselectInterface;
 use Aura\SqlQuery\QueryFactory;
 use Blast\Orm\Entity\EntityInterface;
 use Blast\Orm\Entity\GenericEntity;
+use Doctrine\DBAL\Query\QueryBuilder;
 
 class Mapper implements MapperInterface
 {
@@ -21,12 +22,12 @@ class Mapper implements MapperInterface
     /**
      * @var \Doctrine\DBAL\Connection
      */
-    private $connection = null;
+    private $connection = NULL;
 
     /**
      * @var Factory
      */
-    private $factory = null;
+    private $factory = NULL;
 
     /**
      * @var EntityInterface
@@ -40,7 +41,8 @@ class Mapper implements MapperInterface
         $this->entity = $this->determineEntity($entity);
     }
 
-    protected function determineDialect(){
+    protected function determineDialect()
+    {
         $driverName = $this->getConnection()->getDriver()->getName();
         $dialects = [
             'mysql',
@@ -51,8 +53,8 @@ class Mapper implements MapperInterface
 
         $dialect = 'common';
 
-        foreach($dialects as $value){
-            if(strpos($driverName, $value) !== false){
+        foreach ($dialects as $value) {
+            if (strpos($driverName, $value) !== FALSE) {
                 $dialect = $value;
             }
         }
@@ -104,25 +106,40 @@ class Mapper implements MapperInterface
     }
 
     /**
-     * @return QueryFactory
+     * @return QueryBuilder
      */
     public function getQueryBuilder()
     {
-        return new QueryFactory($this->determineDialect());
+        return $this->getConnection()->createQueryBuilder();
     }
 
-    public function find($pk){
+    /**
+     * @param $pk
+     * @return array
+     */
+    public function find($pk)
+    {
+        $field = $this->getEntity()->primaryKeyField();
+        if ($field === FALSE) {
+            throw new \RuntimeException('Entity does not have a primary key field. Please try findBy()');
+        }
 
+        return $this->findBy($field, $pk);
     }
 
-    public function findBy($field, $pk){
+    /**
+     * @param $field
+     * @param $value
+     * @return array
+     */
+    public function findBy($field, $value)
+    {
         $query = $this->getQueryBuilder();
-        $statement = $query->newSelect();
-        $statement->cols(['*']);
-        $statement->from($this->getEntity()->getTable());
-        $statement->where(':field = :value');
-        $statement->bindValue(':field', $field);
-        $statement->bindValue(':value', $pk);
+        $statement = $query->select('*')
+            ->from($this->getEntity()->getTable())
+            ->where($field . ' = :value');
+
+        $statement->setParameter(':value', $value);
 
         return $this->fetch($statement);
     }
@@ -131,20 +148,36 @@ class Mapper implements MapperInterface
      * @param $statement
      * @return array
      */
-    public function fetch(SelectInterface $statement)
+    public function fetch(QueryBuilder $statement)
     {
-        return $this->getConnection()->fetchAll($statement->getStatement(), $statement->getBindValues());
+        return $this->getConnection()->fetchAll($statement->getSQL(), $statement->getParameters());
     }
 
-    public function create($data){
+    /**
+     * @param $data
+     * @return int
+     */
+    public function create($data)
+    {
         return $this->getConnection()->insert($this->getEntity(), $data);
     }
 
-    public function update($data, $identifiers){
+    /**
+     * @param $data
+     * @param $identifiers
+     * @return int
+     */
+    public function update($data, $identifiers)
+    {
         return $this->getConnection()->update($this->getEntity(), $data, $identifiers);
     }
 
-    public function delete($identifiers){
+    /**
+     * @param $identifiers
+     * @return int
+     */
+    public function delete($identifiers)
+    {
         return $this->getConnection()->insert($this->getEntity(), $identifiers);
     }
 
