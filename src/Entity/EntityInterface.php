@@ -23,7 +23,7 @@ interface EntityInterface extends \IteratorAggregate, \ArrayAccess, \Serializabl
     public function isNew();
 
     /**
-     * @return mixed
+     * @return string|int
      */
     public function primaryKey();
 
@@ -31,5 +31,16 @@ interface EntityInterface extends \IteratorAggregate, \ArrayAccess, \Serializabl
      * @return string
      */
     public function primaryKeyField();
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    public function setData(array $data);
+
+    /**
+     * @return array
+     */
+    public function getData();
 
 }

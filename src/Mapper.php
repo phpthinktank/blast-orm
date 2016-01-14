@@ -130,7 +130,7 @@ class Mapper implements MapperInterface
     /**
      * @param $field
      * @param $value
-     * @return array
+     * @return EntityInterface
      */
     public function findBy($field, $value)
     {
@@ -141,7 +141,7 @@ class Mapper implements MapperInterface
 
         $statement->setParameter(':value', $value);
 
-        return $this->fetch($statement);
+        return $this->getEntity()->setData($this->fetch($statement));
     }
 
     /**
@@ -159,7 +159,7 @@ class Mapper implements MapperInterface
      */
     public function create($data)
     {
-        return $this->getConnection()->insert($this->getEntity(), $data);
+        return $this->getConnection()->insert($this->getEntity()->getTable(), $data);
     }
 
     /**
@@ -169,7 +169,7 @@ class Mapper implements MapperInterface
      */
     public function update($data, $identifiers)
     {
-        return $this->getConnection()->update($this->getEntity(), $data, $identifiers);
+        return $this->getConnection()->update($this->getEntity()->getTable(), $data, $identifiers);
     }
 
     /**
@@ -178,7 +178,7 @@ class Mapper implements MapperInterface
      */
     public function delete($identifiers)
     {
-        return $this->getConnection()->insert($this->getEntity(), $identifiers);
+        return $this->getConnection()->delete($this->getEntity()->getTable(), $identifiers);
     }
 
 
