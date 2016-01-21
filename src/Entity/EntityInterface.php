@@ -9,7 +9,7 @@
 namespace Blast\Orm\Entity;
 
 
-interface EntityInterface extends \IteratorAggregate, \ArrayAccess, \Serializable, \Countable
+interface EntityInterface
 {
 
     /**

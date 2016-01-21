@@ -130,18 +130,17 @@ class Mapper implements MapperInterface
     /**
      * @param $field
      * @param $value
-     * @return EntityInterface
+     * @return EntityInterface|EntityInterface[]
      */
     public function findBy($field, $value)
     {
         $query = $this->getQueryBuilder();
         $statement = $query->select('*')
             ->from($this->getEntity()->getTable())
-            ->where($field . ' = :value');
+            ->where($field . ' = :value')
+            ->setParameter(':value', $value);
 
-        $statement->setParameter(':value', $value);
-
-        return $this->getEntity()->setData($this->fetch($statement));
+        return $this->determineResultSet($this->fetch($statement));
     }
 
     /**
@@ -179,6 +178,36 @@ class Mapper implements MapperInterface
     public function delete($identifiers)
     {
         return $this->getConnection()->delete($this->getEntity()->getTable(), $identifiers);
+    }
+
+    /**
+     * Analyse result and return correct set
+     * @param $data
+     * @return EntityInterface|EntityInterface[]|null
+     */
+    protected function determineResultSet($data)
+    {
+        $count = count($data);
+        $result = NULL;
+
+        if ($count > 1) {
+            $result = [];
+            foreach ($data as $item) {
+                $result[] = $this->getEntityInstance()->setData($item);
+            }
+        } elseif ($count === 1) {
+            $result = $this->getEntityInstance()->setData(array_shift($data));
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return EntityInterface
+     */
+    protected function getEntityInstance()
+    {
+        return (new \ReflectionObject($this->getEntity()))->newInstance();
     }
 
 

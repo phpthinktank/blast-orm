@@ -9,7 +9,7 @@
 namespace Blast\Orm\Entity;
 
 
-abstract class AbstractEntity extends \ArrayObject implements EntityInterface
+abstract class AbstractEntity implements EntityInterface
 {
 
     /**
