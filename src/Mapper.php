@@ -140,16 +140,19 @@ class Mapper implements MapperInterface
             ->where($field . ' = :value')
             ->setParameter(':value', $value);
 
-        return $this->determineResultSet($this->fetch($statement));
+        return $this->fetch($statement);
     }
 
     /**
-     * @param $statement
+     * @param QueryBuilder $statement
+     * @param bool $raw
      * @return array
      */
-    public function fetch(QueryBuilder $statement)
+    public function fetch(QueryBuilder $statement, $raw = false)
     {
-        return $this->getConnection()->fetchAll($statement->getSQL(), $statement->getParameters());
+        $result = $this->getConnection()->fetchAll($statement->getSQL(), $statement->getParameters());
+
+        return $raw === true ? $result : $this->determineResultSet($result);
     }
 
     /**

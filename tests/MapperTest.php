@@ -10,7 +10,6 @@ namespace Blast\Tests\Orm;
 
 use Blast\Orm\Entity\EntityInterface;
 use Blast\Orm\Factory;
-use Blast\Orm\FactoryInterface;
 use Blast\Orm\Mapper;
 use Blast\Tests\Orm\Entities\AnyEntity;
 use Interop\Container\ContainerInterface;
