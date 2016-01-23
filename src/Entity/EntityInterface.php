@@ -9,6 +9,9 @@
 namespace Blast\Orm\Entity;
 
 
+use Blast\Orm\MapperInterface;
+use League\Event\EmitterInterface;
+
 interface EntityInterface
 {
 
@@ -42,5 +45,27 @@ interface EntityInterface
      * @return array
      */
     public function getData();
+
+    /**
+     * @return array
+     */
+    public function fields();
+
+    /**
+     * @param EmitterInterface $emitter
+     * @return
+     */
+    public function events(EmitterInterface $emitter);
+
+    /**
+     * @return MapperInterface
+     */
+    public function getMapper();
+
+    /**
+     * @param MapperInterface $mapper
+     * @return $this
+     */
+    public function setMapper(MapperInterface $mapper);
 
 }
