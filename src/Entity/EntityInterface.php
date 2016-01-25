@@ -9,7 +9,10 @@
 namespace Blast\Orm\Entity;
 
 
-interface EntityInterface extends \IteratorAggregate, \ArrayAccess, \Serializable, \Countable
+use Blast\Orm\MapperInterface;
+use League\Event\EmitterInterface;
+
+interface EntityInterface
 {
 
     /**
@@ -23,7 +26,7 @@ interface EntityInterface extends \IteratorAggregate, \ArrayAccess, \Serializabl
     public function isNew();
 
     /**
-     * @return mixed
+     * @return string|int
      */
     public function primaryKey();
 
@@ -31,5 +34,38 @@ interface EntityInterface extends \IteratorAggregate, \ArrayAccess, \Serializabl
      * @return string
      */
     public function primaryKeyField();
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    public function setData(array $data);
+
+    /**
+     * @return array
+     */
+    public function getData();
+
+    /**
+     * @return array
+     */
+    public function fields();
+
+    /**
+     * @param EmitterInterface $emitter
+     * @return
+     */
+    public function events(EmitterInterface $emitter);
+
+    /**
+     * @return MapperInterface
+     */
+    public function getMapper();
+
+    /**
+     * @param MapperInterface $mapper
+     * @return $this
+     */
+    public function setMapper(MapperInterface $mapper);
 
 }

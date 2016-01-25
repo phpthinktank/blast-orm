@@ -27,6 +27,11 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     private $container;
 
+    /**
+     * @var Factory
+     */
+    private $factory;
+
     protected function setUp()
     {
         $this->container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class);
@@ -39,25 +44,45 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $connection = $factory->getConfig()->getConnection(Factory::DEFAULT_CONNECTION);
-        $connection->prepare('CREATE TABLE test (id int, pk int)')->execute();
+        $connection->prepare('CREATE TABLE test (id int, pk int, same int)')->execute();
         $connection->insert('test', [
             'id' => 1,
-            'pk' => 1
+            'pk' => 1,
+            'same' => 42
         ]);
         $connection->insert('test', [
             'id' => 2,
-            'pk' => 2
+            'pk' => 2,
+            'same' => 42
         ]);
+
+        $this->factory = $factory;
     }
 
-    public function testCreatingMapper()
+    protected function tearDown()
+    {
+        $this->factory->shutdown();
+    }
+
+
+    public function testFindMany()
+    {
+        $entity = $this->entity;
+        $mapper = new Mapper($entity);
+
+        $result = $mapper->findBy('same', 42);
+
+        $this->assertCount(2, $result);
+        $this->assertEquals(1, $result[0]->pk);
+    }
+
+    public function testFindOne()
     {
         $entity = $this->entity;
         $mapper = new Mapper($entity);
 
         $result = $mapper->findBy('pk', 1);
 
-        $this->assertCount(1, $result);
-        $this->assertEquals(1, $result[0]['pk']);
+        $this->assertInstanceOf(EntityInterface::class, $result);
     }
 }
