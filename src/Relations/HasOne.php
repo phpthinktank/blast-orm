@@ -40,6 +40,7 @@ class HasOne extends AbstractRelation
 
     /**
      * Save foreign entity and store value of foreign key into local key field
+     *
      * @return EntityInterface
      */
     public function save()
