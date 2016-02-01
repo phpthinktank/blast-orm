@@ -35,4 +35,12 @@ class Table extends DbalTable
 
     }
 
+    /**
+     * Returns first primary key!
+     * @return string
+     */
+    public function getPrimaryKeyName(){
+        return array_shift($this->getPrimaryKey()->getColumns());
+    }
+
 }

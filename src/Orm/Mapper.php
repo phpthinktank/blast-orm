@@ -197,7 +197,7 @@ class Mapper implements MapperInterface
             return false;
         }
 
-        $pkName = array_shift($entity->getTable()->getPrimaryKey()->getColumns());
+        $pkName = $entity->getTable()->getPrimaryKeyName();
         $result = $this->getConnection()->update($entity->getTable()->getName(), $entity->getData(), [$pkName = $entity->__get($pkName)]);
 
         $event = $entity->getEmitter()->emit(new ResultEvent($entity::AFTER_UPDATE, $result), $entity);
@@ -223,7 +223,7 @@ class Mapper implements MapperInterface
             return false;
         }
 
-        $pkName = array_shift($entity->getTable()->getPrimaryKey()->getColumns());
+        $pkName = $entity->getTable()->getPrimaryKeyName();
         $result = $this->getConnection()->delete($entity->getTable()->getName(), [$pkName = $entity->__get($pkName)]);
 
         $event = $entity->getEmitter()->emit(new ResultEvent($entity::AFTER_DELETE, $result), $entity);

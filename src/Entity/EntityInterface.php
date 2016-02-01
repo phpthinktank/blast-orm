@@ -10,6 +10,7 @@ namespace Blast\Db\Entity;
 
 
 use Blast\Db\Orm\MapperInterface;
+use Blast\Db\Relations\AbstractRelation;
 use Blast\Db\Schema\Table;
 use League\Event\EmitterInterface;
 
@@ -96,6 +97,11 @@ interface EntityInterface
      *
      */
     public function configure();
+
+    /**
+     * @return AbstractRelation[]
+     */
+    public function getRelations();
 
     /**
      * @param $pk

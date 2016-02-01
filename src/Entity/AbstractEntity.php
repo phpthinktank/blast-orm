@@ -11,6 +11,7 @@ namespace Blast\Db\Entity;
 use Blast\Db\Events\ValueEvent;
 use Blast\Db\Orm\Mapper;
 use Blast\Db\Orm\MapperInterface;
+use Blast\Db\Relations\AbstractRelation;
 use Doctrine\DBAL\Schema\Table;
 use League\Event\Emitter;
 
@@ -40,6 +41,11 @@ abstract class AbstractEntity implements EntityInterface
      * @var Emitter
      */
     protected $emitter;
+
+    /**
+     * @var AbstractRelation[]
+     */
+    protected $relations;
 
     /**
      * AbstractEntity constructor.
@@ -209,12 +215,40 @@ abstract class AbstractEntity implements EntityInterface
     abstract public function configure();
 
     /**
+     * @return AbstractRelation[]
+     */
+    public function getRelations(){
+        return $this->relations;
+    }
+
+    public function addRelation(AbstractRelation $relation, $name = null){
+        if($name === null){
+            $name = $relation->getForeignEntity()->getTable()->getName() . '.' . $relation->getForeignKey();
+        }
+
+        if($this->hasRelation($name)){
+            throw new \InvalidArgumentException(sprintf('Relation %s already exists', $name));
+        }
+
+        $this->relations[$name] = $relation;
+    }
+
+    /**
+     * @param $name
+     * @return bool
+     */
+    public function hasRelation($name)
+    {
+        return isset($this->relations[$name]);
+    }
+
+    /**
      * @param $eventName
      * @param $key
      * @param $value
      * @return ValueEvent|\League\Event\EventInterface
      */
-    public function emitValueEvent($eventName, $key, $value)
+    private function emitValueEvent($eventName, $key, $value)
     {
         return $this->getEmitter()->emit(new ValueEvent($eventName, $key, $value));
     }
