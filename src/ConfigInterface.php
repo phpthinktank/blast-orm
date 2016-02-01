@@ -6,7 +6,7 @@
  * Time: 16:19
  */
 
-namespace Blast\Orm;
+namespace Blast\Db;
 
 
 interface ConfigInterface

@@ -9,10 +9,10 @@
 namespace Blast\Tests\Orm;
 
 
-use Blast\Orm\Config;
-use Blast\Orm\ConfigInterface;
-use Blast\Orm\Factory;
-use Blast\Orm\FactoryInterface;
+use Blast\Db\Config;
+use Blast\Db\ConfigInterface;
+use Blast\Db\Factory;
+use Blast\Db\FactoryInterface;
 use Interop\Container\ContainerInterface;
 use Prophecy\Prophecy\ObjectProphecy;
 

@@ -6,7 +6,7 @@
  * Time: 14:33
  */
 
-namespace Blast\Orm;
+namespace Blast\Db;
 
 
 use Doctrine\DBAL\Configuration;

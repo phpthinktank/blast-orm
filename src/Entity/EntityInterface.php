@@ -6,17 +6,34 @@
  * Time: 17:40
  */
 
-namespace Blast\Orm\Entity;
+namespace Blast\Db\Entity;
 
 
-use Blast\Orm\MapperInterface;
+use Blast\Db\Orm\MapperInterface;
+use Blast\Db\Schema\Table;
 use League\Event\EmitterInterface;
 
 interface EntityInterface
 {
 
+    const BEFORE_SAVE = 'save.before';
+    const AFTER_SAVE = 'save.before';
+    const BEFORE_CREATE = 'create.before';
+    const AFTER_CREATE = 'create.before';
+    const BEFORE_UPDATE = 'update.before';
+    const AFTER_UPDATE = 'update.before';
+    const BEFORE_DELETE = 'delete.before';
+    const AFTER_DELETE = 'delete.before';
+    const VALUE_GET = 'value.get';
+    const VALUE_SET = 'value.set';
+
     /**
-     * @return null|string
+     *
+     */
+    public function __construct();
+
+    /**
+     * @return Table
      */
     public function getTable();
 
@@ -24,16 +41,6 @@ interface EntityInterface
      * @return boolean
      */
     public function isNew();
-
-    /**
-     * @return string|int
-     */
-    public function primaryKey();
-
-    /**
-     * @return string
-     */
-    public function primaryKeyField();
 
     /**
      * @param array $data
@@ -47,25 +54,73 @@ interface EntityInterface
     public function getData();
 
     /**
-     * @return array
-     */
-    public function fields();
-
-    /**
-     * @param EmitterInterface $emitter
-     * @return
-     */
-    public function events(EmitterInterface $emitter);
-
-    /**
      * @return MapperInterface
      */
     public function getMapper();
 
     /**
-     * @param MapperInterface $mapper
-     * @return $this
+     * @return EmitterInterface
      */
-    public function setMapper(MapperInterface $mapper);
+    public function getEmitter();
+
+    /**
+     * @param $name
+     * @return mixed
+     */
+    public function __get($name);
+
+    /**
+     * @param $name
+     * @param $value
+     */
+    public function __set($name, $value);
+
+    /**
+     * @param $name
+     * @return bool
+     */
+    public function __isset($name);
+
+    /**
+     * @param $name
+     */
+    public function __unset($name);
+
+    /**
+     * Flush all data
+     * @return mixed
+     */
+    public function reset();
+
+    /**
+     *
+     */
+    public function configure();
+
+    /**
+     * @param $pk
+     * @return mixed
+     */
+    public static function find($pk);
+
+    /**
+     * @param $field
+     * @param $value
+     * @return mixed
+     */
+    public static function findBy($field, $value);
+
+    /**
+     * Save current entity
+     * @return mixed
+     */
+    public function save();
+
+    /**
+     * Delete current entity
+     * @return mixed
+     */
+    public function delete();
+
 
 }

@@ -8,9 +8,9 @@
 
 namespace Blast\Tests\Orm;
 
-use Blast\Orm\Entity\EntityInterface;
-use Blast\Orm\Factory;
-use Blast\Orm\Mapper;
+use Blast\Db\Entity\EntityInterface;
+use Blast\Db\Factory;
+use Blast\Db\Mapper;
 use Blast\Tests\Orm\Entities\AnyEntity;
 use Interop\Container\ContainerInterface;
 use Prophecy\Prophecy\ObjectProphecy;

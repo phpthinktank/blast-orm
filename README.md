@@ -89,7 +89,7 @@ If a definition exists for an field, ORM will automatically validate, cast and t
 ```php
 <?php
 
-class Posts extends Blast\Orm\Model
+class Posts extends Blast\Db\Model
 {
     public function fields(){
         [
@@ -122,7 +122,7 @@ Configuring relations is easy.
 ```php
 <?php
 
-class Posts extends Blast\Orm\Model
+class Posts extends Blast\Db\Model
 {
     public function relations(){
         return [
@@ -152,7 +152,7 @@ If a definition exists for an field, ORM will automatically validate, cast and t
 <?php
 
 //model version
-class Version1Migration extends Blast\Orm\Migration
+class Version1Migration extends Blast\Db\Migration
 {   
     public function migrate($db){
         $schema->createTable(Acme\Models\Posts::class, false);

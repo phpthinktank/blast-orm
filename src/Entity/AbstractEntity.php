@@ -6,51 +6,140 @@
  * Time: 17:48
  */
 
-namespace Blast\Orm\Entity;
+namespace Blast\Db\Entity;
 
+use Blast\Db\Events\ValueEvent;
+use Blast\Db\Orm\Mapper;
+use Blast\Db\Orm\MapperInterface;
+use Doctrine\DBAL\Schema\Table;
+use League\Event\Emitter;
 
 abstract class AbstractEntity implements EntityInterface
 {
-
-    /**
-     * @var null
-     */
-    protected $table = null;
-
-    /**
-     * @var bool
-     */
-    private $new = true;
-
-    /**
-     * @var null
-     */
-    protected $primaryKeyField = null;
-
-    /**
-     * @var null
-     */
-    protected $primaryKey = null;
-
     /**
      * @var array
      */
     protected $data = [];
 
     /**
-     * @return null
+     * @var MapperInterface
      */
-    public function getTable()
+    protected $mapper;
+
+    /**
+     * @var bool
+     */
+    protected $new = true;
+
+    /**
+     * @var string
+     */
+    protected $table = null;
+
+    /**
+     * @var Emitter
+     */
+    protected $emitter;
+
+    /**
+     * AbstractEntity constructor.
+     */
+    public function __construct()
     {
-        return $this->table;
+        $this->configure();
+        $this->attachDefaultValues();
     }
 
     /**
-     * @param null $table
+     * @return $this
      */
-    public function setTable($table)
+    protected function attachDefaultValues()
     {
-        $this->table = $table;
+        $fields = $this->getTable()->getColumns();
+        foreach ($fields as $name => $field) {
+            $this->__set($name, $field['default']);
+        }
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    /**
+     * @param array $data
+     * @return AbstractEntity
+     */
+    public function setData(array $data)
+    {
+        foreach ($data as $name => $value) {
+            $this->set($name, $data);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param $name
+     * @return mixed
+     */
+    public function get($name)
+    {
+        return $this->emitValueEvent(static::VALUE_GET, $name, $this->__isset($name) ? $this->data[$name] : null)->getValue();
+    }
+
+    /**
+     * @param $name
+     * @param $value
+     * @return mixed
+     */
+    public function set($name, $value)
+    {
+        if ($this->getTable()->hasColumn($name)){
+            $this->data[$name] = $this->emitValueEvent(static::VALUE_SET, $name, $value)->getValue();
+        }
+        return $this;
+    }
+
+    /**
+     * @param $name
+     * @return mixed
+     */
+    public function __get($name)
+    {
+        return $this->get($name);
+    }
+
+    /**
+     * @param $name
+     * @param $value
+     */
+    public function __set($name, $value)
+    {
+        $this->set($name, $value);
+    }
+
+    /**
+     * @param $name
+     * @return bool
+     */
+    public function __isset($name)
+    {
+        return isset($this->data[$name]);
+    }
+
+    /**
+     * @param $name
+     */
+    public function __unset($name)
+    {
+        if($this->__isset($name)){
+            $this->data[$name] = null;
+        }
     }
 
     /**
@@ -70,73 +159,104 @@ abstract class AbstractEntity implements EntityInterface
     }
 
     /**
-     * @return null
+     * @return Table
      */
-    public function primaryKeyField()
+    public function getTable()
     {
-        return $this->primaryKeyField;
+        return $this->table;
     }
 
     /**
-     *
+     * @param Table $table
      */
-    public function primaryKey()
+    public function setTable($table)
     {
-        return $this->primaryKey;
+        $this->table = $table;
     }
 
     /**
-     * @return array
+     * @return Emitter
      */
-    public function getData()
+    public function getEmitter()
     {
-        return $this->data;
+        if($this->emitter === null){
+            $this->emitter = new Emitter();
+        }
+        return $this->emitter;
     }
 
     /**
-     * @param array $data
-     * @return AbstractEntity
+     * @return MapperInterface
      */
-    public function setData(array $data)
+    public function getMapper()
     {
-        $this->data = $data;
-
-        return $this;
+        if($this->mapper === null){
+            $this->mapper = new Mapper($this);
+        }
+        return $this->mapper;
     }
 
     /**
-     * @param $name
+     * empty data
+     */
+    public function reset(){
+        $this->data = [];
+    }
+
+    /**
+     * Configure entity
+     */
+    abstract public function configure();
+
+    /**
+     * @param $eventName
+     * @param $key
+     * @param $value
+     * @return ValueEvent|\League\Event\EventInterface
+     */
+    public function emitValueEvent($eventName, $key, $value)
+    {
+        return $this->getEmitter()->emit(new ValueEvent($eventName, $key, $value));
+    }
+
+    /**
+     * save current entity
+     * @return int
+     */
+    public function save()
+    {
+        return $this->getMapper()->save($this);
+    }
+
+    /**
+     * delete current entity
+     * @return int
+     */
+    public function delete()
+    {
+        return $this->getMapper()->delete($this);
+    }
+
+    /**
+     * result by primary key
+     * @param $pk
      * @return mixed
      */
-    public function __get($name)
+    public static function find($pk)
     {
-        return $this->data[$name];
+        return (new static)->getMapper()->find($pk);
     }
 
     /**
-     * @param $name
+     * find result by field
+     *
+     * @param $field
      * @param $value
+     * @return mixed
      */
-    public function __set($name, $value)
+    public static function findBy($field, $value)
     {
-        $this->data[$name] = $value;
-    }
-
-    /**
-     * @param $name
-     * @return bool
-     */
-    public function __isset($name)
-    {
-        return isset($this->data[$name]);
-    }
-
-    /**
-     * @param $name
-     */
-    public function __unset($name)
-    {
-        unset($this->data[$name]);
+        return (new static)->getMapper()->findBy($field, $value);
     }
 
 

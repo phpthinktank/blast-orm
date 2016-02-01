@@ -6,11 +6,14 @@
  * Time: 14:37
  */
 
-namespace Blast\Orm;
+namespace Blast\Db\Orm;
 
-
+use Blast\Db\Config;
+use Blast\Db\ConfigInterface;
+use Blast\Db\Entity\ManagerInterface;
 use Doctrine\DBAL\Connection;
 use Interop\Container\ContainerInterface;
+use League\Event\EmitterInterface;
 
 class Factory implements FactoryInterface
 {
@@ -24,6 +27,16 @@ class Factory implements FactoryInterface
      * @var ContainerInterface
      */
     protected $container;
+
+    /**
+     * @var EmitterInterface
+     */
+    protected $emitter;
+
+    /**
+     * @var ManagerInterface
+     */
+    protected $entityBuilder;
 
     /**
      * @var
@@ -140,6 +153,22 @@ class Factory implements FactoryInterface
     {
         $this->container = $container;
         return $this;
+    }
+
+    /**
+     * @return ManagerInterface
+     */
+    public function getEntityBuilder()
+    {
+        return $this->entityBuilder;
+    }
+
+    /**
+     * @param ManagerInterface $entityBuilder
+     */
+    public function setEntityBuilder($entityBuilder)
+    {
+        $this->entityBuilder = $entityBuilder;
     }
 
     public function shutdown()

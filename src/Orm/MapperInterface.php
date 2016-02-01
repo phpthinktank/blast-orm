@@ -6,10 +6,10 @@
  * Time: 15:40
  */
 
-namespace Blast\Orm;
+namespace Blast\Db\Orm;
 
 
-use Blast\Orm\Entity\EntityInterface;
+use Blast\Db\Entity\EntityInterface;
 use Doctrine\DBAL\Query\QueryBuilder;
 
 interface MapperInterface
@@ -54,22 +54,27 @@ interface MapperInterface
     public function fetch(QueryBuilder $statement);
 
     /**
-     * @param $data
+     * @param EntityInterface $entity
      * @return int
      */
-    public function create($data);
+    public function create($entity);
 
     /**
-     * @param $data
-     * @param $identifiers
+     * @param EntityInterface|EntityInterface[] $entity
      * @return int
      */
-    public function update($data, $identifiers);
+    public function update($entity);
 
     /**
-     * @param $identifiers
+     * @param EntityInterface|EntityInterface[] $entity
      * @return int
      */
-    public function delete($identifiers);
+    public function delete($entity);
+
+    /**
+     * @param EntityInterface|EntityInterface[] $entity
+     * @return int
+     */
+    public function save($entity);
 
 }

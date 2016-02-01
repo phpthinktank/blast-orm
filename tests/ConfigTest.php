@@ -9,7 +9,7 @@
 
 namespace Blast\Tests\Orm;
 
-use Blast\Orm\Config;
+use Blast\Db\Config;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
