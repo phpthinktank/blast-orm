@@ -9,7 +9,7 @@
 namespace Blast\Tests\Orm\Entities;
 
 
-use Blast\Db\Orm\Entity\AbstractEntity;
+use Blast\Db\Entity\AbstractEntity;
 use Blast\Db\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 
@@ -29,7 +29,7 @@ class AnyEntity extends AbstractEntity
         $table->setPrimaryKey(['id']);
         $this->setTable($table);
 
-        $this->getEmitter()->addListener(self::BEFORE_GET, function(){
+        $this->getEmitter()->addListener(self::VALUE_GET, function(){
            echo 'get all values!';
         });
     }
