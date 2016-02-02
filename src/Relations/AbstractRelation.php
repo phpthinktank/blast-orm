@@ -46,6 +46,27 @@ abstract class AbstractRelation
     protected $localKey;
 
     /**
+     * @var bool
+     */
+    protected $foreignEntityUpdate = false;
+
+    /**
+     * @return boolean
+     */
+    public function isForeignEntityUpdate()
+    {
+        return $this->foreignEntityUpdate;
+    }
+
+    /**
+     * @param boolean $foreignEntityUpdate
+     */
+    protected function setForeignEntityUpdate($foreignEntityUpdate)
+    {
+        $this->foreignEntityUpdate = $foreignEntityUpdate;
+    }
+
+    /**
      * @return MapperInterface
      */
     public function getMapper()
@@ -70,6 +91,15 @@ abstract class AbstractRelation
     }
 
     /**
+     * @param EntityInterface $foreignEntity
+     */
+    public function setForeignEntity($foreignEntity)
+    {
+        $this->setForeignEntityUpdate(true);
+        $this->foreignEntity = $foreignEntity;
+    }
+
+    /**
      * @return int|string
      */
     public function getForeignKey()
@@ -91,8 +121,18 @@ abstract class AbstractRelation
         return $this->localKey;
     }
 
+    /**
+     * Save related entities
+     *
+     * @return mixed
+     */
     abstract public function save();
 
+    /**
+     * Fetch related entities
+     *
+     * @return mixed
+     */
     abstract public function fetch();
 
 }

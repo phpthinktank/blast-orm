@@ -21,6 +21,7 @@ class Table extends DbalTable
 
     /**
      * get types of all columns
+     *
      * @return array
      */
     public function getColumnsTypes(){
@@ -37,6 +38,7 @@ class Table extends DbalTable
 
     /**
      * Returns first primary key!
+     *
      * @return string
      */
     public function getPrimaryKeyName(){

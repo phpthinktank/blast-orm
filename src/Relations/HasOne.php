@@ -49,7 +49,10 @@ class HasOne extends AbstractRelation
         $entity = $this->getEntity();
         $entity->__set($this->getLocalKey(), $foreignEntity->__get($this->getForeignKey()));
 
-        $foreignEntity->save();
+        //save foreign only if it has updates
+        if($this->isForeignEntityUpdate()){
+            $foreignEntity->getMapper()->save($foreignEntity);
+        }
 
         return $foreignEntity;
     }

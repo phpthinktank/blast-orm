@@ -47,7 +47,7 @@ class Mapper implements MapperInterface
      */
     public function getConnection()
     {
-        if($this->connection === null){
+        if ($this->connection === null) {
             $this->connection = $this->factory->getConfig()->getConnection(Factory::DEFAULT_CONNECTION);
         }
         return $this->connection;
@@ -66,7 +66,7 @@ class Mapper implements MapperInterface
      */
     public function getFactory()
     {
-        if($this->factory === null){
+        if ($this->factory === null) {
             $this->factory = Factory::getInstance();
         }
         return $this->factory;
@@ -101,7 +101,7 @@ class Mapper implements MapperInterface
      */
     public function getManager()
     {
-        if($this->manager === null){
+        if ($this->manager === null) {
             $this->manager = new Manager($this->getEntity(), $this, $this->getFactory());
         }
         return $this->manager;
@@ -134,15 +134,15 @@ class Mapper implements MapperInterface
     public function findBy($field, $value)
     {
         $query = $this->getQueryBuilder();
-        $statement = $query->select('*')
-            ->from($this->getEntity()->getTable())
-            ->where($field . ' = :value')
-            ->setParameter(':value', $value, $this->getEntity()->getTable()->getColumn($field)->getType());
+        $statement = $query->select('*');
+        $statement->from($this->getEntity()->getTable())
+            ->where($field . ' = ' . $statement->createPositionalParameter($value, $this->getEntity()->getTable()->getColumn($field)->getType()));
 
         return $this->fetch($statement);
     }
 
     /**
+     * Fetch data for entity. if raw is true, fetch assoc instead of entity
      * @param QueryBuilder $statement
      * @param bool $raw
      * @return array
@@ -161,7 +161,7 @@ class Mapper implements MapperInterface
      */
     public function create($entity)
     {
-        if(is_array($entity)){
+        if (is_array($entity)) {
             return $this->batchOperation(__FUNCTION__, $entity);
         }
         $manager = $this->getManager();
@@ -239,6 +239,15 @@ class Mapper implements MapperInterface
         if (is_array($entity)) {
             return $this->batchOperation(__FUNCTION__, $entity);
         }
+
+        //may be it is better to start an transaction
+        //save all relations before saving entity
+        $relations = $entity->getRelations();
+
+        foreach($relations as $relation){
+            $relation->save();
+        }
+
         return $entity->isNew() ? $this->create($entity) : $this->update($entity);
     }
 

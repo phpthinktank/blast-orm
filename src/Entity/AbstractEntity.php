@@ -48,6 +48,16 @@ abstract class AbstractEntity implements EntityInterface
     protected $relations;
 
     /**
+     * @var bool
+     */
+    protected $updated = false;
+
+    /**
+     * @var array
+     */
+    protected $originalData = [];
+
+    /**
      * AbstractEntity constructor.
      */
     public function __construct()
@@ -66,6 +76,30 @@ abstract class AbstractEntity implements EntityInterface
             $this->__set($name, $field['default']);
         }
         return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isUpdated()
+    {
+        return $this->updated;
+    }
+
+    /**
+     * @param boolean $updated
+     */
+    public function setUpdated($updated)
+    {
+        $this->updated = $updated;
+    }
+
+    /**
+     * @return array
+     */
+    public function getOriginalData()
+    {
+        return $this->originalData;
     }
 
     /**
@@ -95,7 +129,14 @@ abstract class AbstractEntity implements EntityInterface
      */
     public function get($name)
     {
-        return $this->emitValueEvent(static::VALUE_GET, $name, $this->__isset($name) ? $this->data[$name] : null)->getValue();
+        if ($this->__isset($name)) {
+            $value = $this->data[$name];
+        } elseif ($this->hasRelation($name)) {
+            $value = $this->getRelation($name)->fetch();
+        } else {
+            $value = null;
+        }
+        return $this->emitValueEvent(static::VALUE_GET, $name, $value)->getValue();
     }
 
     /**
@@ -105,8 +146,23 @@ abstract class AbstractEntity implements EntityInterface
      */
     public function set($name, $value)
     {
-        if ($this->getTable()->hasColumn($name)){
+        if(!$this->isUpdated()){
+            $this->setUpdated(true);
+            $this->originalData = $this->data;
+        }
+        if ($this->getTable()->hasColumn($name)) {
             $this->data[$name] = $this->emitValueEvent(static::VALUE_SET, $name, $value)->getValue();
+        }elseif($this->hasRelation($name)){
+            if(!($value instanceof EntityInterface)){
+                throw new \InvalidArgumentException('Unable to update Relation. Given entity needs to be an instance of ' . EntityInterface::class);
+            }
+
+            $relation = $this->getRelation($name);
+            $relation->setForeignEntity($value);
+
+            //reattach relation
+            //this is probably unnecessary!
+            $this->relations[$name] = $relation;
         }
         return $this;
     }
@@ -143,9 +199,35 @@ abstract class AbstractEntity implements EntityInterface
      */
     public function __unset($name)
     {
-        if($this->__isset($name)){
+        if ($this->__isset($name)) {
             $this->data[$name] = null;
         }
+    }
+
+    public function __call($name, $arguments)
+    {
+        $isAccessor = strpos(strtolower($name), 'get') === 0;
+        $isMutator = strpos(strtolower($name), 'set') === 0;
+
+
+        //call accessor or mutator
+        if (($isAccessor || $isMutator) && !$this->hasRelation($name)) {
+
+            $method = $isMutator ? 'set' : 'get';
+            $args = [lcfirst(str_replace('set', '', $name))];
+
+            if ($isMutator) {
+                $args[] = array_shift($arguments);
+            }
+
+            return call_user_func_array([$this, $method], $args);
+
+        } elseif ($this->hasRelation($name)) {
+            //call relation without fetching it
+            return $this->getRelation($name);
+        }
+
+        throw new \BadMethodCallException('Unknown method ' . __METHOD__);
     }
 
     /**
@@ -185,7 +267,7 @@ abstract class AbstractEntity implements EntityInterface
      */
     public function getEmitter()
     {
-        if($this->emitter === null){
+        if ($this->emitter === null) {
             $this->emitter = new Emitter();
         }
         return $this->emitter;
@@ -196,7 +278,7 @@ abstract class AbstractEntity implements EntityInterface
      */
     public function getMapper()
     {
-        if($this->mapper === null){
+        if ($this->mapper === null) {
             $this->mapper = new Mapper($this);
         }
         return $this->mapper;
@@ -205,7 +287,8 @@ abstract class AbstractEntity implements EntityInterface
     /**
      * empty data
      */
-    public function reset(){
+    public function reset()
+    {
         $this->data = [];
     }
 
@@ -217,20 +300,31 @@ abstract class AbstractEntity implements EntityInterface
     /**
      * @return AbstractRelation[]
      */
-    public function getRelations(){
+    public function getRelations()
+    {
         return $this->relations;
     }
 
-    public function addRelation(AbstractRelation $relation, $name = null){
-        if($name === null){
+    public function addRelation(AbstractRelation $relation, $name = null)
+    {
+        if ($name === null) {
             $name = $relation->getForeignEntity()->getTable()->getName() . '.' . $relation->getForeignKey();
         }
 
-        if($this->hasRelation($name)){
+        if ($this->hasRelation($name)) {
             throw new \InvalidArgumentException(sprintf('Relation %s already exists', $name));
         }
 
         $this->relations[$name] = $relation;
+    }
+
+    /**
+     * @param $name
+     * @return AbstractRelation
+     */
+    public function getRelation($name)
+    {
+        return $this->hasRelation($name) ? $this->relations[$name] : null;
     }
 
     /**
