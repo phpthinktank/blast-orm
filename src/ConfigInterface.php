@@ -25,10 +25,16 @@ interface ConfigInterface
     public function addConnection($name, $connection);
 
     /**
+     * Activate a connection as default connection
+     * @param string $name
+     */
+    public function setActiveConnection($name);
+
+    /**
      * @param $name
      * @return \Doctrine\DBAL\Connection
      */
-    public function getConnection($name);
+    public function getConnection($name = null);
 
     /**
      * @return \Doctrine\DBAL\Connection[]

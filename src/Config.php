@@ -22,6 +22,11 @@ class Config implements ConfigInterface
     protected $connections = [];
 
     /**
+     * @var Connection
+     */
+    protected $activeConnection = null;
+
+    /**
      *
      * Params a related to configuration
      *
@@ -42,16 +47,39 @@ class Config implements ConfigInterface
 
         $this->connections[$name] = $connection;
 
+        //set first connection as active connection
+        if (count($this->connections) === 1) {
+            $this->setActiveConnection($name);
+        }
+
         return $this;
+    }
+
+    /**
+     * Activate a connection as default connection
+     * @param string $name
+     */
+    public function setActiveConnection($name)
+    {
+        if ($this->hasConnection($name)) {
+            $this->activeConnection = $this->getConnection($name);
+        }
+
+        throw new \InvalidArgumentException('Unable to activate connection ' . $name);
     }
 
     /**
      * @param $name
      * @return \Doctrine\DBAL\Connection
      */
-    public function getConnection($name)
+    public function getConnection($name = null)
     {
-        return $this->connections[$name];
+
+        if ($this->hasConnection($name)) {
+            return $this->connections[$name];
+        }
+
+        throw new \InvalidArgumentException('Unknown connection ' . $name);
     }
 
     /**
@@ -79,7 +107,7 @@ class Config implements ConfigInterface
     protected function determineConnection($connection)
     {
         //assume a valid dsn and convert to connection array
-        if(is_array($connection) || is_string($connection)){
+        if (is_array($connection) || is_string($connection)) {
             if (is_string($connection)) {
                 $connection = [
                     'url' => $connection

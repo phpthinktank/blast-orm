@@ -48,17 +48,17 @@ class Mapper implements MapperInterface
     public function getConnection()
     {
         if ($this->connection === null) {
-            $this->connection = $this->factory->getConfig()->getConnection(Factory::DEFAULT_CONNECTION);
+            $this->connection = $this->factory->getConfig()->getConnection();
         }
         return $this->connection;
     }
 
     /**
-     * @param \Doctrine\DBAL\Connection $connection
+     * @param string $name
      */
-    public function setConnection($connection)
+    public function setConnection($name)
     {
-        $this->connection = $connection;
+        $this->connection = $this->factory->getConfig()->getConnection($name);
     }
 
     /**
