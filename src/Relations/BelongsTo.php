@@ -34,8 +34,6 @@ class BelongsTo extends AbstractRelation
         //foreign config
         $this->foreignEntity = $foreignEntity;
         $this->foreignKey = $foreignKey;
-
-
     }
 
     /**
@@ -63,7 +61,8 @@ class BelongsTo extends AbstractRelation
      */
     public function fetch()
     {
-        return $this->getForeignEntity()->getMapper()->findBy($this->getForeignKey(), $this->getEntity()->__get($this->getLocalKey()));
+        $result = $this->getForeignEntity()->getMapper()->findBy($this->getForeignKey(), $this->getEntity()->__get($this->getLocalKey()));
+        return is_array($result) ? array_shift($result) : $result;
     }
 
 }
