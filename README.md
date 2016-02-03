@@ -6,7 +6,7 @@
 [![Total Downloads][ico-downloads]][link-downloads]
 [![Coverage Status](https://img.shields.io/coveralls/phpthinktank/blast-orm/master.svg?style=flat-square)](https://coveralls.io/github/phpthinktank/blast-orm?branch=1.0.x-dev)
 
-Framework agnostic orm package based on Doctrine 2. 
+Framework agnostic db package with orm and active record implementation based on Doctrine 2. 
 
 ## Install
 
@@ -19,6 +19,105 @@ $ composer require blast/orm
 ## Usage
 
 
+
+### Getting Started
+
+Create a factory with container-interopt compatible Container e.g. league/container and connection data.
+
+```php
+<?php
+
+use Blast\Db\Orm\Factory;
+use League\Container;
+
+
+Factory::create(new Container(), [
+    'url' => 'sqlite:///:memory:',
+    'memory' => 'true'
+]);
+
+```
+
+#### Create a new Entity
+
+```php
+<?php
+
+namespace App\Entities\Post;
+
+
+use Blast\Db\Entity\AbstractEntity;
+use Blast\Db\Schema\Table;
+use Doctrine\DBAL\Types\Type;
+
+class Post extends AbstractEntity
+{
+
+    /**
+     * Configure entity
+     */
+    public function configure()
+    {
+        $table = new Table('post');
+        $table->addColumn('id', Type::INTEGER)
+            ->setAutoincrement(true)
+            ->setLength(10);
+        $table->addColumn('title', Type::STRING);
+        $table->addColumn('content', Type::TEXT);
+        $table->addColumn('date', Type::DATETIME)
+            ->setDefault(new \DateTime());
+        $table->setPrimaryKey(['id']);
+
+        //set entity table
+        $this->setTable($table);
+    }
+}
+
+```
+
+#### Creating a new entry
+
+Blast db supports as well as processing data with Active Record and Object Relational Mapper.
+
+#### Active Record
+
+```php
+<?php
+
+use App\Entities\Post;
+
+$post = new Post;
+$post->title = 'Hello World';
+$post->content = 'Some content about hello world.';
+$post->title = new \DateTime();
+
+//create or update entity
+$post->save();
+```
+
+#### Object Relational Mapper
+
+```php
+<?php
+
+use App\Entities\Post;
+use Blast\Db\Orm\Factory;
+
+$post = new Post;
+
+//create mapper from post
+$mapper = Factory::getInstance()->createMapper($post);
+
+$post->title = 'Hello World';
+$post->content = 'Some content about hello world.';
+$post->title = new \DateTime();
+
+//create or update entity
+$mapper->save($post);
+```
+
+
+###
 
 ## Further development
 
