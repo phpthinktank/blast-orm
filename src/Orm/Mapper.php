@@ -10,6 +10,7 @@ namespace Blast\Db\Orm;
 
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Entity\Manager;
+use Blast\Db\Entity\ManagerInterface;
 use Blast\Db\Events\ResultEvent;
 use Doctrine\DBAL\Query\QueryBuilder;
 
@@ -64,7 +65,7 @@ class Mapper implements MapperInterface
      *
      * @param string $name
      */
-    public function setConnection($name)
+    public function onConnection($name)
     {
         $this->connection = $this->factory->getConfig()->getConnection($name);
     }
@@ -110,7 +111,8 @@ class Mapper implements MapperInterface
     public function getManager()
     {
         if ($this->manager === null) {
-            $this->manager = new Manager($this->getEntity(), $this, $this->getFactory());
+            $managerConcrete = $this->getFactory()->getContainer()->get(ManagerInterface::class);
+            $this->manager = (new \ReflectionClass($managerConcrete))->newInstanceArgs([$this->getEntity(), $this, $this->getFactory()]);
         }
         return $this->manager;
     }
@@ -138,6 +140,8 @@ class Mapper implements MapperInterface
     }
 
     /**
+     * Find data by field and value. Optional execute callback for statement.
+     *
      * @param $field
      * @param $value
      * @param callable $callback
@@ -146,18 +150,16 @@ class Mapper implements MapperInterface
      */
     public function findBy($field, $value, callable $callback = null)
     {
-        $builder = $this->getQueryBuilder();
-        $statement = $builder->select('*');
-        $statement->from($this->getEntity()->getTable())
-            ->where($builder->expr()->eq($field, $statement->createPositionalParameter($value, $this->getEntity()->getTable()->getColumn($field)->getType())));
+        $builder = $this->getQueryBuilder()->select('*');
+        $builder->from($this->getEntity()->getTable())
+            ->where($builder->expr()->eq($field, $builder->createPositionalParameter($value, $this->getEntity()->getTable()->getColumn($field)->getType())));
 
-        call_user_func($callback, $statement, $builder);
+        call_user_func($callback, $builder);
 
-        return $this->fetch($statement);
+        return $this->fetch($builder);
     }
 
     /**
-     *
      * Get first Result by pk
      *
      * @param $pk
@@ -165,8 +167,8 @@ class Mapper implements MapperInterface
      */
     public function first($pk)
     {
-        return $this->find($pk, function (QueryBuilder $statement) {
-            $statement->setMaxResults(1)
+        return $this->find($pk, function (QueryBuilder $builder) {
+            $builder->setMaxResults(1)
                 ->setFirstResult(0);
         });
     }
@@ -180,116 +182,142 @@ class Mapper implements MapperInterface
      */
     public function firstBy($field, $value)
     {
-        return $this->findBy($field, $value, function (QueryBuilder $statement) {
-            $statement->setMaxResults(1)
+        return $this->findBy($field, $value, function (QueryBuilder $builder) {
+            $builder->setMaxResults(1)
                 ->setFirstResult(0);
         });
     }
 
     /**
      * Fetch data for entity. if raw is true, fetch assoc instead of entity
-     * @param QueryBuilder $statement
+     * @param QueryBuilder $builder
      * @param bool $raw
      * @return array
      */
-    public function fetch(QueryBuilder $statement, $raw = FALSE)
+    public function fetch(QueryBuilder $builder, $raw = FALSE)
     {
-        $result = $this->getConnection()->executeQuery($statement->getSQL(), $statement->getParameters())->fetchAll();
+        $result = $this->getConnection()->executeQuery($builder->getSQL(), $builder->getParameters())->fetchAll();
 
         return $raw === TRUE ? $result : $this->determineResultSet($result);
     }
 
     /**
+     * Create a new entity or a collection of entities in storage.
+     *
      * @param EntityInterface|EntityInterface[] $entity
      * @return int
      * @internal param $data
      */
     public function create($entity)
     {
+        //execute batch if condition matches
         if (is_array($entity)) {
             return $this->batchOperation(__FUNCTION__, $entity);
         }
-        $manager = $this->getManager();
-        $entity = $manager->create($entity);
 
-        $event = $entity->getEmitter()->emit($entity::BEFORE_CREATE, $entity);
+        //prepare entity
+        $entity = $this->prepareEntity($entity);
 
-        if ($event->isPropagationStopped()) {
+        //emit before event
+        if ($entity->getEmitter()->emit($entity::BEFORE_CREATE, $entity)->isPropagationStopped()) {
             return false;
         }
 
-        $result = $this->getConnection()->insert($entity->getTable()->getName(), $entity->getData(), $entity->getTable()->getColumnsTypes());
+        //prepare statement
+        $builder = $this->getQueryBuilder()->insert($entity->getTable()->getName());
 
-        $event = $entity->getEmitter()->emit(new ResultEvent($entity::AFTER_CREATE, $result), $entity);
-        return $event->isPropagationStopped() ? false : $result;
+        foreach ($entity->getData() as $key => $value) {
+            $builder->setValue($key, $builder->createPositionalParameter($value, $entity->getTable()->getColumn($key)->getType()));
+        }
+
+        //execute statement and emit after event
+        $event = $entity->getEmitter()->emit(new ResultEvent($entity::AFTER_CREATE, $this->executeUpdate($builder)), $entity);
+        return $event->isPropagationStopped() ? false : $event->getResult();
     }
 
     /**
+     * Update an existing entity or a collection of entities in storage
+     *
      * @param EntityInterface|EntityInterface[] $entity
      * @return int
      */
     public function update($entity)
     {
+        //execute batch if condition matches
         if (is_array($entity)) {
             return $this->batchOperation(__FUNCTION__, $entity);
         }
-        $manager = $this->getManager();
-        $entity = $manager->create($entity);
 
-        $event = $entity->getEmitter()->emit($entity::BEFORE_UPDATE, $entity);
+        //prepare entity
+        $entity = $this->prepareEntity($entity);
 
-        if ($event->isPropagationStopped()) {
+        if ($entity->getEmitter()->emit($entity::BEFORE_UPDATE, $entity)->isPropagationStopped()) {
             return false;
         }
 
+        //prepare statement
         $pkName = $entity->getTable()->getPrimaryKeyName();
-        $builder = $this->getQueryBuilder();
-        $statement = $builder->update($entity->getTable()->getName());
+        $builder = $this->getQueryBuilder()->update($entity->getTable()->getName());
 
-        foreach($entity->getUpdatedData() as $key => $value){
-            $statement->set($key, $statement->createPositionalParameter($value, $entity->getTable()->getColumn($key)->getType()));
+        foreach ($entity->getUpdatedData() as $key => $value) {
+            $builder->set($key, $builder->createPositionalParameter($value, $entity->getTable()->getColumn($key)->getType()));
         }
 
-        $statement->where($builder->expr()->eq($pkName, $entity->get($pkName)));
+        $builder->where($builder->expr()->eq($pkName, $entity->get($pkName)));
 
-        $result = $this->getConnection()->executeUpdate($statement->getSQL(), $statement->getParameters(), $statement->getParameterTypes());
-
-        $event = $entity->getEmitter()->emit(new ResultEvent($entity::AFTER_UPDATE, $result), $entity);
-        return $event->isPropagationStopped() ? false : $result;
+        //execute statement and emit after event
+        $event = $entity
+            ->getEmitter()
+            ->emit(new ResultEvent($entity::AFTER_UPDATE, $this->executeUpdate($builder)), $entity);
+        return $event->isPropagationStopped() ? false : $event->getResult();
     }
 
     /**
+     * Delete an existing entity or a collection of entities in storage
+     * 
      * @param EntityInterface|EntityInterface[] $entity
      * @return int
      */
     public function delete($entity)
     {
+        //prepare for batch
+        //delete will always batch delete
+        $entities = [$entity];
+
         if (is_array($entity)) {
-            return $this->batchOperation(__FUNCTION__, $entity);
+            $entities = $entity;
+            $entity = array_shift($entity);
         }
 
-        $manager = $this->getManager();
-        $entity = $manager->create($entity);
+        //prepare entity
+        $entity = $this->prepareEntity($entity);
 
-        $event = $entity->getEmitter()->emit($entity::BEFORE_DELETE, $entity);
-
-        if ($event->isPropagationStopped()) {
+        //emit before event
+        if ($entity->getEmitter()->emit($entity::BEFORE_DELETE, $entity)->isPropagationStopped()) {
             return false;
         }
 
+        //prepare statement
         $pkName = $entity->getTable()->getPrimaryKeyName();
+        $builder = $this->getQueryBuilder()->delete($entity->getTable()->getName());
 
-        $builder = $this->getQueryBuilder();
-        $statement = $builder->delete($entity->getTable()->getName())
-            ->where($builder->expr()->eq($pkName, $builder->createPositionalParameter($entity->__get($pkName), $entity->getTable()->getColumn($pkName)->getType())));
+        //add entities by pk to delete
+        foreach ($entities as $instance) {
+            $instance = $this->prepareEntity($instance);
+            $builder->orWhere($builder->expr()->eq($pkName, $builder->createPositionalParameter($instance->__get($pkName), $instance->getTable()->getColumn($pkName)->getType())));
+        }
 
-        $result = $this->getConnection()->executeUpdate($statement->getSQL(), $statement->getParameters(), $statement->getParameterTypes());
-
-        $event = $entity->getEmitter()->emit(new ResultEvent($entity::AFTER_DELETE, $result), $entity);
-        return $event->isPropagationStopped() ? false : $result;
+        //execute statement and emit after event
+        $event = $entity
+            ->getEmitter()
+            ->emit(new ResultEvent($entity::AFTER_DELETE, $this->executeUpdate($builder)), $entity, $entities);
+        $result = $event->isPropagationStopped() ? false : $event->getResult();
+        return $result;
     }
 
     /**
+     * Create or update an entity or a collection of entities in storage
+     * 
      * @param EntityInterface|EntityInterface[] $entity
      * @return int
      */
@@ -313,7 +341,8 @@ class Mapper implements MapperInterface
     }
 
     /**
-     * Analyse result and return correct set
+     * Analyse result and return one or many results
+     * 
      * @param $data
      * @return EntityInterface|EntityInterface[]|null
      */
@@ -335,7 +364,8 @@ class Mapper implements MapperInterface
     }
 
     /**
-     * Execute batch delete, save, update or insert
+     * Execute batch save, update or insert
+     * 
      * @param $operation
      * @param $entity
      * @return array
@@ -344,9 +374,34 @@ class Mapper implements MapperInterface
     {
         $results = [];
         foreach ($entity as $_) {
-            $this->{$operation}($_);
+            $results[] = $this->{$operation}($_);
         }
         return $results;
+    }
+
+    /**
+     * @param $builder
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function executeUpdate(QueryBuilder $builder)
+    {
+        return $this->getConnection()->executeUpdate($builder->getSQL(), $builder->getParameters(), $builder->getParameterTypes());
+    }
+
+    /**
+     * @param $entity
+     * @return EntityInterface
+     */
+    protected function prepareEntity($entity)
+    {
+        $manager = $this->getManager();
+        $entity = $manager->create($entity);
+
+        if ($entity != $this->getEntity()) {
+            throw new \InvalidArgumentException('Given entity needs to be an instance of ' . get_class($this->getEntity()));
+        }
+        return $entity;
     }
 
 }

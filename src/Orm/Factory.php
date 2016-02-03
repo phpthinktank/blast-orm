@@ -10,6 +10,7 @@ namespace Blast\Db\Orm;
 
 use Blast\Db\Config;
 use Blast\Db\ConfigInterface;
+use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Entity\ManagerInterface;
 use Doctrine\DBAL\Connection;
 use Interop\Container\ContainerInterface;
@@ -27,16 +28,6 @@ class Factory implements FactoryInterface
      * @var ContainerInterface
      */
     protected $container;
-
-    /**
-     * @var EmitterInterface
-     */
-    protected $emitter;
-
-    /**
-     * @var ManagerInterface
-     */
-    protected $entityBuilder;
 
     /**
      * @var
@@ -67,6 +58,9 @@ class Factory implements FactoryInterface
         return static::$instance;
     }
 
+    /**
+     * disconnect all connections
+     */
     public function __destruct(){
 
         $this->shutdown();
@@ -155,22 +149,6 @@ class Factory implements FactoryInterface
         return $this;
     }
 
-    /**
-     * @return ManagerInterface
-     */
-    public function getEntityBuilder()
-    {
-        return $this->entityBuilder;
-    }
-
-    /**
-     * @param ManagerInterface $entityBuilder
-     */
-    public function setEntityBuilder($entityBuilder)
-    {
-        $this->entityBuilder = $entityBuilder;
-    }
-
     public function shutdown()
     {
         $connections = $this->getConfig()->getConnections();
@@ -188,5 +166,28 @@ class Factory implements FactoryInterface
 
         static::$instance = null;
         static::$booted = false;
+    }
+
+    /**
+     * Create mapper from entity
+     *
+     * @param $mapper
+     * @return MapperInterface
+     */
+    public function createMapper($mapper = null){
+
+        if($mapper === null){
+            $mapper = MapperInterface::class;
+        }
+
+        if(is_string($mapper)){
+            $mapper = $this->getContainer()->get($mapper);
+        }
+
+        if(!($mapper instanceof MapperInterface)){
+            throw new \RuntimeException('Mapper needs to be an instance of ' . MapperInterface::class);
+        }
+
+        return $mapper;
     }
 }

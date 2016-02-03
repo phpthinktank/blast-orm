@@ -9,11 +9,13 @@
 namespace Blast\Db\Entity;
 
 use Blast\Db\Events\ValueEvent;
+use Blast\Db\Orm\Factory;
 use Blast\Db\Orm\Mapper;
 use Blast\Db\Orm\MapperInterface;
 use Blast\Db\Relations\AbstractRelation;
 use Doctrine\DBAL\Schema\Table;
 use League\Event\Emitter;
+use League\Event\EmitterInterface;
 
 abstract class AbstractEntity implements EntityInterface
 {
@@ -294,7 +296,7 @@ abstract class AbstractEntity implements EntityInterface
     public function getEmitter()
     {
         if ($this->emitter === null) {
-            $this->emitter = new Emitter();
+            $this->emitter = Factory::getInstance()->getContainer()->get(EmitterInterface::class);
         }
         return $this->emitter;
     }
@@ -304,10 +306,7 @@ abstract class AbstractEntity implements EntityInterface
      */
     public function getMapper()
     {
-        if ($this->mapper === null) {
-            $this->mapper = new Mapper($this);
-        }
-        return $this->mapper;
+        return Factory::getInstance()->createMapper($this->mapper);
     }
 
     /**
