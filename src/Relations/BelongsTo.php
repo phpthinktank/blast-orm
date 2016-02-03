@@ -25,7 +25,7 @@ class BelongsTo extends AbstractRelation
      * @param string|integer|null $localKey Field name on current entity which matches up with foreign key of foreign entity
      * @param string|integer|null $foreignKey name on foreign entity which matches up with local key of current entity
      */
-    public function __construct(EntityInterface $entity, $foreignEntity, $localKey = null, $foreignKey = null)
+    public function __construct(EntityInterface $entity, $foreignEntity, $localKey = null)
     {
         //local config
         $this->entity = $entity;
@@ -33,7 +33,6 @@ class BelongsTo extends AbstractRelation
 
         //foreign config
         $this->foreignEntity = $foreignEntity;
-        $this->foreignKey = $foreignKey;
     }
 
     /**
