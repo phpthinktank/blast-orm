@@ -84,7 +84,7 @@ class HasMany extends AbstractRelation
      */
     public function fetch()
     {
-        return $this->getForeignEntity()->getMapper()->findBy($this->getForeignKey(), $this->getEntity()->__get($this->getLocalKey()));
+        return $this->getEntity()->getMapper()->findBy($this->getLocalKey(), $this->getForeignEntity()->__get($this->getLocalKey()));
     }
 
 }

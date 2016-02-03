@@ -55,6 +55,26 @@ interface EntityInterface
     public function getData();
 
     /**
+     * @return boolean
+     */
+    public function isUpdated();
+
+    /**
+     * @param boolean $updated
+     */
+    public function setUpdated($updated);
+
+    /**
+     * @return array
+     */
+    public function getOriginalData();
+
+    /**
+     * @return array
+     */
+    public function getUpdatedData();
+
+    /**
      * @return MapperInterface
      */
     public function getMapper();
@@ -86,6 +106,17 @@ interface EntityInterface
      * @param $name
      */
     public function __unset($name);
+
+    public function __call($name, $arguments);
+
+    public function get($name);
+
+    /**
+     * @param $name
+     * @param $value
+     * @return mixed
+     */
+    public function set($name, $value);
 
     /**
      * Flush all data

@@ -75,6 +75,11 @@ abstract class AbstractEntity implements EntityInterface
         foreach ($fields as $name => $field) {
             $this->__set($name, $field['default']);
         }
+
+        //reset updates, default values should not be triggered as updates
+        $this->setUpdated(false);
+        $this->originalData = [];
+
         return $this;
     }
 
@@ -102,12 +107,32 @@ abstract class AbstractEntity implements EntityInterface
         return $this->originalData;
     }
 
+    public function getUpdatedData()
+    {
+        $original = $this->getOriginalData();
+        $updated = [];
+
+        foreach($original as $key => $value){
+            if($value !== $this->get($key)){
+                $updated[$key] = $value;
+            }
+        }
+
+        return $updated;
+    }
+
     /**
+     * Get data
+     *
      * @return array
      */
     public function getData()
     {
-        return $this->data;
+        $data = [];
+        foreach(array_keys($this->data) as $key){
+            $data[$key] = $this->get($key);
+        }
+        return $data;
     }
 
     /**
@@ -148,8 +173,9 @@ abstract class AbstractEntity implements EntityInterface
     {
         if(!$this->isUpdated()){
             $this->setUpdated(true);
-            $this->originalData = $this->data;
+            $this->originalData = $this->getData();
         }
+
         if ($this->getTable()->hasColumn($name)) {
             $this->data[$name] = $this->emitValueEvent(static::VALUE_SET, $name, $value)->getValue();
         }elseif($this->hasRelation($name)){

@@ -36,16 +36,18 @@ interface MapperInterface
 
     /**
      * @param $pk
+     * @param callable $callback
      * @return array
      */
-    public function find($pk);
+    public function find($pk, callable $callback = null);
 
     /**
      * @param $field
      * @param $value
+     * @param callable $callback
      * @return array
      */
-    public function findBy($field, $value);
+    public function findBy($field, $value, callable $callback = null);
 
     /**
      * @param $statement

@@ -37,12 +37,18 @@ class Mapper implements MapperInterface
     private $manager;
 
 
+    /**
+     * Create mapper for entity
+     * @param $entity
+     */
     public function __construct($entity)
     {
         $this->entity = $entity;
     }
 
     /**
+     * Get connection.
+     *
      * @return \Doctrine\DBAL\Connection
      */
     public function getConnection()
@@ -54,6 +60,8 @@ class Mapper implements MapperInterface
     }
 
     /**
+     * Set connection by name for mapper
+     *
      * @param string $name
      */
     public function setConnection($name)
@@ -116,29 +124,66 @@ class Mapper implements MapperInterface
     }
 
     /**
+     * Find data by primary key. Optional execute callback for statement.
+     *
      * @param $pk
+     * @param callable $callback
      * @return array
      */
-    public function find($pk)
+    public function find($pk, callable $callback = null)
     {
         $field = array_shift($this->getEntity()->getTable()->getPrimaryKey()->getColumns());
 
-        return $this->findBy($field, $pk);
+        return $this->findBy($field, $pk, $callback = null);
     }
 
     /**
      * @param $field
      * @param $value
-     * @return EntityInterface|EntityInterface[]
+     * @param callable $callback
+     * @return EntityInterface|\Blast\Db\Entity\EntityInterface[]
+     * @throws \Doctrine\DBAL\Schema\SchemaException
      */
-    public function findBy($field, $value)
+    public function findBy($field, $value, callable $callback = null)
     {
-        $query = $this->getQueryBuilder();
-        $statement = $query->select('*');
+        $builder = $this->getQueryBuilder();
+        $statement = $builder->select('*');
         $statement->from($this->getEntity()->getTable())
-            ->where($field . ' = ' . $statement->createPositionalParameter($value, $this->getEntity()->getTable()->getColumn($field)->getType()));
+            ->where($builder->expr()->eq($field, $statement->createPositionalParameter($value, $this->getEntity()->getTable()->getColumn($field)->getType())));
+
+        call_user_func($callback, $statement, $builder);
 
         return $this->fetch($statement);
+    }
+
+    /**
+     *
+     * Get first Result by pk
+     *
+     * @param $pk
+     * @return array
+     */
+    public function first($pk)
+    {
+        return $this->find($pk, function (QueryBuilder $statement) {
+            $statement->setMaxResults(1)
+                ->setFirstResult(0);
+        });
+    }
+
+    /**
+     * Get first result by field and value
+     *
+     * @param $field
+     * @param $value
+     * @return EntityInterface|\Blast\Db\Entity\EntityInterface[]
+     */
+    public function firstBy($field, $value)
+    {
+        return $this->findBy($field, $value, function (QueryBuilder $statement) {
+            $statement->setMaxResults(1)
+                ->setFirstResult(0);
+        });
     }
 
     /**
@@ -198,7 +243,16 @@ class Mapper implements MapperInterface
         }
 
         $pkName = $entity->getTable()->getPrimaryKeyName();
-        $result = $this->getConnection()->update($entity->getTable()->getName(), $entity->getData(), [$pkName = $entity->__get($pkName)]);
+        $builder = $this->getQueryBuilder();
+        $statement = $builder->update($entity->getTable()->getName());
+
+        foreach($entity->getUpdatedData() as $key => $value){
+            $statement->set($key, $statement->createPositionalParameter($value, $entity->getTable()->getColumn($key)->getType()));
+        }
+
+        $statement->where($builder->expr()->eq($pkName, $entity->get($pkName)));
+
+        $result = $this->getConnection()->executeUpdate($statement->getSQL(), $statement->getParameters(), $statement->getParameterTypes());
 
         $event = $entity->getEmitter()->emit(new ResultEvent($entity::AFTER_UPDATE, $result), $entity);
         return $event->isPropagationStopped() ? false : $result;
@@ -224,7 +278,12 @@ class Mapper implements MapperInterface
         }
 
         $pkName = $entity->getTable()->getPrimaryKeyName();
-        $result = $this->getConnection()->delete($entity->getTable()->getName(), [$pkName = $entity->__get($pkName)]);
+
+        $builder = $this->getQueryBuilder();
+        $statement = $builder->delete($entity->getTable()->getName())
+            ->where($builder->expr()->eq($pkName, $builder->createPositionalParameter($entity->__get($pkName), $entity->getTable()->getColumn($pkName)->getType())));
+
+        $result = $this->getConnection()->executeUpdate($statement->getSQL(), $statement->getParameters(), $statement->getParameterTypes());
 
         $event = $entity->getEmitter()->emit(new ResultEvent($entity::AFTER_DELETE, $result), $entity);
         return $event->isPropagationStopped() ? false : $result;
@@ -244,8 +303,10 @@ class Mapper implements MapperInterface
         //save all relations before saving entity
         $relations = $entity->getRelations();
 
-        foreach($relations as $relation){
-            $relation->save();
+        if (count($relations) > 0) {
+            foreach ($relations as $relation) {
+                $relation->save();
+            }
         }
 
         return $entity->isNew() ? $this->create($entity) : $this->update($entity);
