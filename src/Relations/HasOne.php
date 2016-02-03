@@ -64,7 +64,8 @@ class HasOne extends AbstractRelation
      */
     public function fetch()
     {
-        return $this->getEntity()->getMapper()->findBy($this->getLocalKey(), $this->getForeignEntity()->__get($this->getLocalKey()));
+        $result = $this->getEntity()->getMapper()->findBy($this->getLocalKey(), $this->getForeignEntity()->__get($this->getLocalKey()));
+        return is_array($result) ? array_shift($result) : $result;
     }
 
 }
