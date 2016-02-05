@@ -23,7 +23,6 @@ class BelongsTo extends AbstractRelation
      * @param EntityInterface $entity current entity instance
      * @param string|EntityInterface $foreignEntity Entity which have a key field in current entity
      * @param string|integer|null $localKey Field name on current entity which matches up with foreign key of foreign entity
-     * @param string|integer|null $foreignKey name on foreign entity which matches up with local key of current entity
      */
     public function __construct(EntityInterface $entity, $foreignEntity, $localKey = null)
     {
@@ -46,7 +45,7 @@ class BelongsTo extends AbstractRelation
         $entity->__set($this->getLocalKey(), $foreignEntity->__get($this->getForeignKey()));
 
         //save foreign only if it has updates
-        if($this->isForeignEntityUpdate()){
+        if($entity->isUpdated()){
             $foreignEntity->getMapper()->save($foreignEntity);
         }
 

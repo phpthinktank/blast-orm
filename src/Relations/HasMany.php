@@ -70,7 +70,7 @@ class HasMany extends AbstractRelation
         $entity->__set($this->getLocalKey(), $foreignEntity->__get($this->getForeignKey()));
 
         //save foreign only if it has updates
-        if($this->isForeignEntityUpdate()){
+        if($foreignEntity->isUpdated()){
             $foreignEntity->getMapper()->save($foreignEntity);
         }
 
