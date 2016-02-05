@@ -75,27 +75,7 @@ class Post extends AbstractEntity
 
 ```
 
-#### Creating a new entry
-
-Blast db supports as well as processing data with Active Record and Object Relational Mapper.
-
-#### Active Record
-
-```php
-<?php
-
-use App\Entities\Post;
-
-$post = new Post;
-$post->title = 'Hello World';
-$post->content = 'Some content about hello world.';
-$post->title = new \DateTime();
-
-//create or update entity
-$post->save();
-```
-
-#### Object Relational Mapper
+#### Save data
 
 ```php
 <?php
@@ -115,9 +95,6 @@ $post->title = new \DateTime();
 //create or update entity
 $mapper->save($post);
 ```
-
-
-###
 
 ## Further development
 
