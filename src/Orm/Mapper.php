@@ -12,20 +12,15 @@ use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Entity\Manager;
 use Blast\Db\Entity\ManagerInterface;
 use Blast\Db\Events\ResultEvent;
+use Blast\Db\Orm\Traits\ConnectionAwareTrait;
+use Blast\Db\Orm\Traits\FactoryAwareTrait;
 use Doctrine\DBAL\Query\QueryBuilder;
 
 class Mapper implements MapperInterface
 {
 
-    /**
-     * @var \Doctrine\DBAL\Connection
-     */
-    private $connection = NULL;
-
-    /**
-     * @var Factory
-     */
-    private $factory = NULL;
+    use FactoryAwareTrait;
+    use ConnectionAwareTrait;
 
     /**
      * @var EntityInterface
@@ -37,7 +32,6 @@ class Mapper implements MapperInterface
      */
     private $manager;
 
-
     /**
      * Create mapper for entity
      * @param $entity
@@ -48,19 +42,6 @@ class Mapper implements MapperInterface
     }
 
     /**
-     * Get connection.
-     *
-     * @return \Doctrine\DBAL\Connection
-     */
-    public function getConnection()
-    {
-        if ($this->connection === null) {
-            $this->connection = $this->factory->getConfig()->getConnection();
-        }
-        return $this->connection;
-    }
-
-    /**
      * Set connection by name for mapper
      *
      * @param string $name
@@ -68,25 +49,6 @@ class Mapper implements MapperInterface
     public function onConnection($name)
     {
         $this->connection = $this->factory->getConfig()->getConnection($name);
-    }
-
-    /**
-     * @return Factory
-     */
-    public function getFactory()
-    {
-        if ($this->factory === null) {
-            $this->factory = Factory::getInstance();
-        }
-        return $this->factory;
-    }
-
-    /**
-     * @param Factory $factory
-     */
-    public function setFactory($factory)
-    {
-        $this->factory = $factory;
     }
 
     /**
@@ -190,6 +152,7 @@ class Mapper implements MapperInterface
 
     /**
      * Fetch data for entity. if raw is true, fetch assoc instead of entity
+     *
      * @param QueryBuilder $builder
      * @param bool $raw
      * @return array
@@ -217,6 +180,9 @@ class Mapper implements MapperInterface
 
         //prepare entity
         $entity = $this->prepareEntity($entity);
+
+        //save relations before save entity
+        $this->saveRelations($entity);
 
         //emit before event
         if ($entity->getEmitter()->emit($entity::BEFORE_CREATE, $entity)->isPropagationStopped()) {
@@ -250,6 +216,9 @@ class Mapper implements MapperInterface
 
         //prepare entity
         $entity = $this->prepareEntity($entity);
+
+        //save relations before save entity
+        $this->saveRelations($entity);
 
         if ($entity->getEmitter()->emit($entity::BEFORE_UPDATE, $entity)->isPropagationStopped()) {
             return false;
@@ -327,16 +296,6 @@ class Mapper implements MapperInterface
             return $this->batchOperation(__FUNCTION__, $entity);
         }
 
-        //may be it is better to start an transaction
-        //save all relations before saving entity
-        $relations = $entity->getRelations();
-
-        if (count($relations) > 0) {
-            foreach ($relations as $relation) {
-                $relation->save();
-            }
-        }
-
         return $entity->isNew() ? $this->create($entity) : $this->update($entity);
     }
 
@@ -404,4 +363,21 @@ class Mapper implements MapperInterface
         return $entity;
     }
 
+    /**
+     * Save relations for a specific entity
+     *
+     * @param $entity
+     */
+    protected function saveRelations($entity)
+    {
+        //maybe it is better to start an transaction
+        //save all relations before saving entity
+        $relations = $entity->getRelations();
+
+        if (count($relations) > 0) {
+            foreach ($relations as $relation) {
+                $relation->save();
+            }
+        }
+    }
 }

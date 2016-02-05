@@ -134,30 +134,5 @@ interface EntityInterface
      */
     public function getRelations();
 
-    /**
-     * @param $pk
-     * @return mixed
-     */
-    public static function find($pk);
-
-    /**
-     * @param $field
-     * @param $value
-     * @return mixed
-     */
-    public static function findBy($field, $value);
-
-    /**
-     * Save current entity
-     * @return mixed
-     */
-    public function save();
-
-    /**
-     * Delete current entity
-     * @return mixed
-     */
-    public function delete();
-
 
 }
