@@ -8,6 +8,8 @@
 
 namespace Blast\Db\Orm;
 
+use Blast\Db\Entity\Collection;
+use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Entity\Manager;
 use Blast\Db\Entity\ManagerInterface;
@@ -21,6 +23,10 @@ class Mapper implements MapperInterface
 
     use FactoryAwareTrait;
     use ConnectionAwareTrait;
+
+    const RESULT_COLLECTION = 'collection';
+    const RESULT_ENTITY = 'entity';
+    const RESULT_AUTO = 'auto';
 
     /**
      * @var EntityInterface
@@ -301,21 +307,19 @@ class Mapper implements MapperInterface
 
     /**
      * Analyse result and return one or many results
-     * 
+     *
      * @param $data
-     * @return EntityInterface|EntityInterface[]|null
+     * @param string $convert
+     * @return CollectionInterface|EntityInterface|null
      */
-    protected function determineResultSet($data)
+    protected function determineResultSet($data, $convert = self::RESULT_AUTO)
     {
         $count = count($data);
         $result = NULL;
 
-        if ($count > 1) { //if result set has many items, return a collection of entities
-            $result = [];
-            foreach ($data as $item) {
-                $result[] = $this->getManager()->create()->setData($item);
-            }
-        } elseif ($count === 1) { //if result has one item, return the entity
+        if ($count > 1 || $convert === static::RESULT_COLLECTION) { //if result set has many items, return a collection of entities
+            $result = new Collection($data);
+        } elseif ($count === 1 || $convert === static::RESULT_ENTITY) { //if result has one item, return the entity
             $result = $this->getManager()->create()->setData(array_shift($data));
         }
 

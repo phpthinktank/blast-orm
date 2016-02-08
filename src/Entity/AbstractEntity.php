@@ -8,12 +8,14 @@
 
 namespace Blast\Db\Entity;
 
+use Blast\Db\Entity\Traits\DataConverterTrait;
 use Blast\Db\Entity\Traits\EntityTrait;
 
 abstract class AbstractEntity implements EntityInterface
 {
 
     use EntityTrait;
+    use DataConverterTrait;
 
     public function __construct()
     {
