@@ -10,10 +10,7 @@
 * Time: 13:42
 */
 
-namespace Blast\Db\Orm\Traits;
-
-
-use Blast\Db\Orm\Factory;
+namespace Blast\Db;
 
 trait FactoryAwareTrait
 {

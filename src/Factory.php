@@ -6,12 +6,13 @@
  * Time: 14:37
  */
 
-namespace Blast\Db\Orm;
+namespace Blast\Db;
 
 use Blast\Db\Config;
 use Blast\Db\ConfigInterface;
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Entity\ManagerInterface;
+use Blast\Db\Orm\MapperInterface;
 use Doctrine\DBAL\Connection;
 use Interop\Container\ContainerInterface;
 use League\Event\EmitterInterface;
@@ -189,5 +190,10 @@ class Factory implements FactoryInterface
         }
 
         return $mapper;
+    }
+
+    public function __call($name, $arguments)
+    {
+        return call_user_func_array([$this->getConfig()->getConnection(), $name], $arguments);
     }
 }

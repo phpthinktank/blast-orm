@@ -15,7 +15,7 @@ namespace Blast\Db\Entity\Traits;
 
 use Blast\Db\Entity\Manager;
 use Blast\Db\Entity\ManagerInterface;
-use Blast\Db\Orm\Factory;
+use Blast\Db\Factory;
 
 trait EntityAwareTrait
 {

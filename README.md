@@ -27,7 +27,7 @@ Create a factory with container-interopt compatible Container e.g. league/contai
 ```php
 <?php
 
-use Blast\Db\Orm\Factory;
+use Blast\Db\Factory;
 use League\Container;
 
 
@@ -81,7 +81,7 @@ class Post extends AbstractEntity
 <?php
 
 use App\Entities\Post;
-use Blast\Db\Orm\Factory;
+use Blast\Db\Factory;
 
 $post = new Post;
 

@@ -8,14 +8,12 @@
 
 namespace Blast\Db\Orm;
 
-use Blast\Db\Entity\Collection;
-use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Entity\Manager;
 use Blast\Db\Entity\ManagerInterface;
 use Blast\Db\Events\ResultEvent;
 use Blast\Db\Orm\Traits\ConnectionAwareTrait;
-use Blast\Db\Orm\Traits\FactoryAwareTrait;
+use Blast\Db\FactoryAwareTrait;
 use Doctrine\DBAL\Query\QueryBuilder;
 
 class Mapper implements MapperInterface
@@ -23,10 +21,6 @@ class Mapper implements MapperInterface
 
     use FactoryAwareTrait;
     use ConnectionAwareTrait;
-
-    const RESULT_COLLECTION = 'collection';
-    const RESULT_ENTITY = 'entity';
-    const RESULT_AUTO = 'auto';
 
     /**
      * @var EntityInterface
@@ -39,12 +33,33 @@ class Mapper implements MapperInterface
     private $manager;
 
     /**
+     * @var bool
+     */
+    private $fetchEager = false;
+
+    /**
      * Create mapper for entity
      * @param $entity
      */
     public function __construct($entity)
     {
         $this->entity = $entity;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isFetchEager()
+    {
+        return $this->fetchEager;
+    }
+
+    /**
+     * @param boolean $fetchEager
+     */
+    public function setFetchEager($fetchEager)
+    {
+        $this->fetchEager = $fetchEager;
     }
 
     /**
@@ -78,10 +93,11 @@ class Mapper implements MapperInterface
      */
     public function getManager()
     {
-        if ($this->manager === null) {
+        if ($this->manager === NULL) {
             $managerConcrete = $this->getFactory()->getContainer()->get(ManagerInterface::class);
             $this->manager = (new \ReflectionClass($managerConcrete))->newInstanceArgs([$this->getEntity(), $this, $this->getFactory()]);
         }
+
         return $this->manager;
     }
 
@@ -94,37 +110,37 @@ class Mapper implements MapperInterface
     }
 
     /**
-     * Find data by primary key. Optional execute callback for statement.
-     *
-     * @param $pk
-     * @param callable $callback
-     * @return array
+     * Get statement when eager is false, or result when eager is true. Fetch by pk if pk is not null.
+     * @param null $pk
+     * @return array|Statement
+     * @throws \Doctrine\DBAL\Schema\SchemaException
      */
-    public function find($pk, callable $callback = null)
+    public function find($pk = NULL)
     {
-        $field = array_shift($this->getEntity()->getTable()->getPrimaryKey()->getColumns());
+        if ($pk !== NULL) {
+            $field = $this->getEntity()->getTable()->getPrimaryKeyName();
+            $value = $pk;
+        }
 
-        return $this->findBy($field, $pk, $callback = null);
+        $statement = $this->query();
+        $builder = $statement->getBuilder();
+        if (isset($field) && isset($value)) {
+            $builder->where($builder->expr()->eq($field, $builder->createPositionalParameter($value, $this->getEntity()->getTable()->getColumn($field)->getType())));
+        }
+
+        return $this->executeStatement($statement);
     }
 
     /**
-     * Find data by field and value. Optional execute callback for statement.
-     *
-     * @param $field
-     * @param $value
-     * @param callable $callback
-     * @return EntityInterface|\Blast\Db\Entity\EntityInterface[]
-     * @throws \Doctrine\DBAL\Schema\SchemaException
+     * Get a statement and build a query. Table is already selected
+     * @return Statement
      */
-    public function findBy($field, $value, callable $callback = null)
+    public function query()
     {
         $builder = $this->getQueryBuilder()->select('*');
-        $builder->from($this->getEntity()->getTable())
-            ->where($builder->expr()->eq($field, $builder->createPositionalParameter($value, $this->getEntity()->getTable()->getColumn($field)->getType())));
+        $builder->from($this->getEntity()->getTable());
 
-        call_user_func($callback, $builder);
-
-        return $this->fetch($builder);
+        return $this->createStatement($builder);
     }
 
     /**
@@ -133,41 +149,13 @@ class Mapper implements MapperInterface
      * @param $pk
      * @return array
      */
-    public function first($pk)
+    public function first($pk = NULL)
     {
-        return $this->find($pk, function (QueryBuilder $builder) {
-            $builder->setMaxResults(1)
-                ->setFirstResult(0);
-        });
-    }
+        $statement = $this->find($pk, FALSE);
+        $statement->getBuilder()->setMaxResults(1)
+            ->setFirstResult(0);
 
-    /**
-     * Get first result by field and value
-     *
-     * @param $field
-     * @param $value
-     * @return EntityInterface|\Blast\Db\Entity\EntityInterface[]
-     */
-    public function firstBy($field, $value)
-    {
-        return $this->findBy($field, $value, function (QueryBuilder $builder) {
-            $builder->setMaxResults(1)
-                ->setFirstResult(0);
-        });
-    }
-
-    /**
-     * Fetch data for entity. if raw is true, fetch assoc instead of entity
-     *
-     * @param QueryBuilder $builder
-     * @param bool $raw
-     * @return array
-     */
-    public function fetch(QueryBuilder $builder, $raw = FALSE)
-    {
-        $result = $this->getConnection()->executeQuery($builder->getSQL(), $builder->getParameters())->fetchAll();
-
-        return $raw === TRUE ? $result : $this->determineResultSet($result);
+        return $this->executeStatement($statement, Statement::RESULT_ENTITY);
     }
 
     /**
@@ -192,7 +180,7 @@ class Mapper implements MapperInterface
 
         //emit before event
         if ($entity->getEmitter()->emit($entity::BEFORE_CREATE, $entity)->isPropagationStopped()) {
-            return false;
+            return FALSE;
         }
 
         //prepare statement
@@ -204,7 +192,8 @@ class Mapper implements MapperInterface
 
         //execute statement and emit after event
         $event = $entity->getEmitter()->emit(new ResultEvent($entity::AFTER_CREATE, $this->executeUpdate($builder)), $entity);
-        return $event->isPropagationStopped() ? false : $event->getResult();
+
+        return $event->isPropagationStopped() ? FALSE : $event->getResult();
     }
 
     /**
@@ -227,7 +216,7 @@ class Mapper implements MapperInterface
         $this->saveRelations($entity);
 
         if ($entity->getEmitter()->emit($entity::BEFORE_UPDATE, $entity)->isPropagationStopped()) {
-            return false;
+            return FALSE;
         }
 
         //prepare statement
@@ -244,12 +233,13 @@ class Mapper implements MapperInterface
         $event = $entity
             ->getEmitter()
             ->emit(new ResultEvent($entity::AFTER_UPDATE, $this->executeUpdate($builder)), $entity);
-        return $event->isPropagationStopped() ? false : $event->getResult();
+
+        return $event->isPropagationStopped() ? FALSE : $event->getResult();
     }
 
     /**
      * Delete an existing entity or a collection of entities in storage
-     * 
+     *
      * @param EntityInterface|EntityInterface[] $entity
      * @return int
      */
@@ -269,7 +259,7 @@ class Mapper implements MapperInterface
 
         //emit before event
         if ($entity->getEmitter()->emit($entity::BEFORE_DELETE, $entity)->isPropagationStopped()) {
-            return false;
+            return FALSE;
         }
 
         //prepare statement
@@ -286,13 +276,14 @@ class Mapper implements MapperInterface
         $event = $entity
             ->getEmitter()
             ->emit(new ResultEvent($entity::AFTER_DELETE, $this->executeUpdate($builder)), $entity, $entities);
-        $result = $event->isPropagationStopped() ? false : $event->getResult();
+        $result = $event->isPropagationStopped() ? FALSE : $event->getResult();
+
         return $result;
     }
 
     /**
      * Create or update an entity or a collection of entities in storage
-     * 
+     *
      * @param EntityInterface|EntityInterface[] $entity
      * @return int
      */
@@ -306,43 +297,6 @@ class Mapper implements MapperInterface
     }
 
     /**
-     * Analyse result and return one or many results
-     *
-     * @param $data
-     * @param string $convert
-     * @return CollectionInterface|EntityInterface|null
-     */
-    protected function determineResultSet($data, $convert = self::RESULT_AUTO)
-    {
-        $count = count($data);
-        $result = NULL;
-
-        if ($count > 1 || $convert === static::RESULT_COLLECTION) { //if result set has many items, return a collection of entities
-            $result = new Collection($data);
-        } elseif ($count === 1 || $convert === static::RESULT_ENTITY) { //if result has one item, return the entity
-            $result = $this->getManager()->create()->setData(array_shift($data));
-        }
-
-        return $result;
-    }
-
-    /**
-     * Execute batch save, update or insert
-     * 
-     * @param $operation
-     * @param $entity
-     * @return array
-     */
-    private function batchOperation($operation, $entity)
-    {
-        $results = [];
-        foreach ($entity as $_) {
-            $results[] = $this->{$operation}($_);
-        }
-        return $results;
-    }
-
-    /**
      * @param $builder
      * @return int
      * @throws \Doctrine\DBAL\DBALException
@@ -350,6 +304,18 @@ class Mapper implements MapperInterface
     public function executeUpdate(QueryBuilder $builder)
     {
         return $this->getConnection()->executeUpdate($builder->getSQL(), $builder->getParameters(), $builder->getParameterTypes());
+    }
+
+    /**
+     * Execute a statement with behaviour of mapper
+     * @param Statement $statement
+     * @param string $convert
+     * @param bool $raw
+     * @return mixed
+     */
+    public function executeStatement(Statement $statement, $convert = Statement::RESULT_AUTO, $raw = FALSE)
+    {
+        return $this->isFetchEager() === TRUE ? $statement->fetch($convert, $raw) : $statement;
     }
 
     /**
@@ -364,13 +330,14 @@ class Mapper implements MapperInterface
         if ($entity != $this->getEntity()) {
             throw new \InvalidArgumentException('Given entity needs to be an instance of ' . get_class($this->getEntity()));
         }
+
         return $entity;
     }
 
     /**
      * Save relations for a specific entity
      *
-     * @param $entity
+     * @param EntityInterface $entity
      */
     protected function saveRelations($entity)
     {
@@ -383,5 +350,31 @@ class Mapper implements MapperInterface
                 $relation->save();
             }
         }
+    }
+
+    /**
+     * Execute batch save, update or insert
+     *
+     * @param $operation
+     * @param $entity
+     * @return array
+     */
+    protected function batchOperation($operation, $entity)
+    {
+        $results = [];
+        foreach ($entity as $_) {
+            $results[] = $this->{$operation}($_);
+        }
+
+        return $results;
+    }
+
+    /**
+     * @param $builder
+     * @return Statement
+     */
+    public function createStatement($builder)
+    {
+        return new Statement($builder, $this->getManager());
     }
 }

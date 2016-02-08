@@ -11,8 +11,8 @@ namespace Blast\Tests\Orm;
 
 use Blast\Db\Config;
 use Blast\Db\ConfigInterface;
-use Blast\Db\Orm\Factory;
-use Blast\Db\Orm\FactoryInterface;
+use Blast\Db\Factory;
+use Blast\Db\FactoryInterface;
 use Interop\Container\ContainerInterface;
 use Prophecy\Prophecy\ObjectProphecy;
 

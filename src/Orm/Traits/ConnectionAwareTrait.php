@@ -13,7 +13,7 @@
 namespace Blast\Db\Orm\Traits;
 
 
-use Blast\Db\Orm\Factory;
+use Blast\Db\Factory;
 
 trait ConnectionAwareTrait
 {

@@ -15,7 +15,7 @@ namespace Blast\Db\Entity;
 
 
 
-use Blast\Db\Orm\Factory;
+use Blast\Db\Factory;
 use Blast\Db\Orm\MapperInterface;
 
 class Manager implements ManagerInterface

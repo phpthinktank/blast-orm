@@ -9,7 +9,7 @@
 namespace Blast\Tests\Orm;
 
 use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Orm\Factory;
+use Blast\Db\Factory;
 use Blast\Db\Orm\Mapper;
 use Blast\Tests\Orm\Entities\AnyEntity;
 use Interop\Container\ContainerInterface;

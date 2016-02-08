@@ -15,7 +15,7 @@ namespace Blast\Db\Entity\Traits;
 
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Events\ValueEvent;
-use Blast\Db\Orm\Factory;
+use Blast\Db\Factory;
 use Blast\Db\Orm\MapperInterface;
 use Blast\Db\Relations\AbstractRelation;
 use Blast\Db\Schema\Table;

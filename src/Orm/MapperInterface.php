@@ -9,6 +9,7 @@
 namespace Blast\Db\Orm;
 
 
+use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
 use Doctrine\DBAL\Query\QueryBuilder;
 
@@ -35,25 +36,11 @@ interface MapperInterface
     public function getQueryBuilder();
 
     /**
-     * @param $pk
-     * @param callable $callback
-     * @return array
+     *
+     * @param null $pk
+     * @return CollectionInterface|EntityInterface|Statement
      */
-    public function find($pk, callable $callback = null);
-
-    /**
-     * @param $field
-     * @param $value
-     * @param callable $callback
-     * @return array
-     */
-    public function findBy($field, $value, callable $callback = null);
-
-    /**
-     * @param $statement
-     * @return array
-     */
-    public function fetch(QueryBuilder $statement);
+    public function find($pk = null);
 
     /**
      * @param EntityInterface $entity
