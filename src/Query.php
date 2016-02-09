@@ -135,7 +135,7 @@ class Query
      *
      * @param string $convert
      * @param bool $raw
-     * @return array
+     * @return array|CollectionInterface|EntityInterface
      * @throws \Doctrine\DBAL\DBALException
      */
     public function execute($convert = self::RESULT_AUTO)
@@ -145,7 +145,7 @@ class Query
         $statement = $builder->execute();
         $result = $isFetchable ? $statement->fetchAll() : $statement;
 
-        return $convert = self::RESULT_RAW || $this->getEntity() === null || $result instanceof Statement || is_int($result) ? $result : $this->determineResultSet($result, $convert);
+        return $convert === self::RESULT_RAW || $this->getEntity() === null || $result instanceof Statement || is_int($result) ? $result : $this->determineResultSet($result, $convert);
     }
 
     /**
