@@ -9,6 +9,7 @@
 namespace Blast\Tests\Db\Orm;
 
 use Blast\Db\ConfigInterface;
+use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Factory;
 use Blast\Db\Orm\Mapper;
@@ -78,10 +79,8 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $query = $mapper->select();
         $result = $query->where('same = 42')->execute();
 
-//        var_dump($result);
-
-//        $this->assertCount(2, $result);
-//        $this->assertEquals(1, $result[0]->pk);
+        $this->assertInstanceOf(CollectionInterface::class, $result);
+        $this->assertEquals(2, $result->count());
     }
 
     /**
@@ -107,6 +106,6 @@ class MapperTest extends \PHPUnit_Framework_TestCase
 
         $result = $mapper->create($any);
 
-        var_dump($result);
+        $this->assertTrue(is_numeric($result) && !is_bool($result));
     }
 }
