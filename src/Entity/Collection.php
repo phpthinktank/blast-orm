@@ -13,7 +13,8 @@
 namespace Blast\Db\Entity;
 
 
-use Blast\Db\Entity\Traits\DataConverterTrait;
+
+use Blast\Db\DataConverterTrait;
 
 class Collection implements CollectionInterface
 {
