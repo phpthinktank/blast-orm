@@ -10,11 +10,13 @@ namespace Blast\Db\Entity;
 
 use Blast\Db\Entity\Traits\DataConverterTrait;
 use Blast\Db\Entity\Traits\EntityTrait;
+use Blast\Db\Orm\MapperAwareTrait;
 
 abstract class AbstractEntity implements EntityInterface
 {
 
     use EntityTrait;
+    use MapperAwareTrait;
     use DataConverterTrait;
 
     public function __construct()

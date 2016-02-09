@@ -31,6 +31,11 @@ class Mapper implements MapperInterface
     use ConnectionAwareTrait;
 
     /**
+     * @var EntityInterface
+     */
+    private $entity;
+
+    /**
      * @var Manager
      */
     private $manager;
@@ -42,6 +47,7 @@ class Mapper implements MapperInterface
     public function __construct($entity)
     {
         $this->manager = $entity instanceof ManagerInterface ? $entity : $this->createManager($entity);
+        $this->entity = $this->getManager()->getEntity()->setMapper($this);
     }
 
     /**
@@ -59,7 +65,7 @@ class Mapper implements MapperInterface
      */
     public function getEntity()
     {
-        return $this->getManager()->getEntity();
+        return $this->entity;
     }
 
     /**
@@ -293,7 +299,8 @@ class Mapper implements MapperInterface
      * @param $entity
      * @return bool
      */
-    protected function isMassProcessable($entity){
+    protected function isMassProcessable($entity)
+    {
         return $entity instanceof CollectionInterface || is_array($entity) || $entity instanceof \ArrayObject;
     }
 
@@ -316,12 +323,12 @@ class Mapper implements MapperInterface
 
     /**
      * @param $entity
+     * @return ManagerInterface
      */
     protected function createManager($entity)
     {
-        if ($this->manager === NULL) {
-            $managerConcrete = $this->getFactory()->getContainer()->get(ManagerInterface::class);
-            $this->manager = (new \ReflectionClass($managerConcrete))->newInstanceArgs([$entity, $this, $this->getFactory()]);
-        }
+        $managerConcrete = $this->getFactory()->getContainer()->get(ManagerInterface::class);
+
+        return (new \ReflectionClass($managerConcrete))->newInstanceArgs([$entity]);
     }
 }
