@@ -25,11 +25,9 @@ class AnyEntity extends AbstractEntity
     {
         $table = new Table('test');
         $table->addColumn('id', Type::INTEGER);
+        $table->addColumn('pk', Type::INTEGER);
+        $table->addColumn('same', Type::INTEGER);
         $table->setPrimaryKey(['id']);
         $this->setTable($table);
-
-        $this->getEmitter()->addListener(self::VALUE_GET, function(){
-           echo 'get all values!';
-        });
     }
 }
