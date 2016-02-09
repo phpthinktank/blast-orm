@@ -13,7 +13,7 @@ Framework agnostic db package with orm and active record implementation based on
 Via Composer
 
 ``` bash
-$ composer require blast/db
+$ composer require blast/orm
 ```
 
 ## Usage
