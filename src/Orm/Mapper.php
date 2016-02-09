@@ -10,12 +10,13 @@ namespace Blast\Db\Orm;
 
 use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Entity\Manager;
 use Blast\Db\Entity\ManagerInterface;
 use Blast\Db\Events\ResultEvent;
 use Blast\Db\ConnectionAwareTrait;
+use Blast\Db\Factory;
 use Blast\Db\FactoryAwareTrait;
 use Blast\Db\Query;
+use Blast\Db\Relations\RelationManagerInterface;
 
 /**
  * Class Mapper
@@ -35,19 +36,14 @@ class Mapper implements MapperInterface
      */
     private $entity;
 
-    /**
-     * @var Manager
-     */
-    private $manager;
 
     /**
      * Create mapper for entity
-     * @param EntityInterface|ManagerInterface $entity
+     * @param EntityInterface
      */
     public function __construct($entity)
     {
-        $this->manager = $entity instanceof ManagerInterface ? $entity : $this->createManager($entity);
-        $this->entity = $this->getManager()->getEntity()->setMapper($this);
+        $this->entity = $entity;
     }
 
     /**
@@ -69,20 +65,12 @@ class Mapper implements MapperInterface
     }
 
     /**
-     * @return Manager
-     */
-    public function getManager()
-    {
-        return $this->manager;
-    }
-
-    /**
      * Create a new Query instance
      * @return Query
      */
     public function createQuery()
     {
-        return new Query($this->getConnection()->createQueryBuilder(), $this->getManager());
+        return new Query($this->getConnection()->createQueryBuilder(), $this->getEntity());
     }
 
     /**
@@ -91,7 +79,6 @@ class Mapper implements MapperInterface
      * @param $value
      * @return array|Query
      * @throws \Doctrine\DBAL\Schema\SchemaException
-     * @internal param null $pk
      */
     public function find($value)
     {
@@ -113,7 +100,7 @@ class Mapper implements MapperInterface
     {
         $query = $this->createQuery();
         $query->select($selects)
-            ->from($this->getEntity()->getTable());
+            ->from($this->getEntity()->getTable()->getName());
 
         return $query;
     }
@@ -123,7 +110,6 @@ class Mapper implements MapperInterface
      *
      * @param EntityInterface|EntityInterface[] $entity
      * @return int
-     * @internal param $data
      */
     public function create($entity)
     {
@@ -265,13 +251,6 @@ class Mapper implements MapperInterface
      */
     protected function prepareEntity($entity)
     {
-        $manager = $this->getManager();
-        $entity = $manager->create($entity);
-
-        if ($entity != $this->getEntity()) {
-            throw new \InvalidArgumentException('Given entity needs to be an instance of ' . get_class($this->getEntity()));
-        }
-
         return $entity;
     }
 
@@ -282,6 +261,9 @@ class Mapper implements MapperInterface
      */
     protected function saveRelations($entity)
     {
+        if(!($entity instanceof RelationManagerInterface)){
+            return;
+        }
         //maybe it is better to start an transaction
         //save all relations before saving entity
         $relations = $entity->getRelations();
@@ -319,16 +301,5 @@ class Mapper implements MapperInterface
         }
 
         return $results;
-    }
-
-    /**
-     * @param $entity
-     * @return ManagerInterface
-     */
-    protected function createManager($entity)
-    {
-        $managerConcrete = $this->getFactory()->getContainer()->get(ManagerInterface::class);
-
-        return (new \ReflectionClass($managerConcrete))->newInstanceArgs([$entity]);
     }
 }

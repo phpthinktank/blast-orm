@@ -19,7 +19,6 @@
   "require": {
     "php": ">=5.5.0",
     "doctrine/dbal": "~2.5.1",
-    "aura/sqlquery": "~2.6.0",
     "container-interop/container-interop": "~1.1",
     "league/event": "~2.0"
   },
@@ -28,12 +27,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Blast\\Orm\\": "src"
+      "Blast\\Db\\": "src"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Blast\\Tests\\Orm\\": "tests"
+      "Blast\\Tests\\Db\\": "tests"
     }
   },
   "extra": {

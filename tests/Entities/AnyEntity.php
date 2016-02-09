@@ -6,8 +6,7 @@
  * Time: 17:04
  */
 
-namespace Blast\Tests\Orm\Entities;
-
+namespace Blast\Tests\Db\Entities;
 
 use Blast\Db\Entity\AbstractEntity;
 use Blast\Db\Schema\Table;

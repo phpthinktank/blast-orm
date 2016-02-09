@@ -9,7 +9,6 @@
 namespace Blast\Db\Entity;
 
 use Blast\Db\Orm\MapperAwareInterface;
-use Blast\Db\Relations\AbstractRelation;
 use Blast\Db\Schema\Table;
 use League\Event\EmitterInterface;
 
@@ -36,11 +35,6 @@ interface EntityInterface extends MapperAwareInterface
      * @return Table
      */
     public function getTable();
-
-    /**
-     * @return ManagerInterface
-     */
-    public function getManager();
 
     /**
      * @return boolean
@@ -132,11 +126,6 @@ interface EntityInterface extends MapperAwareInterface
      *
      */
     public function configure();
-
-    /**
-     * @return AbstractRelation[]
-     */
-    public function getRelations();
 
 
 }

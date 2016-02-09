@@ -14,7 +14,9 @@
 namespace Blast\Db\Events;
 
 
-class ValueEvent
+use League\Event\AbstractEvent;
+
+class ValueEvent extends AbstractEvent
 {
     /**
      * @var string

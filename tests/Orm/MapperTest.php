@@ -6,14 +6,13 @@
  * Time: 16:09
  */
 
-namespace Blast\Tests\Orm;
+namespace Blast\Tests\Db\Orm;
 
+use Blast\Db\ConfigInterface;
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Factory;
 use Blast\Db\Orm\Mapper;
-use Blast\Db\Orm\Query;
-use Blast\Tests\Orm\Entities\AnyEntity;
-use Doctrine\DBAL\Query\QueryBuilder;
+use Blast\Tests\Db\Entities\AnyEntity;
 use Interop\Container\ContainerInterface;
 use Prophecy\Prophecy\ObjectProphecy;
 
@@ -37,7 +36,6 @@ class MapperTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $this->container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class);
-        $this->entity = new AnyEntity();
 
         $container = $this->container->reveal();
         $factory = Factory::create($container, [
@@ -45,7 +43,9 @@ class MapperTest extends \PHPUnit_Framework_TestCase
             'memory' => 'true'
         ]);
 
-        $connection = $factory->getConfig()->getConnection(Factory::DEFAULT_CONNECTION);
+        $this->entity = new AnyEntity();
+
+        $connection = $factory->getConfig()->getConnection(ConfigInterface::DEFAULT_CONNECTION);
         $connection->prepare('CREATE TABLE test (id int, pk int, same int)')->execute();
         $connection->insert('test', [
             'id' => 1,
@@ -57,39 +57,56 @@ class MapperTest extends \PHPUnit_Framework_TestCase
             'pk' => 2,
             'same' => 42
         ]);
-
-        $this->factory = $factory;
     }
 
     protected function tearDown()
     {
-        $connection = $this->factory->getConfig()->getConnection(Factory::DEFAULT_CONNECTION);
-        $connection->prepare('DROP TABLE test')->execute();
-        $this->factory->shutdown();
+        $factory = Factory::getInstance();
+        $connection = $factory->getConfig()->getConnection(ConfigInterface::DEFAULT_CONNECTION);
+//        $connection->prepare('DROP TABLE test')->execute();
+        $factory->shutdown();
     }
 
-
-    public function testFindMany()
+    /**
+     * select any field
+     */
+    public function testSelect()
     {
         $entity = $this->entity;
         $mapper = new Mapper($entity);
 
-        $result = $mapper->findBy('same', 42);
+        $query = $mapper->select();
+        $result = $query->where('same = 42')->execute();
 
-        $this->assertCount(2, $result);
-        $this->assertEquals(1, $result[0]->pk);
+//        var_dump($result);
+
+//        $this->assertCount(2, $result);
+//        $this->assertEquals(1, $result[0]->pk);
     }
 
-    public function testFindOne()
+    /**
+     * find by pk
+     */
+    public function testFind()
     {
         $entity = $this->entity;
         $mapper = new Mapper($entity);
 
-        $result = $mapper->findBy('pk', 1);
-
-        $query = new Query();
-        $query->
+        $result = $mapper->find(1);
 
         $this->assertInstanceOf(EntityInterface::class, $result);
+    }
+
+    public function testCreateByEntity(){
+        $entity = $this->entity;
+        $mapper = new Mapper($entity);
+
+        $any = new AnyEntity();
+        $any->pk = 1;
+        $any->same = 42;
+
+        $result = $mapper->create($any);
+
+        var_dump($result);
     }
 }

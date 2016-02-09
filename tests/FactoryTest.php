@@ -6,7 +6,7 @@
  * Time: 11:34
  */
 
-namespace Blast\Tests\Orm;
+namespace Blast\Tests\Db;
 
 
 use Blast\Db\Config;

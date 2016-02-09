@@ -96,20 +96,21 @@ class Query
      * @var QueryBuilder
      */
     private $builder;
+
     /**
-     * @var ManagerInterface
+     * @var EntityInterface
      */
-    private $manager;
+    private $entity;
 
     /**
      * Statement constructor.
      * @param QueryBuilder $builder
-     * @param ManagerInterface $manager
+     * @param EntityInterface $entity
      */
-    public function __construct(QueryBuilder $builder = null, ManagerInterface $manager = null)
+    public function __construct(QueryBuilder $builder = null, EntityInterface $entity = null)
     {
         $this->builder = $builder === null ? Factory::getInstance()->getConfig()->getConnection()->createQueryBuilder() : $builder;
-        $this->manager = $manager;
+        $this->entity = $entity;
     }
 
     /**
@@ -121,11 +122,11 @@ class Query
     }
 
     /**
-     * @return ManagerInterface
+     * @return EntityInterface
      */
-    public function getManager()
+    public function getEntity()
     {
-        return $this->manager;
+        return $this->entity;
     }
 
     /**
@@ -143,7 +144,7 @@ class Query
         $statement = $builder->execute();
         $result = $isFetchable ? $statement->fetchAll() : $statement;
 
-        return $raw === TRUE || !$this->hasManager() || $result instanceof Statement || is_int($result) ? $result : $this->determineResultSet($result, $convert);
+        return $raw === TRUE || $this->getEntity() === null || $result instanceof Statement || is_int($result) ? $result : $this->determineResultSet($result, $convert);
     }
 
     /**
@@ -160,22 +161,16 @@ class Query
 
         if ($count > 1 || $convert === static::RESULT_COLLECTION) { //if result set has many items, return a collection of entities
             foreach ($data as $key => $value) {
-                $data[$key] = $this->getManager()->create()->setData($value);
+                $entity = clone $this->getEntity();
+                $data[$key] = $entity->setData($value);
             }
             $result = new Collection($data);
         } elseif ($count === 1 || $convert === static::RESULT_ENTITY) { //if result has one item, return the entity
-            $result = $this->getManager()->create()->setData(array_shift($data));
+            $entity = clone $this->getEntity();
+            $result = $entity->setData(array_shift($data));
         }
 
         return $result;
-    }
-
-    /**
-     * @return bool
-     */
-    protected function hasManager()
-    {
-        return $this->getManager() === null;
     }
 
     /**
@@ -187,7 +182,8 @@ class Query
      */
     public function __call($name, $arguments)
     {
-        return call_user_func_array([$this->getBuilder(), $name], $arguments);
+        $result = call_user_func_array([$this->getBuilder(), $name], $arguments);
+        return $result instanceof QueryBuilder ? $this : $result;
     }
 
 }

@@ -8,18 +8,11 @@
 
 namespace Blast\Db;
 
-use Blast\Db\Config;
-use Blast\Db\ConfigInterface;
-use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Entity\ManagerInterface;
-use Blast\Db\Orm\MapperInterface;
 use Doctrine\DBAL\Connection;
 use Interop\Container\ContainerInterface;
-use League\Event\EmitterInterface;
 
 class Factory implements FactoryInterface
 {
-    const DEFAULT_CONNECTION = 'default';
     /**
      * @var
      */
@@ -98,7 +91,8 @@ class Factory implements FactoryInterface
     {
         $this->container = $container;
         $this->setContainer($container);
-        $this->getConfig()->addConnection(self::DEFAULT_CONNECTION, $connection);
+
+        $this->getConfig()->addConnection(ConfigInterface::DEFAULT_CONNECTION, $connection);
     }
 
     /**

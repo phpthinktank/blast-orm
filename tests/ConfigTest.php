@@ -7,7 +7,7 @@
  * Time: 13:40
  */
 
-namespace Blast\Tests\Orm;
+namespace Blast\Tests\Db;
 
 use Blast\Db\Config;
 use Doctrine\DBAL\Configuration;
@@ -17,12 +17,12 @@ use PHPUnit_Framework_TestCase;
 
 class ConfigTest extends PHPUnit_Framework_TestCase
 {
-
+    protected $dsn = 'sqlite:///:memory:';
 
     public function testAddConnectionString()
     {
         $config = new Config();
-        $config->addConnection('string', 'sqlite:///:memory:');
+        $config->addConnection('string', $this->dsn);
 
         $this->assertInstanceOf(Connection::class, $config->getConnection('string'));
     }
@@ -31,7 +31,7 @@ class ConfigTest extends PHPUnit_Framework_TestCase
     {
         $config = new Config();
         $config->addConnection('array', [
-                'url' => 'sqlite:///:memory:',
+                'url' => $this->dsn,
                 'memory' => true
             ]
         );
@@ -45,7 +45,7 @@ class ConfigTest extends PHPUnit_Framework_TestCase
 
         $dbalConfiguration = new Configuration();
         $connection = DriverManager::getConnection([
-            'url' => 'sqlite:///:memory:',
+            'url' => $this->dsn,
             'memory' => true
         ], $dbalConfiguration);
 
@@ -54,10 +54,11 @@ class ConfigTest extends PHPUnit_Framework_TestCase
         $this->assertInstanceOf(Connection::class, $config->getConnection('object'));
     }
 
-    public function testGetConnections(){
+    public function testGetConnections()
+    {
         $config = new Config();
-        $config->addConnection('string', 'sqlite:///:memory:');
-        $config->addConnection('string2', 'sqlite:///:memory:');
+        $config->addConnection('string', $this->dsn);
+        $config->addConnection('string2', $this->dsn);
 
         $this->assertArrayHasKey('string', $config->getConnections());
         $this->assertArrayHasKey('string2', $config->getConnections());

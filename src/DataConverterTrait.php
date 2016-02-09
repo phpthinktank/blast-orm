@@ -10,7 +10,7 @@
 * Time: 15:17
 */
 
-namespace Blast\Db\Entity\Traits;
+namespace Blast\Db;
 
 
 trait DataConverterTrait

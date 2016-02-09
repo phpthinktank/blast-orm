@@ -42,7 +42,8 @@ class Table extends DbalTable
      * @return string
      */
     public function getPrimaryKeyName(){
-        return array_shift($this->getPrimaryKey()->getColumns());
+        $columns = $this->getPrimaryKey()->getColumns();
+        return array_shift($columns);
     }
 
 }

@@ -10,16 +10,13 @@
 * Time: 13:53
 */
 
-namespace Blast\Db\Entity\Traits;
+namespace Blast\Db\Entity;
 
 
 use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Entity\Manager;
 use Blast\Db\Events\ValueEvent;
 use Blast\Db\Factory;
-use Blast\Db\Orm\Mapper;
-use Blast\Db\Orm\MapperInterface;
-use Blast\Db\Relations\AbstractRelation;
+use Blast\Db\Relations\RelationManagerInterface;
 use Blast\Db\Schema\Table;
 use League\Event\Emitter;
 use League\Event\EmitterInterface;
@@ -30,11 +27,6 @@ trait EntityTrait
      * @var array
      */
     protected $data = [];
-
-    /**
-     * @var Manager
-     */
-    protected $manager;
 
     /**
      * @var bool
@@ -50,11 +42,6 @@ trait EntityTrait
      * @var Emitter
      */
     protected $emitter;
-
-    /**
-     * @var AbstractRelation[]
-     */
-    protected $relations;
 
     /**
      * @var bool
@@ -73,7 +60,7 @@ trait EntityTrait
     {
         $fields = $this->getTable()->getColumns();
         foreach ($fields as $name => $field) {
-            $this->__set($name, $field['default']);
+            $this->__set($name, $field->getDefault());
         }
 
         //reset updates, default values should not be triggered as updates
@@ -112,8 +99,8 @@ trait EntityTrait
         $original = $this->getOriginalData();
         $updated = [];
 
-        foreach($original as $key => $value){
-            if($value !== $this->get($key)){
+        foreach ($original as $key => $value) {
+            if ($value !== $this->get($key)) {
                 $updated[$key] = $value;
             }
         }
@@ -129,7 +116,7 @@ trait EntityTrait
     public function getData()
     {
         $data = [];
-        foreach(array_keys($this->data) as $key){
+        foreach (array_keys($this->data) as $key) {
             $data[$key] = $this->get($key);
         }
         return $data;
@@ -171,25 +158,24 @@ trait EntityTrait
      */
     public function set($name, $value)
     {
-        if(!$this->isUpdated()){
+        if (!$this->isUpdated()) {
             $this->setUpdated(true);
             $this->originalData = $this->getData();
         }
 
         if ($this->getTable()->hasColumn($name)) {
             $this->data[$name] = $this->emitValueEvent(EntityInterface::VALUE_SET, $name, $value)->getValue();
-        }elseif($this->hasRelation($name)){
-            if(!($value instanceof EntityInterface)){
-                throw new \InvalidArgumentException('Unable to update Relation. Given entity needs to be an instance of ' . EntityInterface::class);
+        } elseif ($this instanceof RelationManagerInterface) {
+            if ($this->hasRelation($name)) {
+                if (!($value instanceof EntityInterface)) {
+                    throw new \InvalidArgumentException('Unable to update Relation. Given entity needs to be an instance of ' . EntityInterface::class);
+                }
+
+                $relation = $this->getRelation($name);
+                $relation->setForeignEntity($value);
             }
-
-            $relation = $this->getRelation($name);
-            $relation->setForeignEntity($value);
-
-            //reattach relation
-            //this is probably unnecessary!
-            $this->relations[$name] = $relation;
         }
+
         return $this;
     }
 
@@ -238,7 +224,7 @@ trait EntityTrait
 
 
         //call accessor or mutator
-        if (($isAccessor || $isMutator) && !$this->hasRelation($name)) {
+        if (($isAccessor || $isMutator)) {
 
             $method = $isMutator ? 'set' : 'get';
             $args = [lcfirst(str_replace('set', '', $name))];
@@ -249,12 +235,14 @@ trait EntityTrait
 
             return call_user_func_array([$this, $method], $args);
 
-        } elseif ($this->hasRelation($name)) {
-            //call relation without fetching it
-            return $this->getRelation($name);
+        } elseif ($this instanceof RelationManagerInterface) {
+            if ($this->hasRelation($name)) {
+                //call relation without fetching it
+                return $this->getRelation($name);
+            }
         }
 
-        throw new \BadMethodCallException('Unknown method ' . __METHOD__);
+        throw new \BadMethodCallException('Unknown method ' . $name);
     }
 
     /**
@@ -299,7 +287,8 @@ trait EntityTrait
     public function getEmitter()
     {
         if ($this->emitter === null) {
-            $this->emitter = Factory::getInstance()->getContainer()->get(EmitterInterface::class);
+            $container = Factory::getInstance()->getContainer();
+            $this->emitter = $container->get(EmitterInterface::class) ? $container->get(EmitterInterface::class) : new Emitter();
         }
         return $this->emitter;
     }
@@ -313,53 +302,6 @@ trait EntityTrait
     }
 
     /**
-     * @return AbstractRelation[]
-     */
-    public function getRelations()
-    {
-        return $this->relations;
-    }
-
-    /**
-     * add a new relation for entity
-     *
-     * @param AbstractRelation $relation
-     * @param null $name
-     * @return $this
-     */
-    public function addRelation(AbstractRelation $relation, $name = null)
-    {
-        if ($name === null) {
-            $name = $relation->getForeignEntity()->getTable()->getName() . '.' . $relation->getForeignKey();
-        }
-
-        if ($this->hasRelation($name)) {
-            throw new \InvalidArgumentException(sprintf('Relation %s already exists', $name));
-        }
-
-        $this->relations[$name] = $relation;
-        return $this;
-    }
-
-    /**
-     * @param $name
-     * @return AbstractRelation
-     */
-    public function getRelation($name)
-    {
-        return $this->hasRelation($name) ? $this->relations[$name] : null;
-    }
-
-    /**
-     * @param $name
-     * @return bool
-     */
-    public function hasRelation($name)
-    {
-        return isset($this->relations[$name]);
-    }
-
-    /**
      * @param $eventName
      * @param $key
      * @param $value
@@ -368,5 +310,10 @@ trait EntityTrait
     private function emitValueEvent($eventName, $key, $value)
     {
         return $this->getEmitter()->emit(new ValueEvent($eventName, $key, $value));
+    }
+
+    public function __clone()
+    {
+        $this->reset();
     }
 }

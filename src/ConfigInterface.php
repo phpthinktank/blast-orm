@@ -11,6 +11,7 @@ namespace Blast\Db;
 
 interface ConfigInterface
 {
+    const DEFAULT_CONNECTION = 'default';
 
     /**
      *

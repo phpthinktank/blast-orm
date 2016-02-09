@@ -15,7 +15,6 @@ use Doctrine\DBAL\DriverManager;
 
 class Config implements ConfigInterface
 {
-
     /**
      * @var \Doctrine\DBAL\Connection[]
      */
@@ -58,11 +57,13 @@ class Config implements ConfigInterface
     /**
      * Activate a connection as default connection
      * @param string $name
+     * @return $this
      */
     public function setActiveConnection($name)
     {
         if ($this->hasConnection($name)) {
             $this->activeConnection = $this->getConnection($name);
+            return $this;
         }
 
         throw new \InvalidArgumentException('Unable to activate connection ' . $name);
@@ -72,9 +73,8 @@ class Config implements ConfigInterface
      * @param $name
      * @return \Doctrine\DBAL\Connection
      */
-    public function getConnection($name = null)
+    public function getConnection($name = self::DEFAULT_CONNECTION)
     {
-
         if ($this->hasConnection($name)) {
             return $this->connections[$name];
         }

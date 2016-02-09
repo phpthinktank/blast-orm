@@ -8,21 +8,34 @@
 
 namespace Blast\Db\Entity;
 
-use Blast\Db\Entity\Traits\DataConverterTrait;
-use Blast\Db\Entity\Traits\EntityTrait;
+use Blast\Db\DataConverterTrait;
+use Blast\Db\Entity\EntityTrait;
+use Blast\Db\Orm\Mapper;
 use Blast\Db\Orm\MapperAwareTrait;
+use Blast\Db\Relations\RelationManagerTrait;
 
 abstract class AbstractEntity implements EntityInterface
 {
 
     use EntityTrait;
-    use MapperAwareTrait;
+    use MapperAwareTrait {
+        getMapper as getInternalMapper;
+    }
+    use RelationManagerTrait;
     use DataConverterTrait;
 
     public function __construct()
     {
         $this->configure();
         $this->attachDefaultValues();
+    }
+
+    public function getMapper()
+    {
+        if($this->mapper === null){
+            $this->mapper = new Mapper($this);
+        }
+        return $this->getInternalMapper();
     }
 
     /**
