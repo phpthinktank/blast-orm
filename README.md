@@ -6,7 +6,7 @@
 [![Total Downloads][ico-downloads]][link-downloads]
 [![Coverage Status](https://img.shields.io/coveralls/phpthinktank/blast-orm/master.svg?style=flat-square)](https://coveralls.io/github/phpthinktank/blast-orm?branch=1.0.x-dev)
 
-Framework agnostic ormuration package supporting php and json. More file types under development.
+Framework agnostic db package with orm and active record implementation based on Doctrine 2. 
 
 ## Install
 
@@ -18,159 +18,303 @@ $ composer require blast/orm
 
 ## Usage
 
-Only a few lines of code:
+
+
+### Getting Started
+
+Create a factory with container-interopt compatible Container e.g. league/container and connection data.
 
 ```php
 <?php
 
-// define our repository and add our models
-$repository = new Repository(
-    [
-        'posts' => \Acme\Models\Posts::class,
-        'user' => \Acme\Models\User::class
-    ]
-);
+use Blast\Db\Factory;
+use League\Container;
 
-//get user data
-//the convention is *table*.*field*
-//if the table name can associated with the model name we use model data automatically.
-$user = $repository->user()->findBy('user.id', 1);
 
-//results which does not relating to a model are GenericModels and contain information 
-//about a table but do not validate or transform fields
+Factory::create(new Container(), [
+    'url' => 'sqlite:///:memory:',
+    'memory' => 'true'
+]);
 
-//find posts by user relation with repository
-$posts = $repository->findBy('posts.user', $user);
-
-//or find with mapper
-$repository->mapper('posts')->fetch((new Query)->where('user_id', $user->primaryKey()));
-
-//or more convenient
-$posts = $user->posts;
-
-//each result is an instance of ResultInterface
-
-//a single result = ResultInterface::ONE
-//a result collection = ResultInterface::MANY
-
-//manipulate data
-if($posts->isOne()){
-    $posts->anyField = 'value';
-}elseif($posts->isMany()){
-    foreach($posts as $post){
-        $post->anyField = 'value';
-    }
-}
-
-//we also could force a type
-//find posts by user relation
-//relation types need to configure within the model
-$posts = $repository->findBy('posts.user', $user, ResultInterface::MANY);
-
-//or find with mapper
-$repository->mapper('posts')->fetch((new Query)->where('user_id', $user->primaryKey()), ResultInterface::MANY);
-
-//saving data
-//with repository
-
-$repository->save($posts);
-
-//or with mapper, object needs to be an instance of model in mapper!
-$repository->mapper('posts')->save($posts);
-
-//or in orm style which is similar to $repository->mapper('posts')->save($posts);
-$posts->save();
 ```
 
-### Field definitions
-
-If a definition exists for an field, ORM will automatically validate, cast and transform field data.
-
-```php
-    <?php
-    
-    class Posts extends Blast\Orm\Model
-    {
-        public function fields(){
-            [
-                'id' => [
-                    'type' => 'int',
-                    'auto_increment' => true,
-                    'primary' => 'true',
-                ],
-                'text' => [
-                    'type' => 'text'
-                    'default' => null
-                ],
-                'meta' => [
-                    'type' => 'json'
-                    'default' => '[]'
-                ],
-                'created_at' => [
-                    'type' => 'timestamp',
-                    'default' => 'datetime'
-                ]
-            ]
-        }
-    }
-```
-
-### Relations
-
-Configuring relations is easy.
+#### Create a new Entity
 
 ```php
 <?php
 
-class Posts extends Blast\Orm\Model
+namespace App\Entities\Post;
+
+
+use Blast\Db\Entity\AbstractEntity;
+use Blast\Db\Schema\Table;
+use Doctrine\DBAL\Types\Type;
+
+class Post extends AbstractEntity
 {
 
-    public function relations(){
-        return [
-            //belongs to another model or table: local key, target model or table, foreign key, foreign key index
-            'user' => $this->belongsTo('user_id', Acme\Model::class, 'id', 'fk_user_id'),
-            
-            //belongs to many entries of one model: foreign key, target model or table, local key
-            'comments' => $this->hasMany('user_id', Acme\Model::class, 'id'),
-            
-            //belongs to many through: 
-            // - lookup: model or table
-            // - local[lookup key, local key]
-            // - foreign[lookup key, foreign key, model or table]
-            'tags' => $this->hasManyThrough('post_tags', ['post_id', 'id'], ['tag_id', 'id', Acme\Model\Tags),
-        ]
+    /**
+     * Configure entity
+     */
+    public function configure()
+    {
+        $table = new Table('post');
+        $table->addColumn('id', Type::INTEGER)
+            ->setAutoincrement(true)
+            ->setLength(10);
+        $table->addColumn('title', Type::STRING);
+        $table->addColumn('content', Type::TEXT);
+        $table->addColumn('date', Type::DATETIME)
+            ->setDefault(new \DateTime());
+        $table->setPrimaryKey(['id']);
+
+        //set entity table
+        $this->setTable($table);
     }
+}
+
+```
+
+#### get mapper
+
+Get mapper from entity.
+
+```php
+<?php
+
+use App\Entities\Post;
+
+$post = new Post;
+
+//create mapper from entity
+$mapper = $post->getMapper();
+```
+
+Create new mapper with entity
+
+```php
+<?php
+
+$mapper = new Mapper($post);
+
+```
+
+#### Save data
+
+Save is determining whether to create or update an entity, but you could also use update or create instead of save. All work as the same!
+
+```php
+<?php
+
+$post->title = 'Hello World';
+$post->content = 'Some content about hello world.';
+$post->date = new \DateTime();
+
+//create or update entity
+$mapper->save($post);
+```
+
+Save many entries as array
+
+```php
+<?php
+
+$mapper->save([$post, $post2]);
+```
+
+Save many entries from collection, e.g. from manipulated previous result
+
+```php
+<?php
+
+use Blast\Db\Entity\Collection;
+ 
+$collection = new Collection([$post, $post2]);
+
+$mapper->save($collection);
+```
+
+#### delete data
+
+Delete is following the same behaviour like save, create or update, but is removing instead of manipulating data
+
+Delete onw entry
+
+```php
+<?php
+
+$mapper->delete($post);
+```
+
+Delete many entries
+
+```php
+<?php
+
+$mapper->delete([$post, $post2]);
+```
+
+Delete a collection of entries
+
+```php
+<?php
+
+use Blast\Db\Entity\Collection;
+ 
+$collection = new Collection([$post, $post2]);
+$mapper->delete($collection);
+```
+
+#### working with data
+
+Fetch one entry by primary key
+
+```php
+<?php
+
+$post = $mapper->find(1);
+
+```
+
+Fetch one entry by query
+
+```php
+<?php
+
+$first = $mapper->select()->where('title = "Hello world"')->setMaxResults(1)->execute(Query::RESULT_ENTITY);
+```
+
+Fetch all entries
+
+```php
+<?php
+//find all posts as collection
+$posts = $mapper->all();
+
+foreach($posts as $post){
+
+    //do somesthing
 
 }
 
 ```
 
-### Migrations
+#### Relations
 
-If a definition exists for an field, ORM will automatically validate, cast and transform field data.
+Creating a new relation is for each relation the same
 
 ```php
-    <?php
-    
-    //model version
-    class Version1Migration extends Blast\Orm\Migration
-    {   
-        public function migrate($db){
-            $schema->createTable(Acme\Models\Posts::class, false);
-            $schema->createTable(Acme\Models\Tags::class, false);
-            $schema->createTable('posts_tags', [
-                'post_id' => [
-                    'type' => 'int',
-                ],
-                'tag_id' => [
-                    'type' => 'int',
-                ]
-            ]);
-            
-            //writes schema
-            $this->publish($schema);
-        }
+<?php
+
+//...previous code
+
+use Blast\Db\Relations\BelongsTo
+
+class Post extends AbstractEntity
+{
+
+    /**
+     * Configure entity
+     */
+    public function configure()
+    {
+        //... previous configuration
+        $this->addRelation(new BelongsTo($this, new User(), 'id'));
     }
+}
+```
+
+Get relation from entity like any field
+
+```php
+<?php
+
+$user = $post->user;
+```
+
+Update entity with related entity
+
+```php
+<?php
+
+$post->user->name = "fred";
+$mapper->save($post);
+```
+
+Add a new related entity
+
+```php
+<?php
+
+$user = new User();
+$user->name = "Peter Pan";
+
+$post->user = $user;
+$mapper->save($post);
+```
+
+If an entity is deleted, it's related entities will not deleted or updated automatically!
+
+### Data conversion
+
+Convert a collection or entity into an array or json with `toArray` and `toJson`;
+
+### Query
+
+Sometime you need to do complex queries. The query object is providing all high level API methods of 
+[doctrine 2 query builder](http://doctrine-orm.readthedocs.org/projects/doctrine-orm/en/latest/reference/query-builder.html#high-level-api-methods).
+
+Create a new query for entity
+
+```php
+<?php
+
+$query = new Query($post);
+```
+
+Do a complex query
+
+```php
+<?php
+$query->select() // string 'u' is converted to array internally
+   ->from($post->getTable()->getName(), 'p')
+   ->where($qb->expr()->orX(
+       $query->expr()->eq('p.id', 1),
+       $query->expr()->like('p.title', "Hello%")
+   ))
+   ->orderBy('p.date', 'ASC'));
+```
+
+Execute query and get result
+
+```php
+<?php
+
+$result = $query->execute();
+```
+
+Execute query and get result as entity
+
+```php
+<?php
+
+$post = $query->execute(Query::RESULT_ENTITY);
+```
+
+Execute query and get result as collection
+
+```php
+<?php
+
+$posts = $query->execute(Query::RESULT_COLLECTION);
+```
+
+Execute query and get raw result as array
+
+```php
+<?php
+
+$result = $query->execute(Query::RESULT_RAW);
 ```
 
 ## Further development
