@@ -28,44 +28,44 @@ use Doctrine\DBAL\Query\QueryBuilder;
  * @method int getType()
  * @method int getState()
  * @method string getSQL()
- * @method QueryBuilder setParameter($key, $value, $type = null)
- * @method QueryBuilder setParameters(array $params, array $types = array())
+ * @method Query setParameter($key, $value, $type = null)
+ * @method Query setParameters(array $params, array $types = array())
  * @method array getParameters()
  * @method mixed getParameter($key)
  * @method array getParameterTypes()
  * @method mixed getParameterType($key)
- * @method QueryBuilder setFirstResult($firstResult)
+ * @method Query setFirstResult($firstResult)
  * @method int getFirstResult()
- * @method QueryBuilder setMaxResults($maxResults)
+ * @method Query setMaxResults($maxResults)
  * @method int getMaxResults()
- * @method QueryBuilder add($sqlPartName, $sqlPart, $append = false)
- * @method QueryBuilder select($select = null)
- * @method QueryBuilder addSelect($select = null)
- * @method QueryBuilder delete($delete = null, $alias = null)
- * @method QueryBuilder update($update = null, $alias = null)
- * @method QueryBuilder insert($insert = null)
- * @method QueryBuilder from($from, $alias = null)
- * @method QueryBuilder join($fromAlias, $join, $alias, $condition = null)
- * @method QueryBuilder innerJoin($fromAlias, $join, $alias, $condition = null)
- * @method QueryBuilder leftJoin($fromAlias, $join, $alias, $condition = null)
- * @method QueryBuilder rightJoin($fromAlias, $join, $alias, $condition = null)
- * @method QueryBuilder set($key, $value)
- * @method QueryBuilder where($predicates)
- * @method QueryBuilder andWhere($where)
- * @method QueryBuilder orWhere($where)
- * @method QueryBuilder groupBy($groupBy)
- * @method QueryBuilder addGroupBy($groupBy)
- * @method QueryBuilder setValue($column, $value)
- * @method QueryBuilder values(array $values)
- * @method QueryBuilder having($having)
- * @method QueryBuilder andHaving($having)
- * @method QueryBuilder orHaving($having)
- * @method QueryBuilder orderBy($sort, $order = null)
- * @method QueryBuilder addOrderBy($sort, $order = null)
+ * @method Query add($sqlPartName, $sqlPart, $append = false)
+ * @method Query select($select = null)
+ * @method Query addSelect($select = null)
+ * @method Query delete($delete = null, $alias = null)
+ * @method Query update($update = null, $alias = null)
+ * @method Query insert($insert = null)
+ * @method Query from($from, $alias = null)
+ * @method Query join($fromAlias, $join, $alias, $condition = null)
+ * @method Query innerJoin($fromAlias, $join, $alias, $condition = null)
+ * @method Query leftJoin($fromAlias, $join, $alias, $condition = null)
+ * @method Query rightJoin($fromAlias, $join, $alias, $condition = null)
+ * @method Query set($key, $value)
+ * @method Query where($predicates)
+ * @method Query andWhere($where)
+ * @method Query orWhere($where)
+ * @method Query groupBy($groupBy)
+ * @method Query addGroupBy($groupBy)
+ * @method Query setValue($column, $value)
+ * @method Query values(array $values)
+ * @method Query having($having)
+ * @method Query andHaving($having)
+ * @method Query orHaving($having)
+ * @method Query orderBy($sort, $order = null)
+ * @method Query addOrderBy($sort, $order = null)
  * @method mixed getQueryPart($queryPartName)
  * @method array getQueryParts()
- * @method QueryBuilder resetQueryParts($queryPartNames = null)
- * @method QueryBuilder resetQueryPart($queryPartName)
+ * @method Query resetQueryParts($queryPartNames = null)
+ * @method Query resetQueryPart($queryPartName)
  * @method string __toString()
  * @method string createNamedParameter($value, $type = \PDO::PARAM_STR, $placeHolder = null)
  * @method string createPositionalParameter($value, $type = \PDO::PARAM_STR)
@@ -87,6 +87,7 @@ class Query
      *
      */
     const RESULT_ENTITY = 'entity';
+    const RESULT_RAW = 'raw';
     /**
      *
      */
@@ -104,10 +105,10 @@ class Query
 
     /**
      * Statement constructor.
-     * @param QueryBuilder $builder
      * @param EntityInterface $entity
+     * @param QueryBuilder $builder
      */
-    public function __construct(QueryBuilder $builder = null, EntityInterface $entity = null)
+    public function __construct(EntityInterface $entity = null, QueryBuilder $builder = null)
     {
         $this->builder = $builder === null ? Factory::getInstance()->getConfig()->getConnection()->createQueryBuilder() : $builder;
         $this->entity = $entity;
@@ -137,14 +138,14 @@ class Query
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function execute($convert = self::RESULT_AUTO, $raw = FALSE)
+    public function execute($convert = self::RESULT_AUTO)
     {
         $builder = $this->getBuilder();
         $isFetchable = $builder->getType() === $builder::SELECT;
         $statement = $builder->execute();
         $result = $isFetchable ? $statement->fetchAll() : $statement;
 
-        return $raw === TRUE || $this->getEntity() === null || $result instanceof Statement || is_int($result) ? $result : $this->determineResultSet($result, $convert);
+        return $convert = self::RESULT_RAW || $this->getEntity() === null || $result instanceof Statement || is_int($result) ? $result : $this->determineResultSet($result, $convert);
     }
 
     /**

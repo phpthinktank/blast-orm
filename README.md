@@ -75,25 +75,246 @@ class Post extends AbstractEntity
 
 ```
 
-#### Save data
+#### get mapper
+
+Get mapper from entity.
 
 ```php
 <?php
 
 use App\Entities\Post;
-use Blast\Db\Factory;
 
 $post = new Post;
 
-//create mapper from post
-$mapper = Factory::getInstance()->createMapper($post);
+//create mapper from entity
+$mapper = $post->getMapper();
+```
+
+Create new mapper with entity
+
+```php
+<?php
+
+$mapper = new Mapper($post);
+
+```
+
+#### Save data
+
+Save is determining whether to create or update an entity, but you could also use update or create instead of save. All work as the same!
+
+```php
+<?php
 
 $post->title = 'Hello World';
 $post->content = 'Some content about hello world.';
-$post->title = new \DateTime();
+$post->date = new \DateTime();
 
 //create or update entity
 $mapper->save($post);
+```
+
+Save many entries as array
+
+```php
+<?php
+
+$mapper->save([$post, $post2]);
+```
+
+Save many entries from collection, e.g. from manipulated previous result
+
+```php
+<?php
+
+use Blast\Db\Entity\Collection;
+ 
+$collection = new Collection([$post, $post2]);
+
+$mapper->save($collection);
+```
+
+#### delete data
+
+Delete is following the same behaviour like save, create or update, but is removing instead of manipulating data
+
+Delete onw entry
+
+```php
+<?php
+
+$mapper->delete($post);
+```
+
+Delete many entries
+
+```php
+<?php
+
+$mapper->delete([$post, $post2]);
+```
+
+Delete a collection of entries
+
+```php
+<?php
+
+use Blast\Db\Entity\Collection;
+ 
+$collection = new Collection([$post, $post2]);
+$mapper->delete($collection);
+```
+
+#### working with data
+
+Fetch one entry by primary key
+
+```php
+<?php
+
+$post = $mapper->find(1);
+
+```
+
+Fetch one entry by query
+
+```php
+<?php
+
+$first = $mapper->select()->where('title = "Hello world"')->setMaxResults(1)->execute(Query::RESULT_ENTITY);
+```
+
+Fetch all entries
+
+```php
+<?php
+//find all posts as collection
+$posts = $mapper->all();
+
+foreach($posts as $post){
+
+    //do somesthing
+
+}
+
+```
+
+#### Relations
+
+Creating a new relation is for each relation the same
+
+```php
+<?php
+
+//...previous code
+
+use Blast\Db\Relations\BelongsTo
+
+class Post extends AbstractEntity
+{
+
+    /**
+     * Configure entity
+     */
+    public function configure()
+    {
+        //... previous configuration
+        $this->addRelation(new BelongsTo($this, new User(), 'id'));
+    }
+}
+```
+
+Get relation from entity like any field
+
+```php
+<?php
+
+$user = $post->user;
+```
+
+Update entity with related entity
+
+```php
+<?php
+
+$post->user->name = "fred";
+$mapper->save($post);
+```
+
+Add a new related entity
+
+```php
+<?php
+
+$user = new User();
+$user->name = "Peter Pan";
+
+$post->user = $user;
+$mapper->save($post);
+```
+
+If an entity is deleted, it's related entities will not deleted or updated automatically!
+
+### Data conversion
+
+Convert a collection or entity into an array or json with `toArray` and `toJson`;
+
+### Query
+
+Sometime you need to do complex queries. The query object is providing all high level API methods of 
+[doctrine 2 query builder](http://doctrine-orm.readthedocs.org/projects/doctrine-orm/en/latest/reference/query-builder.html#high-level-api-methods).
+
+Create a new query for entity
+
+```php
+<?php
+
+$query = new Query($post);
+```
+
+Do a complex query
+
+```php
+<?php
+$query->select() // string 'u' is converted to array internally
+   ->from($post->getTable()->getName(), 'p')
+   ->where($qb->expr()->orX(
+       $query->expr()->eq('p.id', 1),
+       $query->expr()->like('p.title', "Hello%")
+   ))
+   ->orderBy('p.date', 'ASC'));
+```
+
+Execute query and get result
+
+```php
+<?php
+
+$result = $query->execute();
+```
+
+Execute query and get result as entity
+
+```php
+<?php
+
+$post = $query->execute(Query::RESULT_ENTITY);
+```
+
+Execute query and get result as collection
+
+```php
+<?php
+
+$posts = $query->execute(Query::RESULT_COLLECTION);
+```
+
+Execute query and get raw result as array
+
+```php
+<?php
+
+$result = $query->execute(Query::RESULT_RAW);
 ```
 
 ## Further development

@@ -70,7 +70,7 @@ class Mapper implements MapperInterface
      */
     public function createQuery()
     {
-        return new Query($this->getConnection()->createQueryBuilder(), $this->getEntity());
+        return new Query($this->getEntity(), $this->getConnection()->createQueryBuilder());
     }
 
     /**
@@ -88,7 +88,16 @@ class Mapper implements MapperInterface
             $query->where($query->expr()->eq($field, $query->createPositionalParameter($value, $this->getEntity()->getTable()->getColumn($field)->getType())));
         }
 
-        return $query->execute();
+        return $query->execute(Query::RESULT_ENTITY);
+    }
+
+    /**
+     * Get a collection of all entities
+     *
+     * @return array|CollectionInterface
+     */
+    public function all(){
+        return $this->select()->execute(Query::RESULT_COLLECTION);
     }
 
     /**
