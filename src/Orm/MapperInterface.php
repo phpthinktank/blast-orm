@@ -11,6 +11,7 @@ namespace Blast\Db\Orm;
 
 use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
+use Blast\Db\Factory;
 use Doctrine\DBAL\Query\QueryBuilder;
 
 interface MapperInterface
@@ -33,35 +34,35 @@ interface MapperInterface
     /**
      * @return QueryBuilder
      */
-    public function getQueryBuilder();
+    public function createQuery();
 
     /**
      *
-     * @param null $pk
-     * @return CollectionInterface|EntityInterface|Statement
+     * @param $value
+     * @return CollectionInterface|EntityInterface|Query
      */
-    public function find($pk = null);
+    public function find($value);
 
     /**
-     * @param EntityInterface $entity
+     * @param CollectionInterface|EntityInterface|array $entity
      * @return int
      */
     public function create($entity);
 
     /**
-     * @param EntityInterface|EntityInterface[] $entity
+     * @param CollectionInterface|EntityInterface|array $entity
      * @return int
      */
     public function update($entity);
 
     /**
-     * @param EntityInterface|EntityInterface[] $entity
+     * @param CollectionInterface|EntityInterface|array $entity
      * @return int
      */
     public function delete($entity);
 
     /**
-     * @param EntityInterface|EntityInterface[] $entity
+     * @param CollectionInterface|EntityInterface|array $entity
      * @return int
      */
     public function save($entity);

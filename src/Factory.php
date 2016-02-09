@@ -150,6 +150,9 @@ class Factory implements FactoryInterface
         return $this;
     }
 
+    /**
+     * Close all non persistent connections
+     */
     public function shutdown()
     {
         $connections = $this->getConfig()->getConnections();
@@ -167,33 +170,5 @@ class Factory implements FactoryInterface
 
         static::$instance = null;
         static::$booted = false;
-    }
-
-    /**
-     * Create mapper from entity
-     *
-     * @param $mapper
-     * @return MapperInterface
-     */
-    public function createMapper($mapper = null){
-
-        if($mapper === null){
-            $mapper = MapperInterface::class;
-        }
-
-        if(is_string($mapper)){
-            $mapper = $this->getContainer()->get($mapper);
-        }
-
-        if(!($mapper instanceof MapperInterface)){
-            throw new \RuntimeException('Mapper needs to be an instance of ' . MapperInterface::class);
-        }
-
-        return $mapper;
-    }
-
-    public function __call($name, $arguments)
-    {
-        return call_user_func_array([$this->getConfig()->getConnection(), $name], $arguments);
     }
 }

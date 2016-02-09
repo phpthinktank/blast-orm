@@ -11,7 +11,9 @@ namespace Blast\Tests\Orm;
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Factory;
 use Blast\Db\Orm\Mapper;
+use Blast\Db\Orm\Query;
 use Blast\Tests\Orm\Entities\AnyEntity;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Interop\Container\ContainerInterface;
 use Prophecy\Prophecy\ObjectProphecy;
 
@@ -84,6 +86,9 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $mapper = new Mapper($entity);
 
         $result = $mapper->findBy('pk', 1);
+
+        $query = new Query();
+        $query->
 
         $this->assertInstanceOf(EntityInterface::class, $result);
     }

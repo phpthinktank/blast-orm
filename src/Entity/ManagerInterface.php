@@ -19,9 +19,9 @@ interface ManagerInterface
 
     /**
      * Build entity with fields and events, set fields from attached entity
-     * @param EntityInterface $previous
+     * @param EntityInterface|array $previous
      * @return EntityInterface
      */
-    public function create(EntityInterface $previous = null);
+    public function create($previous = null);
 
 }

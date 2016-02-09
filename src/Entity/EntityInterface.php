@@ -60,11 +60,6 @@ interface EntityInterface
     public function isUpdated();
 
     /**
-     * @param boolean $updated
-     */
-    public function setUpdated($updated);
-
-    /**
      * @return array
      */
     public function getOriginalData();
@@ -73,11 +68,6 @@ interface EntityInterface
      * @return array
      */
     public function getUpdatedData();
-
-    /**
-     * @return MapperInterface
-     */
-    public function getMapper();
 
     /**
      * @return EmitterInterface
@@ -107,8 +97,18 @@ interface EntityInterface
      */
     public function __unset($name);
 
+    /**
+     * Call accessors, mutators or relations
+     * @param $name
+     * @param $arguments
+     * @return mixed
+     */
     public function __call($name, $arguments);
 
+    /**
+     * @param $name
+     * @return mixed
+     */
     public function get($name);
 
     /**

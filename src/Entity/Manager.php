@@ -41,11 +41,10 @@ class Manager implements ManagerInterface
      * @param MapperInterface $mapper
      * @param Factory $factory
      */
-    public function __construct($entity, MapperInterface $mapper, Factory $factory)
+    public function __construct($entity)
     {
-        $this->factory = $factory;
+        $this->factory = Factory::getInstance();
         $this->entity = $this->composeEntityClass($entity);
-        $this->mapper = $mapper;
     }
 
     /**
@@ -81,33 +80,21 @@ class Manager implements ManagerInterface
     }
 
     /**
-     * @return MapperInterface
-     */
-    public function getMapper()
-    {
-        return $this->mapper;
-    }
-
-    /**
-     * @param MapperInterface $mapper
-     */
-    public function setMapper($mapper)
-    {
-        $this->mapper = $mapper;
-    }
-
-    /**
      *
-     * @param EntityInterface $previous
+     * @param EntityInterface|array $previous
      * @return EntityInterface
      */
-    public function create(EntityInterface $previous = null)
+    public function create($previous = null)
     {
         $entity = $this->composeEntityClass($this->getEntity());
 
+        if(is_array($previous)){
+            $previous = $this->composeEntityClass($this->getEntity())->setData($previous);
+        }
+
         //overwrite data from previous entity, if previous is similar entity
         if($previous == $entity){
-            $entity->setData($previous->getData());
+            $entity->setData($previous instanceof EntityInterface ? $previous->getData() : $previous);
         }
 
         return $entity;

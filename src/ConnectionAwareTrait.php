@@ -10,10 +10,7 @@
 * Time: 13:45
 */
 
-namespace Blast\Db\Orm\Traits;
-
-
-use Blast\Db\Factory;
+namespace Blast\Db;
 
 trait ConnectionAwareTrait
 {

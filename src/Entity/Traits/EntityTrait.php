@@ -14,8 +14,10 @@ namespace Blast\Db\Entity\Traits;
 
 
 use Blast\Db\Entity\EntityInterface;
+use Blast\Db\Entity\Manager;
 use Blast\Db\Events\ValueEvent;
 use Blast\Db\Factory;
+use Blast\Db\Orm\Mapper;
 use Blast\Db\Orm\MapperInterface;
 use Blast\Db\Relations\AbstractRelation;
 use Blast\Db\Schema\Table;
@@ -30,9 +32,9 @@ trait EntityTrait
     protected $data = [];
 
     /**
-     * @var MapperInterface
+     * @var Manager
      */
-    protected $mapper;
+    protected $manager;
 
     /**
      * @var bool
@@ -165,7 +167,7 @@ trait EntityTrait
     /**
      * @param $name
      * @param $value
-     * @return mixed
+     * @return $this
      */
     public function set($name, $value)
     {
@@ -203,10 +205,11 @@ trait EntityTrait
     /**
      * @param $name
      * @param $value
+     * @return $this
      */
     public function __set($name, $value)
     {
-        $this->set($name, $value);
+        return $this->set($name, $value);
     }
 
     /**
@@ -264,10 +267,12 @@ trait EntityTrait
 
     /**
      * @param boolean $new
+     * @return $this
      */
     public function setNew($new)
     {
         $this->new = $new;
+        return $this;
     }
 
     /**
@@ -280,10 +285,12 @@ trait EntityTrait
 
     /**
      * @param Table $table
+     * @return $this
      */
-    public function setTable($table)
+    protected function setTable($table)
     {
         $this->table = $table;
+        return $this;
     }
 
     /**
@@ -295,14 +302,6 @@ trait EntityTrait
             $this->emitter = Factory::getInstance()->getContainer()->get(EmitterInterface::class);
         }
         return $this->emitter;
-    }
-
-    /**
-     * @return MapperInterface
-     */
-    public function getMapper()
-    {
-        return Factory::getInstance()->createMapper($this->mapper);
     }
 
     /**
@@ -326,6 +325,7 @@ trait EntityTrait
      *
      * @param AbstractRelation $relation
      * @param null $name
+     * @return $this
      */
     public function addRelation(AbstractRelation $relation, $name = null)
     {
@@ -338,6 +338,7 @@ trait EntityTrait
         }
 
         $this->relations[$name] = $relation;
+        return $this;
     }
 
     /**
