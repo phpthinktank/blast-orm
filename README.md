@@ -89,6 +89,9 @@ Accessing data by property, which is internal calling `get`
 <?php
 
 $content = $post->content;
+
+//or with magic accessor
+$content = $post->getContent();
 ```
 
 Manipulating accessor with `value.get` event, for example passing html markup to post title.
@@ -121,6 +124,9 @@ Accessing data by property, which is internal calling `get`
 <?php
 
 $post->content = 'A lot of content';
+
+//or with magic accessor
+$post->setContent('A lot of content');
 ```
 
 Manipulating mutator with `value.set` event, for example stripping html markup from post content.
@@ -182,6 +188,9 @@ $user = $post->user;
 
 //or with accssor
 $user = $post->get('user');
+
+//or with magic accessor
+$user = $post->getUser();
 ```
 
 Update entity with related entity
