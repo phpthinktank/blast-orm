@@ -24,6 +24,12 @@ interface RelationInterface
     public function getEntity();
 
     /**
+     * @param EntityInterface $entity
+     * @return $this
+     */
+    public function setEntity($entity);
+
+    /**
      * @return EntityInterface
      */
     public function getForeignEntity();

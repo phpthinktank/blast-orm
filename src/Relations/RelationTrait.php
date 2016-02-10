@@ -63,6 +63,16 @@ trait RelationTrait
     }
 
     /**
+     * @param EntityInterface $entity
+     * @return RelationTrait
+     */
+    public function setEntity($entity)
+    {
+        $this->entity = $entity;
+        return $this;
+    }
+
+    /**
      * @return EntityInterface
      */
     public function getForeignEntity()

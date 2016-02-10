@@ -176,6 +176,12 @@ trait EntityTrait
             }
         }
 
+        if($this instanceof EntityInterface){
+            foreach($this->getRelations() as $relation){
+                $relation->setEntity($this);
+            }
+        }
+
         return $this;
     }
 

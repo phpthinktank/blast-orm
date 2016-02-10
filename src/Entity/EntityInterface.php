@@ -9,10 +9,11 @@
 namespace Blast\Db\Entity;
 
 use Blast\Db\Orm\MapperAwareInterface;
+use Blast\Db\Relations\RelationManagerInterface;
 use Blast\Db\Schema\Table;
 use League\Event\EmitterInterface;
 
-interface EntityInterface extends MapperAwareInterface
+interface EntityInterface extends MapperAwareInterface, RelationManagerInterface
 {
 
     const BEFORE_SAVE = 'save.before';

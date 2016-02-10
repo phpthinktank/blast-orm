@@ -13,9 +13,10 @@ use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Factory;
 use Blast\Db\Orm\Mapper;
-use Blast\Tests\Db\Entities\AnyEntity;
+use Blast\Tests\Db\Stubs\Entities\Post;
 use Interop\Container\ContainerInterface;
 use Prophecy\Prophecy\ObjectProphecy;
+use Stubs\Entities\User;
 
 class MapperTest extends \PHPUnit_Framework_TestCase
 {
@@ -44,19 +45,24 @@ class MapperTest extends \PHPUnit_Framework_TestCase
             'memory' => 'true'
         ]);
 
-        $this->entity = new AnyEntity();
+        $this->entity = new Post();
 
         $connection = $factory->getConfig()->getConnection(ConfigInterface::DEFAULT_CONNECTION);
-        $connection->prepare('CREATE TABLE test (id int, pk int, same int)')->execute();
-        $connection->insert('test', [
+        $connection->prepare('CREATE TABLE post (id int, user_id int, same int)')->execute();
+        $connection->prepare('CREATE TABLE user (id int, name VARCHAR(255))')->execute();
+        $connection->insert('post', [
             'id' => 1,
-            'pk' => 1,
+            'user_id' => 1,
             'same' => 42
         ]);
-        $connection->insert('test', [
+        $connection->insert('post', [
             'id' => 2,
-            'pk' => 2,
+            'user_id' => 2,
             'same' => 42
+        ]);
+        $connection->insert('user', [
+            'id' => 1,
+            'name' => 'Franz'
         ]);
     }
 
@@ -96,15 +102,30 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(EntityInterface::class, $result);
     }
 
+    /**
+     * find by pk
+     */
+    public function testBelongsTo()
+    {
+        $entity = $this->entity;
+        $mapper = new Mapper($entity);
+
+        $result = $mapper->find(1);
+
+        $this->assertInstanceOf(Post::class, $result);
+        $this->assertInstanceOf(User::class, $result->user);
+    }
+
     public function testCreateByEntity(){
         $entity = $this->entity;
         $mapper = new Mapper($entity);
 
-        $any = new AnyEntity();
-        $any->pk = 1;
-        $any->same = 42;
+        $post = new Post();
+        $post->pk = 3;
+        $post->user_id = 1;
+        $post->same = 42;
 
-        $result = $mapper->create($any);
+        $result = $mapper->create($post);
 
         $this->assertTrue(is_numeric($result) && !is_bool($result));
     }

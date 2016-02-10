@@ -58,7 +58,7 @@ class BelongsTo extends AbstractRelation
     {
         $query = $this->getForeignEntity()->getMapper()->select();
         $result = $query->where(
-            $query->expr()->eq($this->getForeignKey(), $this->getEntity()->__get($this->getLocalKey()))
+            $query->expr()->eq($this->getForeignKey(), $this->getEntity()->get($this->getLocalKey()))
         )->setMaxResults(1)->execute(Query::RESULT_ENTITY);
 
         return $this->setResults($result)->getResults();
