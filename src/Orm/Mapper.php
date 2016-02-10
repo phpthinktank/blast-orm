@@ -260,7 +260,7 @@ class Mapper implements MapperInterface
      */
     public function save($entity, $forceUpdate = false)
     {
-        if (is_array($entity)) {
+        if ($this->isMassProcessable($entity)) {
             return $this->massProcess(__FUNCTION__, $entity);
         }
 
@@ -273,9 +273,9 @@ class Mapper implements MapperInterface
      */
     protected function prepareEntity($entity)
     {
-        $targetEntity = get_class($this->getEntity());
-        if(!is_subclass_of($entity, $targetEntity)){
-            throw new \InvalidArgumentException('Given entity needs to be an instance of ' . $targetEntity);
+        $targetEntity = $this->getEntity();
+        if(get_class($entity) != get_class($targetEntity)){
+            throw new \InvalidArgumentException('Given entity ' . (is_object($entity) ? get_class($entity) : gettype($entity)) .' needs to be an instance of ' . get_class($targetEntity));
         }
         return $entity;
     }
