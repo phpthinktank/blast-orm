@@ -117,7 +117,7 @@ trait RelationTrait
      */
     public function getResults()
     {
-        return $this->results;
+        return $this->results === null ? new Collection() : $this->results;
     }
 
     /**
