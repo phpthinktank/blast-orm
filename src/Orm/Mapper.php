@@ -118,7 +118,7 @@ class Mapper implements MapperInterface
      * Create a new entity or a collection of entities in storage.
      *
      * @param EntityInterface|EntityInterface[]|CollectionInterface $entity
-     * @return int
+     * @return int|int[]|bool[]|bool
      */
     public function create($entity)
     {
@@ -161,7 +161,7 @@ class Mapper implements MapperInterface
      *
      * @param EntityInterface|EntityInterface[]|CollectionInterface $entity
      * @param bool $forceUpdate
-     * @return int
+     * @return int|int[]|bool[]|bool
      * @throws \Doctrine\DBAL\Schema\SchemaException
      */
     public function update($entity, $forceUpdate = false)
@@ -273,6 +273,10 @@ class Mapper implements MapperInterface
      */
     protected function prepareEntity($entity)
     {
+        $targetEntity = get_class($this->getEntity());
+        if(!is_subclass_of($entity, $targetEntity)){
+            throw new \InvalidArgumentException('Given entity needs to be an instance of ' . $targetEntity);
+        }
         return $entity;
     }
 
