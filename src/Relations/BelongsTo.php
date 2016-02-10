@@ -15,6 +15,7 @@ namespace Blast\Db\Relations;
 
 
 use Blast\Db\Entity\EntityInterface;
+use Blast\Db\Query;
 
 class BelongsTo extends AbstractRelation
 {
@@ -45,7 +46,7 @@ class BelongsTo extends AbstractRelation
         $entity->__set($this->getLocalKey(), $foreignEntity->__get($this->getForeignKey()));
 
         //save foreign only if it has updates
-        if($entity->isUpdated()){
+        if ($entity->isUpdated()) {
             $foreignEntity->getMapper()->save($foreignEntity);
         }
 
@@ -59,8 +60,11 @@ class BelongsTo extends AbstractRelation
      */
     public function fetch()
     {
-        $result = $this->getForeignEntity()->getMapper()->findBy($this->getForeignKey(), $this->getEntity()->__get($this->getLocalKey()));
-        return is_array($result) ? array_shift($result) : $result;
+        $query = $this->getForeignEntity()->getMapper()->select();
+        $result = $query->where(
+            $query->expr()->eq($this->getForeignKey(), $this->getEntity()->__get($this->getLocalKey()))
+        )->setMaxResults(1)->execute(Query::RESULT_ENTITY);
+        return $result;
     }
 
 }

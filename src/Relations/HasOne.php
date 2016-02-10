@@ -15,6 +15,7 @@ namespace Blast\Db\Relations;
 
 
 use Blast\Db\Entity\EntityInterface;
+use Blast\Db\Query;
 
 class HasOne extends AbstractRelation
 {
@@ -62,8 +63,11 @@ class HasOne extends AbstractRelation
      */
     public function fetch()
     {
-        $result = $this->getEntity()->getMapper()->findBy($this->getLocalKey(), $this->getForeignEntity()->__get($this->getLocalKey()));
-        return is_array($result) ? array_shift($result) : $result;
+        $query = $this->getForeignEntity()->getMapper()->select();
+        $result = $query->where(
+            $query->expr()->eq($this->getLocalKey(), $this->getForeignEntity()->get($this->getLocalKey()))
+        )->setMaxResults(1)->execute(Query::RESULT_ENTITY);
+        return $result;
     }
 
 }
