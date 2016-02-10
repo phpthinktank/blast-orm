@@ -1,10 +1,11 @@
 {
   "name": "blast/orm",
-  "description": "Framework agnostic orm",
+  "description": "Framework agnostic data access and persistence based on Doctrine 2 DBAL",
   "keywords": [
     "sql",
     "database",
-    "orm"
+    "orm",
+    "query"
   ],
   "homepage": "https://github.com/phpthinktank/blast-orm",
   "license": "MIT",

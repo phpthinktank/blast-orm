@@ -6,7 +6,7 @@
 [![Total Downloads][ico-downloads]][link-downloads]
 [![Coverage Status](https://img.shields.io/coveralls/phpthinktank/blast-orm/master.svg?style=flat-square)](https://coveralls.io/github/phpthinktank/blast-orm?branch=1.0.x-dev)
 
-Framework agnostic db package with orm and active record implementation based on Doctrine 2. 
+Framework agnostic data access and persistence based on Doctrine 2 DBAL.
 
 ## Install
 
