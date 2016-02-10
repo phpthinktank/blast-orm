@@ -13,6 +13,7 @@
 namespace Blast\Db\Relations;
 
 
+use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Orm\MapperInterface;
 
@@ -22,11 +23,6 @@ interface RelationInterface
      * @return boolean
      */
     public function isForeignEntityUpdate();
-
-    /**
-     * @return MapperInterface
-     */
-    public function getMapper();
 
     /**
      * @return EntityInterface
@@ -52,4 +48,15 @@ interface RelationInterface
      * @return int|string
      */
     public function getLocalKey();
+
+    /**
+     * @return CollectionInterface|EntityInterface
+     */
+    public function getResults();
+
+    /**
+     * @param CollectionInterface|EntityInterface $results
+     * @return $this
+     */
+    public function setResults($results);
 }

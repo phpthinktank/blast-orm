@@ -103,7 +103,7 @@ trait RelationTrait
     }
 
     /**
-     * @return CollectionInterface
+     * @return CollectionInterface|EntityInterface
      */
     public function getResults()
     {
