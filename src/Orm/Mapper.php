@@ -77,7 +77,7 @@ class Mapper implements MapperInterface
      * Find result by primary key
      *
      * @param $value
-     * @return array|Query
+     * @return EntityInterface
      * @throws \Doctrine\DBAL\Schema\SchemaException
      */
     public function find($value)
@@ -117,7 +117,7 @@ class Mapper implements MapperInterface
     /**
      * Create a new entity or a collection of entities in storage.
      *
-     * @param EntityInterface|EntityInterface[] $entity
+     * @param EntityInterface|EntityInterface[]|CollectionInterface $entity
      * @return int
      */
     public function create($entity)
@@ -155,7 +155,9 @@ class Mapper implements MapperInterface
     /**
      * Update an existing entity or a collection of entities in storage
      *
-     * @param EntityInterface|EntityInterface[] $entity
+     * Returns false on error and 0 when nothing ha been updated!
+     *
+     * @param EntityInterface|EntityInterface[]|CollectionInterface $entity
      * @return int
      */
     public function update($entity)
@@ -173,6 +175,10 @@ class Mapper implements MapperInterface
 
         if ($entity->getEmitter()->emit($entity::BEFORE_UPDATE, $entity)->isPropagationStopped()) {
             return FALSE;
+        }
+
+        if(!$entity->isUpdated()){
+            return 0;
         }
 
         //prepare statement
@@ -197,7 +203,7 @@ class Mapper implements MapperInterface
     /**
      * Delete an existing entity or a collection of entities in storage
      *
-     * @param EntityInterface|EntityInterface[] $entity
+     * @param EntityInterface|EntityInterface[]|CollectionInterface $entity
      * @return int
      */
     public function delete($entity)
