@@ -38,7 +38,8 @@ Factory::create(new Container(), [
 
 ### Working with Entities
 
-Entities representing database tables as objects. Entities know their fields, indexes and relations.
+Entities representing database tables as objects. Entities know their fields, indexes and relations. Create a table 
+instance for reference to database table.
 
 ```php
 <?php
@@ -71,6 +72,71 @@ class Post extends AbstractEntity
 }
 
 ```
+
+#### Accessor
+
+Accessing data with `get`
+
+```php
+<?php
+
+$content = $post->get('content');
+```
+
+Accessing data by property, which is internal calling `get`
+
+```php
+<?php
+
+$content = $post->content;
+```
+
+Manipulating accessor with `value.get` event, for example passing html markup to post title.
+
+```php
+<?php
+
+$post->getEmitter()->addListener($post::VALUE_GET, function(ValueEvent $event){
+    if($event->getKey() === 'same'){
+        $event->setValue(sprintf('<h1>%s</h1>', $event->getValue()));
+    }
+});
+```
+
+Events could als attached on `AbstractEntity::configure`
+
+#### Mutator
+
+Passing data with `set` to entity
+
+```php
+<?php
+
+$post->set('content', 'A lot of content');
+```
+
+Accessing data by property, which is internal calling `get`
+
+```php
+<?php
+
+$post->content = 'A lot of content';
+```
+
+Manipulating mutator with `value.set` event, for example stripping html markup from post content.
+
+```php
+<?php
+
+$post->getEmitter()->addListener($post::VALUE_SET, function(ValueEvent $event){
+    if($event->getKey() === 'content'){
+        $event->setValue(strip_tags($event->getValue()));
+    }
+});
+```
+
+Events could als attached on `AbstractEntity::configure`
+
 #### Relations
 
 Blast Db is providing a way to connect entities with relations.
@@ -107,12 +173,15 @@ class Post extends AbstractEntity
 }
 ```
 
-Get relation from entity like any field
+Get related entity from entity like any field
 
 ```php
 <?php
 
 $user = $post->user;
+
+//or with accssor
+$user = $post->get('user');
 ```
 
 Update entity with related entity
@@ -137,6 +206,22 @@ $mapper->save($post);
 ```
 
 If an entity is deleted, it's related entities will not deleted or updated!
+
+Access relation object
+
+```php
+<?php
+
+$userRelation = $post->getRelation('user');
+```
+
+Check if relation exists
+
+```php
+<?php
+
+$hasRelation = $post->hasRelation('user');
+```
 
 ### Query
 
