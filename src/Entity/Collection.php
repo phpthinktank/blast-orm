@@ -44,7 +44,8 @@ class Collection implements CollectionInterface
      * reset pointer on data
      */
     public function rewind() {
-        reset($this->getData());
+        $data = $this->getData();
+        reset($data);
     }
 
     /**
@@ -52,7 +53,8 @@ class Collection implements CollectionInterface
      * @return EntityInterface
      */
     public function current() {
-        return current($this->getData());
+        $data = $this->getData();
+        return current($data);
     }
 
     /**
@@ -60,7 +62,8 @@ class Collection implements CollectionInterface
      * @return string|int
      */
     public function key() {
-        return key($this->getData());
+        $data = $this->getData();
+        return key($data);
     }
 
     /**
@@ -68,7 +71,8 @@ class Collection implements CollectionInterface
      * @return mixed
      */
     public function next() {
-        return next($this->getData());
+        $data = $this->getData();
+        return next($data);
     }
 
     /**

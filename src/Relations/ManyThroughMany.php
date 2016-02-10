@@ -15,6 +15,7 @@ namespace Blast\Db\Relations;
 
 
 use Blast\Db\Entity\EntityInterface;
+use Blast\Db\Query;
 
 class ManyThroughMany extends AbstractRelation
 {
@@ -59,7 +60,8 @@ class ManyThroughMany extends AbstractRelation
      */
     public function save()
     {
-        throw new \Exception('No implemented yet');
+        //@todo Add saving for many through many relations
+        throw new \Exception('Not implemented yet');
     }
 
     /**
@@ -69,29 +71,28 @@ class ManyThroughMany extends AbstractRelation
      */
     public function fetch()
     {
-        $through = $this->getThroughEntity()->getMapper()
-            ->findBy(
-                $this->getLocalKey() . '_id',
-                $this->getForeignEntity()->get(
-                    $this->getForeignEntity()->getTable()->getPrimaryKeyName()
-                )
-            );
+        //@todo maybe we want to use a join instead of huge double query
+        $query = $this->getThroughEntity()->getMapper()->select();
+        $through = $query->select($query->expr()->eq(
+            $this->getLocalKey() . '_id',
+            $this->getForeignEntity()->get($this->getForeignEntity()->getTable()->getPrimaryKeyName())
+        ))->execute(Query::RESULT_COLLECTION);
 
-        if(!is_array($through) && $through == $this->getThroughEntity()){
+        if (!is_array($through) && $through == $this->getThroughEntity()) {
             $through = [$through];
         }
 
-        if(!is_array($through)){
+        if (!is_array($through)) {
             return false;
         }
 
-        $mapper = $this->getForeignEntity()->getMapper();
-        $builder = $mapper->getQueryBuilder();
+        $query = $this->getForeignEntity()->getMapper()->select();
 
-        foreach($through as $entity){
-            $builder->orWhere($builder->expr()->eq($this->getForeignKey(), $entity->get($this->getForeignKey() . '_id')));
+        foreach ($through as $entity) {
+            $query->orWhere($query->expr()->eq($this->getForeignKey(), $entity->get($this->getForeignKey() . '_id')));
         }
 
-        return $mapper->fetch($builder);
+        $result = $query->execute(Query::RESULT_COLLECTION);
+        return $this->setResults($result)->getResults();
     }
 }

@@ -77,7 +77,7 @@ class Mapper implements MapperInterface
      * Find result by primary key
      *
      * @param $value
-     * @return array|Query
+     * @return EntityInterface
      * @throws \Doctrine\DBAL\Schema\SchemaException
      */
     public function find($value)
@@ -117,8 +117,8 @@ class Mapper implements MapperInterface
     /**
      * Create a new entity or a collection of entities in storage.
      *
-     * @param EntityInterface|EntityInterface[] $entity
-     * @return int
+     * @param EntityInterface|EntityInterface[]|CollectionInterface $entity
+     * @return int|int[]|bool[]|bool
      */
     public function create($entity)
     {
@@ -155,10 +155,16 @@ class Mapper implements MapperInterface
     /**
      * Update an existing entity or a collection of entities in storage
      *
-     * @param EntityInterface|EntityInterface[] $entity
-     * @return int
+     * Returns false on error and 0 when nothing has been updated!
+     *
+     * Optional force update of entities without updates
+     *
+     * @param EntityInterface|EntityInterface[]|CollectionInterface $entity
+     * @param bool $forceUpdate
+     * @return int|int[]|bool[]|bool
+     * @throws \Doctrine\DBAL\Schema\SchemaException
      */
-    public function update($entity)
+    public function update($entity, $forceUpdate = false)
     {
         //execute batch if condition matches
         if ($this->isMassProcessable($entity)) {
@@ -173,6 +179,10 @@ class Mapper implements MapperInterface
 
         if ($entity->getEmitter()->emit($entity::BEFORE_UPDATE, $entity)->isPropagationStopped()) {
             return FALSE;
+        }
+
+        if(!$entity->isUpdated()){
+            return 0;
         }
 
         //prepare statement
@@ -197,7 +207,7 @@ class Mapper implements MapperInterface
     /**
      * Delete an existing entity or a collection of entities in storage
      *
-     * @param EntityInterface|EntityInterface[] $entity
+     * @param EntityInterface|EntityInterface[]|CollectionInterface $entity
      * @return int
      */
     public function delete($entity)
@@ -242,12 +252,15 @@ class Mapper implements MapperInterface
     /**
      * Create or update an entity or a collection of entities in storage
      *
+     * Optional force update of entities without updates
+     *
      * @param EntityInterface|EntityInterface[]|array $entity
+     * @param bool $forceUpdate
      * @return int
      */
-    public function save($entity)
+    public function save($entity, $forceUpdate = false)
     {
-        if (is_array($entity)) {
+        if ($this->isMassProcessable($entity)) {
             return $this->massProcess(__FUNCTION__, $entity);
         }
 
@@ -260,6 +273,10 @@ class Mapper implements MapperInterface
      */
     protected function prepareEntity($entity)
     {
+        $targetEntity = $this->getEntity();
+        if(get_class($entity) != get_class($targetEntity)){
+            throw new \InvalidArgumentException('Given entity ' . (is_object($entity) ? get_class($entity) : gettype($entity)) .' needs to be an instance of ' . get_class($targetEntity));
+        }
         return $entity;
     }
 

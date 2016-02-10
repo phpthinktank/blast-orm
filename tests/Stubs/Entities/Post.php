@@ -6,28 +6,29 @@
  * Time: 17:04
  */
 
-namespace Blast\Tests\Db\Entities;
+namespace Blast\Tests\Db\Stubs\Entities;
 
 use Blast\Db\Entity\AbstractEntity;
+use Blast\Db\Relations\BelongsTo;
 use Blast\Db\Schema\Table;
 use Doctrine\DBAL\Types\Type;
+use Stubs\Entities\User;
 
-class AnyEntity extends AbstractEntity
+class Post extends AbstractEntity
 {
-    protected $table = 'test';
-    protected $primaryKeyField = 'id';
-
 
     /**
      * Configure entity
      */
     public function configure()
     {
-        $table = new Table('test');
+        $table = new Table('post');
         $table->addColumn('id', Type::INTEGER);
-        $table->addColumn('pk', Type::INTEGER);
+        $table->addColumn('user_id', Type::INTEGER);
         $table->addColumn('same', Type::INTEGER);
         $table->setPrimaryKey(['id']);
         $this->setTable($table);
+
+        $this->addRelation(new BelongsTo($this, new User()));
     }
 }

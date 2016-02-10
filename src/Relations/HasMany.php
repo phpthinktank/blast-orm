@@ -14,7 +14,9 @@
 namespace Blast\Db\Relations;
 
 
+use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
+use Blast\Db\Query;
 
 class HasMany extends AbstractRelation
 {
@@ -68,11 +70,7 @@ class HasMany extends AbstractRelation
         $foreignEntity = $this->getForeignEntity();
         $entity = $this->getEntity();
         $entity->__set($this->getLocalKey(), $foreignEntity->__get($this->getForeignKey()));
-
-        //save foreign only if it has updates
-        if($foreignEntity->isUpdated()){
-            $foreignEntity->getMapper()->save($foreignEntity);
-        }
+        $foreignEntity->getMapper()->save($this->getResults());
 
         return $foreignEntity;
     }
@@ -80,11 +78,15 @@ class HasMany extends AbstractRelation
     /**
      * Fetch data from foreign entity, when value of foreign key matches up with value of local key
      *
-     * @return EntityInterface|\Blast\Db\Entity\EntityInterface[]
+     * @return CollectionInterface
      */
     public function fetch()
     {
-        return $this->getEntity()->getMapper()->findBy($this->getLocalKey(), $this->getForeignEntity()->__get($this->getLocalKey()));
+        $query = $this->getForeignEntity()->getMapper()->select();
+        $result = $query->where(
+            $query->expr()->eq($this->getLocalKey(), $this->getForeignEntity()->get($this->getLocalKey()))
+        )->execute(Query::RESULT_COLLECTION);
+        return $this->setResults($result)->getResults();
     }
 
 }

@@ -129,7 +129,7 @@ trait EntityTrait
     public function setData(array $data)
     {
         foreach ($data as $name => $value) {
-            $this->set($name, $data);
+            $this->set($name, $value);
         }
 
         return $this;
@@ -173,6 +173,12 @@ trait EntityTrait
 
                 $relation = $this->getRelation($name);
                 $relation->setForeignEntity($value);
+            }
+        }
+
+        if($this instanceof EntityInterface){
+            foreach($this->getRelations() as $relation){
+                $relation->setEntity($this);
             }
         }
 

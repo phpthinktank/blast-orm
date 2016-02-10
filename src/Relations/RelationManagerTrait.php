@@ -18,7 +18,7 @@ trait RelationManagerTrait
     /**
      * @var AbstractRelation[]
      */
-    protected $relations;
+    protected $relations = [];
 
     /**
      * @return AbstractRelation[]
@@ -38,7 +38,7 @@ trait RelationManagerTrait
     public function addRelation(AbstractRelation $relation, $name = null)
     {
         if ($name === null) {
-            $name = $relation->getForeignEntity()->getTable()->getName() . '.' . $relation->getForeignKey();
+            $name = $relation->getForeignEntity()->getTable()->getName();
         }
 
         if ($this->hasRelation($name)) {

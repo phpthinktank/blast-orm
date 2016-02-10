@@ -12,7 +12,8 @@
 
 namespace Blast\Db\Relations;
 
-
+use Blast\Db\Entity\Collection;
+use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Orm\MapperInterface;
 
@@ -44,33 +45,14 @@ trait RelationTrait
     protected $localKey;
 
     /**
+     * @var CollectionInterface
+     */
+    protected $results;
+
+    /**
      * @var bool
      */
     protected $foreignEntityUpdate = false;
-
-    /**
-     * @return boolean
-     */
-    public function isForeignEntityUpdate()
-    {
-        return $this->foreignEntityUpdate;
-    }
-
-    /**
-     * @param boolean $foreignEntityUpdate
-     */
-    protected function setForeignEntityUpdate($foreignEntityUpdate)
-    {
-        $this->foreignEntityUpdate = $foreignEntityUpdate;
-    }
-
-    /**
-     * @return MapperInterface
-     */
-    public function getMapper()
-    {
-        return $this->mapper;
-    }
 
     /**
      * @return EntityInterface
@@ -78,6 +60,16 @@ trait RelationTrait
     public function getEntity()
     {
         return $this->entity;
+    }
+
+    /**
+     * @param EntityInterface $entity
+     * @return RelationTrait
+     */
+    public function setEntity($entity)
+    {
+        $this->entity = $entity;
+        return $this;
     }
 
     /**
@@ -90,11 +82,12 @@ trait RelationTrait
 
     /**
      * @param EntityInterface $foreignEntity
+     * @return $this
      */
     public function setForeignEntity($foreignEntity)
     {
-        $this->setForeignEntityUpdate(true);
         $this->foreignEntity = $foreignEntity;
+        return $this;
     }
 
     /**
@@ -117,5 +110,27 @@ trait RelationTrait
             $this->localKey = $this->getEntity()->getTable()->getPrimaryKeyName();
         }
         return $this->localKey;
+    }
+
+    /**
+     * @return CollectionInterface|EntityInterface
+     */
+    public function getResults()
+    {
+        return $this->results === null ? new Collection() : $this->results;
+    }
+
+    /**
+     * @param CollectionInterface|EntityInterface $results
+     * @return $this
+     */
+    public function setResults($results)
+    {
+        if(!($results instanceof CollectionInterface || $results instanceof EntityInterface)){
+            throw new \InvalidArgumentException('Result set needs to be an instance of ' . CollectionInterface::class . ' or ' . EntityInterface::class);
+        }
+
+        $this->results = $results;
+        return $this;
     }
 }
