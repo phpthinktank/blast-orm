@@ -92,6 +92,7 @@ class ManyThroughMany extends AbstractRelation
             $query->orWhere($query->expr()->eq($this->getForeignKey(), $entity->get($this->getForeignKey() . '_id')));
         }
 
-        return $query->execute(Query::RESULT_COLLECTION);
+        $result = $query->execute(Query::RESULT_COLLECTION);
+        return $this->setResults($result)->getResults();
     }
 }

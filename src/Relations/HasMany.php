@@ -70,11 +70,7 @@ class HasMany extends AbstractRelation
         $foreignEntity = $this->getForeignEntity();
         $entity = $this->getEntity();
         $entity->__set($this->getLocalKey(), $foreignEntity->__get($this->getForeignKey()));
-
-        //save foreign only if it has updates
-        if($foreignEntity->isUpdated()){
-            $foreignEntity->getMapper()->save($foreignEntity);
-        }
+        $foreignEntity->getMapper()->save($this->getResults());
 
         return $foreignEntity;
     }
@@ -90,7 +86,7 @@ class HasMany extends AbstractRelation
         $result = $query->where(
             $query->expr()->eq($this->getLocalKey(), $this->getForeignEntity()->get($this->getLocalKey()))
         )->execute(Query::RESULT_COLLECTION);
-        return $result;
+        return $this->setResults($result)->getResults();
     }
 
 }
