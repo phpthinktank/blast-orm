@@ -60,6 +60,7 @@ class ManyThroughMany extends AbstractRelation
      */
     public function save()
     {
+        //@todo Add saving for many through many relations
         throw new \Exception('Not implemented yet');
     }
 
@@ -70,6 +71,7 @@ class ManyThroughMany extends AbstractRelation
      */
     public function fetch()
     {
+        //@todo maybe we want to use a join instead of huge double query
         $query = $this->getThroughEntity()->getMapper()->select();
         $through = $query->select($query->expr()->eq(
             $this->getLocalKey() . '_id',
