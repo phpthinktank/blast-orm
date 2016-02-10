@@ -53,6 +53,12 @@ trait EntityTrait
      */
     protected $originalData = [];
 
+    public function __construct()
+    {
+        $this->configure();
+        $this->attachDefaultValues();
+    }
+
     /**
      * @return $this
      */
@@ -321,5 +327,12 @@ trait EntityTrait
     public function __clone()
     {
         $this->reset();
+    }
+
+    /**
+     * Config placeholder
+     */
+    public function configure(){
+
     }
 }
