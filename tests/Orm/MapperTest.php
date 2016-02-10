@@ -72,7 +72,8 @@ class MapperTest extends \PHPUnit_Framework_TestCase
     {
         $factory = Factory::getInstance();
         $connection = $factory->getConfig()->getConnection(ConfigInterface::DEFAULT_CONNECTION);
-        $connection->prepare('DROP TABLE test')->execute();
+        $connection->prepare('DROP TABLE post')->execute();
+        $connection->prepare('DROP TABLE user')->execute();
         $factory->shutdown();
     }
 
@@ -85,7 +86,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $mapper = new Mapper($entity);
 
         $query = $mapper->select();
-        $result = $query->where('user_id = 42')->execute();
+        $result = $query->where('user_id = 1')->execute();
 
         $this->assertInstanceOf(CollectionInterface::class, $result);
         $this->assertEquals(2, $result->count());
