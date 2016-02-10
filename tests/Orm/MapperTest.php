@@ -48,17 +48,19 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $this->entity = new Post();
 
         $connection = $factory->getConfig()->getConnection(ConfigInterface::DEFAULT_CONNECTION);
-        $connection->prepare('CREATE TABLE post (id int, user_id int, same int)')->execute();
+        $connection->prepare('CREATE TABLE post (id int, user_id int, title VARCHAR(255), content TEXT)')->execute();
         $connection->prepare('CREATE TABLE user (id int, name VARCHAR(255))')->execute();
         $connection->insert('post', [
             'id' => 1,
             'user_id' => 1,
-            'same' => 42
+            'title' => 'Hello World',
+            'content' => 'Some text',
         ]);
         $connection->insert('post', [
             'id' => 2,
-            'user_id' => 2,
-            'same' => 42
+            'user_id' => 1,
+            'title' => 'Next thing',
+            'content' => 'More text to read'
         ]);
         $connection->insert('user', [
             'id' => 1,
@@ -70,7 +72,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
     {
         $factory = Factory::getInstance();
         $connection = $factory->getConfig()->getConnection(ConfigInterface::DEFAULT_CONNECTION);
-//        $connection->prepare('DROP TABLE test')->execute();
+        $connection->prepare('DROP TABLE test')->execute();
         $factory->shutdown();
     }
 
@@ -83,7 +85,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $mapper = new Mapper($entity);
 
         $query = $mapper->select();
-        $result = $query->where('same = 42')->execute();
+        $result = $query->where('user_id = 42')->execute();
 
         $this->assertInstanceOf(CollectionInterface::class, $result);
         $this->assertEquals(2, $result->count());
@@ -123,7 +125,8 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $post = new Post();
         $post->pk = 3;
         $post->user_id = 1;
-        $post->same = 42;
+        $post->ttile = 'first created post';
+        $post->content = 'A new post!';
 
         $result = $mapper->create($post);
 
