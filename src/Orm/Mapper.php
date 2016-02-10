@@ -155,12 +155,16 @@ class Mapper implements MapperInterface
     /**
      * Update an existing entity or a collection of entities in storage
      *
-     * Returns false on error and 0 when nothing ha been updated!
+     * Returns false on error and 0 when nothing has been updated!
+     *
+     * Optional force update of entities without updates
      *
      * @param EntityInterface|EntityInterface[]|CollectionInterface $entity
+     * @param bool $forceUpdate
      * @return int
+     * @throws \Doctrine\DBAL\Schema\SchemaException
      */
-    public function update($entity)
+    public function update($entity, $forceUpdate = false)
     {
         //execute batch if condition matches
         if ($this->isMassProcessable($entity)) {
@@ -248,10 +252,13 @@ class Mapper implements MapperInterface
     /**
      * Create or update an entity or a collection of entities in storage
      *
+     * Optional force update of entities without updates
+     *
      * @param EntityInterface|EntityInterface[]|array $entity
+     * @param bool $forceUpdate
      * @return int
      */
-    public function save($entity)
+    public function save($entity, $forceUpdate = false)
     {
         if (is_array($entity)) {
             return $this->massProcess(__FUNCTION__, $entity);
