@@ -24,12 +24,10 @@ abstract class AbstractEntity implements EntityInterface
     use RelationManagerTrait;
     use DataConverterTrait;
 
-    public function __construct()
-    {
-        $this->configure();
-        $this->attachDefaultValues();
-    }
-
+    /**
+     * Get mapper and lazy instantiate mapper if no mapper exists
+     * @return \Blast\Db\Orm\MapperInterface
+     */
     public function getMapper()
     {
         if($this->mapper === null){
@@ -37,10 +35,5 @@ abstract class AbstractEntity implements EntityInterface
         }
         return $this->getInternalMapper();
     }
-
-    /**
-     * Configure entity
-     */
-    abstract public function configure();
 
 }
