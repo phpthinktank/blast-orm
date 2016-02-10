@@ -15,15 +15,9 @@ namespace Blast\Db\Relations;
 
 use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Orm\MapperInterface;
 
 interface RelationInterface
 {
-    /**
-     * @return boolean
-     */
-    public function isForeignEntityUpdate();
-
     /**
      * @return EntityInterface
      */
