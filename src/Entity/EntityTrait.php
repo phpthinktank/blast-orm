@@ -129,7 +129,7 @@ trait EntityTrait
     public function setData(array $data)
     {
         foreach ($data as $name => $value) {
-            $this->set($name, $data);
+            $this->set($name, $value);
         }
 
         return $this;
