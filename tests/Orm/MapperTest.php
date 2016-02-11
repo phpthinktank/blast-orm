@@ -37,7 +37,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->markTestSkipped('Entity and models are in development. Mapper tests depend on entity and needs to be updated');
+//        $this->markTestSkipped('Entity and models are in development. Mapper tests depend on entity and needs to be updated');
 
         $this->container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class);
 

@@ -14,7 +14,7 @@
 namespace Blast\Db\Relations;
 
 
-interface RelationManagerInterface
+interface RelationAwareInterface
 {
     /**
      * @return AbstractRelation[]

@@ -10,6 +10,7 @@ namespace Blast\Tests\Db\Stubs\Entities;
 
 use Blast\Db\Entity\AbstractEntity;
 use Blast\Db\Events\ValueEvent;
+use Blast\Db\Orm\Model\ModelEmitterAwareInterface;
 use Blast\Db\Relations\BelongsTo;
 use Blast\Db\Schema\Table;
 use Doctrine\DBAL\Types\Type;
@@ -33,13 +34,13 @@ class Post extends AbstractEntity
 
         $this->addRelation(new BelongsTo($this, new User()));
 
-        $this->getEmitter()->addListener(self::VALUE_GET, function(ValueEvent $event){
+        $this->getEmitter()->addListener(ModelEmitterAwareInterface::VALUE_GET, function(ValueEvent $event){
             if($event->getKey() === 'title'){
                 $event->setValue(sprintf('<h1>%s</h1>', $event->getValue()));
             }
         });
 
-        $this->getEmitter()->addListener(self::VALUE_GET, function(ValueEvent $event){
+        $this->getEmitter()->addListener(ModelEmitterAwareInterface::VALUE_GET, function(ValueEvent $event){
             if($event->getKey() === 'content'){
                 $event->setValue(strip_tags($event->getValue()));
             }

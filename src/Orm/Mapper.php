@@ -15,8 +15,9 @@ use Blast\Db\Events\ResultEvent;
 use Blast\Db\ConnectionAwareTrait;
 use Blast\Db\Factory;
 use Blast\Db\FactoryAwareTrait;
+use Blast\Db\Orm\Model\ModelEmitterAwareInterface;
 use Blast\Db\Query;
-use Blast\Db\Relations\RelationManagerInterface;
+use Blast\Db\Relations\RelationAwareInterface;
 
 /**
  * Class Mapper
@@ -134,7 +135,7 @@ class Mapper implements MapperInterface
         $this->saveRelations($entity);
 
         //emit before event
-        if ($entity->getEmitter()->emit($entity::BEFORE_CREATE, $entity)->isPropagationStopped()) {
+        if ($entity->getEmitter()->emit(ModelEmitterAwareInterface::BEFORE_CREATE, $entity)->isPropagationStopped()) {
             return FALSE;
         }
 
@@ -147,7 +148,7 @@ class Mapper implements MapperInterface
         }
 
         //execute statement and emit after event
-        $event = $entity->getEmitter()->emit(new ResultEvent($entity::AFTER_CREATE, $query->execute()), $entity);
+        $event = $entity->getEmitter()->emit(new ResultEvent(ModelEmitterAwareInterface::AFTER_CREATE, $query->execute()), $entity);
 
         return $event->isPropagationStopped() ? FALSE : $event->getResult();
     }
@@ -177,7 +178,7 @@ class Mapper implements MapperInterface
         //save relations before save entity
         $this->saveRelations($entity);
 
-        if ($entity->getEmitter()->emit($entity::BEFORE_UPDATE, $entity)->isPropagationStopped()) {
+        if ($entity->getEmitter()->emit(ModelEmitterAwareInterface::BEFORE_UPDATE, $entity)->isPropagationStopped()) {
             return FALSE;
         }
 
@@ -199,7 +200,7 @@ class Mapper implements MapperInterface
         //execute statement and emit after event
         $event = $entity
             ->getEmitter()
-            ->emit(new ResultEvent($entity::AFTER_UPDATE, $query->execute()), $entity);
+            ->emit(new ResultEvent(ModelEmitterAwareInterface::AFTER_UPDATE, $query->execute()), $entity);
 
         return $event->isPropagationStopped() ? FALSE : $event->getResult();
     }
@@ -225,7 +226,7 @@ class Mapper implements MapperInterface
         $entity = $this->prepareEntity($entity);
 
         //emit before event
-        if ($entity->getEmitter()->emit($entity::BEFORE_DELETE, $entity)->isPropagationStopped()) {
+        if ($entity->getEmitter()->emit(ModelEmitterAwareInterface::BEFORE_DELETE, $entity)->isPropagationStopped()) {
             return FALSE;
         }
 
@@ -243,7 +244,7 @@ class Mapper implements MapperInterface
         //execute statement and emit after event
         $event = $entity
             ->getEmitter()
-            ->emit(new ResultEvent($entity::AFTER_DELETE, $query->execute()), $entity, $entities);
+            ->emit(new ResultEvent(ModelEmitterAwareInterface::AFTER_DELETE, $query->execute()), $entity, $entities);
         $result = $event->isPropagationStopped() ? FALSE : $event->getResult();
 
         return $result;
@@ -287,7 +288,7 @@ class Mapper implements MapperInterface
      */
     protected function saveRelations($entity)
     {
-        if(!($entity instanceof RelationManagerInterface)){
+        if(!($entity instanceof RelationAwareInterface)){
             return;
         }
         //maybe it is better to start an transaction

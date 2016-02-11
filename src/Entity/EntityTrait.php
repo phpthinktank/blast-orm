@@ -13,10 +13,10 @@
 namespace Blast\Db\Entity;
 
 
-use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Events\ValueEvent;
 use Blast\Db\Factory;
-use Blast\Db\Relations\RelationManagerInterface;
+use Blast\Db\Orm\Model\ModelEmitterAwareInterface;
+use Blast\Db\Relations\RelationAwareInterface;
 use Blast\Db\Schema\Table;
 use League\Event\Emitter;
 use League\Event\EmitterInterface;
@@ -142,6 +142,8 @@ trait EntityTrait
     }
 
     /**
+     * Getting data
+     *
      * @param $name
      * @return mixed
      */
@@ -154,7 +156,7 @@ trait EntityTrait
         } else {
             $value = null;
         }
-        return $this->emitValueEvent(EntityInterface::VALUE_GET, $name, $value)->getValue();
+        return $this->emitValueEvent(ModelEmitterAwareInterface::VALUE_GET, $name, $value)->getValue();
     }
 
     /**
@@ -170,8 +172,8 @@ trait EntityTrait
         }
 
         if ($this->getTable()->hasColumn($name)) {
-            $this->data[$name] = $this->emitValueEvent(EntityInterface::VALUE_SET, $name, $value)->getValue();
-        } elseif ($this instanceof RelationManagerInterface) {
+            $this->data[$name] = $this->emitValueEvent(ModelEmitterAwareInterface::VALUE_SET, $name, $value)->getValue();
+        } elseif ($this instanceof RelationAwareInterface) {
             if ($this->hasRelation($name)) {
                 if (!($value instanceof EntityInterface)) {
                     throw new \InvalidArgumentException('Unable to update Relation. Given entity needs to be an instance of ' . EntityInterface::class);
@@ -216,7 +218,7 @@ trait EntityTrait
      */
     public function __isset($name)
     {
-        return isset($this->data[$name]);
+        return $this->has($name);
     }
 
     /**
@@ -247,7 +249,7 @@ trait EntityTrait
 
             return call_user_func_array([$this, $method], $args);
 
-        } elseif ($this instanceof RelationManagerInterface) {
+        } elseif ($this instanceof RelationAwareInterface) {
             if ($this->hasRelation($name)) {
                 //call relation without fetching it
                 return $this->getRelation($name);
@@ -334,5 +336,14 @@ trait EntityTrait
      */
     public function configure(){
 
+    }
+
+    /**
+     * @param $name
+     * @return bool
+     */
+    public function has($name)
+    {
+        return isset($this->data[$name]);
     }
 }
