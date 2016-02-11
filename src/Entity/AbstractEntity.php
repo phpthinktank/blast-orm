@@ -9,7 +9,6 @@
 namespace Blast\Db\Entity;
 
 use Blast\Db\DataConverterTrait;
-use Blast\Db\Entity\EntityTrait;
 use Blast\Db\Orm\Mapper;
 use Blast\Db\Orm\MapperAwareTrait;
 use Blast\Db\Relations\RelationManagerTrait;
