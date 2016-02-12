@@ -25,7 +25,7 @@ class Helper
     public static function receiveDataFromObject($object)
     {
         $data = [];
-        if ($object instanceof DataObjectInterface) {
+        if ($object instanceof DataObjectInterface || $object instanceof ImmutableDataObjectInterface) {
             $data = $object->getData();
         } elseif ($object instanceof \ArrayObject) {
             $data = $object->getArrayCopy();
@@ -46,6 +46,8 @@ class Helper
     {
         if ($object instanceof DataObjectInterface) {
             $object->setData($data);
+        } elseif ($object instanceof ImmutableDataObjectInterface) {
+            throw new \InvalidArgumentException('Helper can not replace data. Given object is immutable!');
         } elseif ($object instanceof \ArrayObject) {
             $object->exchangeArray($data);
         } elseif (is_object($object)) {
