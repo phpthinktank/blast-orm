@@ -54,9 +54,10 @@ class Hook
         $results = [];
 
         foreach($reflection->getMethods() as $method){
+            $methodName = $method->getName();
 
             //filter all hooks which does not match with $name as prefix
-            if($options & static::HOOK_EXPLICIT ? $name === $method : strpos($method, $name) === 0){
+            if($options & static::HOOK_EXPLICIT ? $name !== $methodName : strpos($methodName, $name) !== 0){
                 continue;
             }
 
@@ -72,7 +73,7 @@ class Hook
             $params = is_array($result) ? $result : $params;
 
             if($options & static::HOOK_ALL_RESULTS){
-                $results[$method->getName()] = $result;
+                $results[$methodName] = $result;
             }
         }
 
