@@ -20,7 +20,7 @@ trait IteratorTrait
      * reset pointer on data
      */
     public function rewind() {
-        $data = Helper::receiveDataFromObject($this);
+        $data = DataHelper::receiveDataFromObject($this);
         reset($data);
     }
 
@@ -29,7 +29,7 @@ trait IteratorTrait
      * @return mixed
      */
     public function current() {
-        $data = Helper::receiveDataFromObject($this);
+        $data = DataHelper::receiveDataFromObject($this);
         return current($data);
     }
 
@@ -38,7 +38,7 @@ trait IteratorTrait
      * @return string|int
      */
     public function key() {
-        $data = Helper::receiveDataFromObject($this);
+        $data = DataHelper::receiveDataFromObject($this);
         return key($data);
     }
 
@@ -47,7 +47,7 @@ trait IteratorTrait
      * @return mixed
      */
     public function next() {
-        $data = Helper::receiveDataFromObject($this);
+        $data = DataHelper::receiveDataFromObject($this);
         return next($data);
     }
 

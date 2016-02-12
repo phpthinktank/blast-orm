@@ -28,7 +28,7 @@ trait MutatorTrait
      */
     public function set($name, $value = null)
     {
-        $data = Helper::receiveDataFromObject($this);
+        $data = DataHelper::receiveDataFromObject($this);
 
         //hook before receive data
         $before = Hook::trigger('beforeSet', $this, ['name' => $name, 'data' => $data]);
@@ -45,7 +45,7 @@ trait MutatorTrait
 
         //replace data of object
         $data = isset($after['data']) ? $after['data'] : $data;
-        Helper::replaceDataFromObject($this, $data);
+        DataHelper::replaceDataFromObject($this, $data);
 
         return $this;
     }
@@ -58,7 +58,7 @@ trait MutatorTrait
      */
     public function remove($name)
     {
-        $data = Helper::receiveDataFromObject($this);
+        $data = DataHelper::receiveDataFromObject($this);
 
         //hook before receive data
         $before = Hook::trigger('beforeRemove', $this, ['name' => $name, 'data' => $data]);
@@ -78,7 +78,7 @@ trait MutatorTrait
         //replace data of object
         $data = isset($after['data']) ? $after['data'] : $data;
 
-        Helper::replaceDataFromObject($this, $data);
+        DataHelper::replaceDataFromObject($this, $data);
 
         return $this;
     }

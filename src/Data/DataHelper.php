@@ -13,7 +13,7 @@
 
 namespace Blast\Db\Data;
 
-class Helper
+class DataHelper
 {
 
     /**

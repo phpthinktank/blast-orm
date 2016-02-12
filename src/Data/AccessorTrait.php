@@ -14,7 +14,7 @@
 namespace Blast\Db\Data;
 
 
-use Blast\Db\Data\Helper;
+use Blast\Db\Data\DataHelper;
 use Blast\Db\Hook;
 
 /**
@@ -33,7 +33,7 @@ trait AccessorTrait
      */
     public function get($name, $default = null)
     {
-        $data = Helper::receiveDataFromObject($this);
+        $data = DataHelper::receiveDataFromObject($this);
 
         //hook before receive data
         $before = Hook::trigger('beforeGet', $this, ['name' => $name, 'data' => $data]);
@@ -60,7 +60,7 @@ trait AccessorTrait
      */
     public function has($name)
     {
-        $data = Helper::receiveDataFromObject($this);
+        $data = DataHelper::receiveDataFromObject($this);
 
         //hooking before check data
         $before = Hook::trigger('beforeHas', $this, ['name' => $name, 'data' => $data]);

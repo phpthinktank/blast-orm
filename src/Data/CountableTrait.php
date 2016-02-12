@@ -23,6 +23,6 @@ trait CountableTrait
      */
     public function count()
     {
-        return count(Helper::receiveDataFromObject($this));
+        return count(DataHelper::receiveDataFromObject($this));
     }
 }
