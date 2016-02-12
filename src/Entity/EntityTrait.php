@@ -135,7 +135,7 @@ trait EntityTrait
      * @param array $data
      * @return $this
      */
-    public function setData(array $data)
+    public function setData(array $data = [])
     {
         foreach ($data as $name => $value) {
             $this->set($name, $value);
@@ -150,7 +150,7 @@ trait EntityTrait
      * @param $name
      * @return mixed
      */
-    public function get($name)
+    public function get($name, $default = null)
     {
         if ($this->__isset($name)) {
             $value = $this->data[$name];
@@ -167,7 +167,7 @@ trait EntityTrait
      * @param $value
      * @return $this
      */
-    public function set($name, $value)
+    public function set($name, $value = null)
     {
         if (!$this->isUpdated()) {
             $this->setUpdated(true);
@@ -229,9 +229,7 @@ trait EntityTrait
      */
     public function __unset($name)
     {
-        if ($this->__isset($name)) {
-            $this->data[$name] = null;
-        }
+        $this->remove($name);
     }
 
     public function __call($name, $arguments)
@@ -348,5 +346,15 @@ trait EntityTrait
     public function has($name)
     {
         return isset($this->data[$name]);
+    }
+
+    /**
+     * @param $name
+     */
+    public function remove($name)
+    {
+        if ($this->__isset($name)) {
+            $this->data[$name] = null;
+        }
     }
 }

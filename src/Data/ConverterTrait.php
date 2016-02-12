@@ -41,7 +41,10 @@ trait ConverterTrait
      * @param int $options
      * @return string
      */
-    public function toJson($options = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_BIGINT_AS_STRING | JSON_NUMERIC_CHECK){
+    public function toJson($options = 0){
+        if($options === 0){
+            $options = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_BIGINT_AS_STRING | JSON_NUMERIC_CHECK;
+        }
         return json_encode($this->toArray(), $options);
     }
 
