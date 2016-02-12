@@ -20,6 +20,7 @@ use Blast\Db\Entity\ManagerInterface;
 use Blast\Db\ConnectionAwareTrait;
 use Doctrine\DBAL\Driver\Statement;
 use Doctrine\DBAL\Query\QueryBuilder;
+use stdClass;
 
 /**
  * Class Statement
@@ -105,10 +106,10 @@ class Query
 
     /**
      * Statement constructor.
-     * @param EntityInterface $entity
+     * @param EntityInterface|array|stdClass|\ArrayObject $entity
      * @param QueryBuilder $builder
      */
-    public function __construct(EntityInterface $entity = null, QueryBuilder $builder = null)
+    public function __construct($entity = null, QueryBuilder $builder = null)
     {
         $this->builder = $builder === null ? Factory::getInstance()->getConfig()->getConnection()->createQueryBuilder() : $builder;
         $this->entity = $entity;
@@ -134,7 +135,6 @@ class Query
      * Fetch data for entity. if raw is true, fetch assoc instead of entity
      *
      * @param string $convert
-     * @param bool $raw
      * @return array|CollectionInterface|EntityInterface
      * @throws \Doctrine\DBAL\DBALException
      */
@@ -162,12 +162,23 @@ class Query
 
         if ($count > 1 || $convert === static::RESULT_COLLECTION) { //if result set has many items, return a collection of entities
             foreach ($data as $key => $value) {
-                $entity = clone $this->getEntity();
+                /**
+                 * @todo support deprecated entity data passing
+                 */
+                if($this->getEntity() instanceof EntityInterface){
+                    $entity = clone $this->getEntity();
+                }else{
+                    $entity = new Result();
+                }
                 $data[$key] = $entity->setData($value);
             }
-            $result = new Collection($data);
+            $result = $this->getEntity() instanceof EntityInterface ? new Collection($data) : new ResultCollection();
         } elseif ($count === 1 || $convert === static::RESULT_ENTITY) { //if result has one item, return the entity
-            $entity = clone $this->getEntity();
+            if($this->getEntity() instanceof EntityInterface) {
+                $entity = clone $this->getEntity();
+            }else{
+                $entity = new Result();
+            }
             $result = $entity->setData(array_shift($data));
         }
 
