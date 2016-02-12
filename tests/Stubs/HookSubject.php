@@ -35,7 +35,7 @@ class HookSubject
      * @param $config
      * @return mixed
      */
-    public function initServices($config)
+    private function initServices($config)
     {
         $config['services'] = [
             'Router',
@@ -51,11 +51,15 @@ class HookSubject
      * @param $config
      * @return mixed
      */
-    public function initImmutable($config)
+    protected function initImmutable($config)
     {
         $config['immutable'] = $this->immutable;
 
         return $config;
+    }
+
+    public function doSomethingWrong($config){
+        $config['wrong'] = true;
     }
 
 

@@ -42,7 +42,32 @@ class HookTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('services', $result);
         $this->assertArrayHasKey('name', $result);
         $this->assertArrayHasKey('immutable', $result);
+        $this->assertArrayHasKey('environment', $result);
         $this->assertEquals($immutableValue, $result['immutable']);
+        $this->assertArrayNotHasKey('wrong', $result);
+    }
+
+    /**
+     * Test that hook triggers methods from subject object
+     */
+    public function testTriggerUnknownHookFromSubjectObject()
+    {
+
+        $config = [
+            'environment' => 'test'
+        ];
+
+        $subject = new HookSubject();
+
+        $immutableValue = 'Any value';
+        $subject->immutable = $immutableValue;
+
+
+        $result = Hook::trigger('setup', $subject, $config);
+        $this->assertInternalType('array', $result);
+        $this->assertCount(1, $result);
+        $this->assertArrayHasKey('environment', $result);
+        $this->assertArrayNotHasKey('wrong', $result);
     }
 
     /**
@@ -59,6 +84,8 @@ class HookTest extends \PHPUnit_Framework_TestCase
         $this->assertInternalType('array', $result);
         $this->assertArrayHasKey('services', $result);
         $this->assertArrayHasKey('name', $result);
+        $this->assertArrayHasKey('environment', $result);
+        $this->assertArrayNotHasKey('wrong', $result);
     }
 
     /**
@@ -77,6 +104,7 @@ class HookTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('initConfig', $result);
         $this->assertArrayHasKey('initServices', $result);
         $this->assertArrayHasKey('initImmutable', $result);
+        $this->assertArrayNotHasKey('doSomethingWrong', $result);
     }
 
     /**
@@ -91,6 +119,8 @@ class HookTest extends \PHPUnit_Framework_TestCase
         $result = Hook::trigger('initConfig', HookSubject::class, $config, Hook::HOOK_EXPLICIT);
         $this->assertInternalType('array', $result);
         $this->assertArrayHasKey('name', $result);
+        $this->assertArrayHasKey('environment', $result);
+        $this->assertArrayNotHasKey('wrong', $result);
     }
 
     /**
@@ -105,6 +135,7 @@ class HookTest extends \PHPUnit_Framework_TestCase
         $result = Hook::trigger('initConfig', HookSubject::class, $config, Hook::HOOK_EXPLICIT|Hook::HOOK_ALL_RESULTS);
         $this->assertInternalType('array', $result);
         $this->assertArrayHasKey('initConfig', $result);
+        $this->assertArrayNotHasKey('doSomethingWrong', $result);
     }
 
     /**
