@@ -7,24 +7,21 @@
  * file that was distributed with this source code.
  *
  * Date: 11.02.2016
- * Time: 10:31
+ * Time: 10:35
  *
  */
 
-namespace Blast\Db\Entity;
+namespace Blast\Db\Data;
 
-
-interface DataObjectInterface
+interface UpdatedDataObjectInterface
 {
     /**
-     * @param array $data
-     * @return $this
+     * @return boolean
      */
-    public function setData(array $data);
+    public function isUpdated();
 
     /**
      * @return array
      */
-    public function getData();
-
+    public function getUpdatedData();
 }

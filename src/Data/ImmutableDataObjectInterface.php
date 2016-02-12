@@ -6,15 +6,20 @@
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
  *
- * Date: 11.02.2016
- * Time: 11:34
+ * Date: 12.02.2016
+ * Time: 10:29
  *
  */
 
-namespace Blast\Db\Entity;
+namespace Blast\Db\Data;
 
 
-trait AccessorTrait
+interface ImmutableDataObjectInterface
 {
+    /**
+     * Receive data
+     * @return array
+     */
+    public function getData();
 
 }

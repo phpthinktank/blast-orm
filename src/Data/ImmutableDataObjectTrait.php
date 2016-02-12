@@ -6,23 +6,22 @@
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
  *
- * Date: 11.02.2016
- * Time: 10:35
+ * Date: 12.02.2016
+ * Time: 10:36
  *
  */
 
-namespace Blast\Db\Entity;
+namespace Blast\Db\Data;
 
 
-interface UpdatedDataObjectInterface
+trait ImmutableDataObjectTrait
 {
     /**
-     * @return boolean
-     */
-    public function isUpdated();
-
-    /**
+     * Receive data
      * @return array
      */
-    public function getUpdatedData();
+    public function getData()
+    {
+        return Helper::receiveDataFromObject($this);
+    }
 }

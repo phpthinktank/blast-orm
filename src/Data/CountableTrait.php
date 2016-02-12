@@ -6,20 +6,23 @@
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
  *
- * Date: 11.02.2016
+ * Date: 12.02.2016
  * Time: 10:41
  *
  */
 
-namespace Blast\Db\Entity;
+namespace Blast\Db\Data;
 
 
-interface MutatorInterface
+trait CountableTrait
 {
     /**
-     * @param $name
-     * @param $value
-     * @return mixed
+     * get count of data
+     *
+     * @return int
      */
-    public function set($name, $value);
+    public function count()
+    {
+        return count(Helper::receiveDataFromObject($this));
+    }
 }

@@ -7,25 +7,26 @@
  * file that was distributed with this source code.
  *
  * Date: 11.02.2016
- * Time: 10:32
+ * Time: 10:31
  *
  */
 
-namespace Blast\Db\Entity;
+namespace Blast\Db\Data;
 
 
-interface AccessorInterface
+interface DataObjectInterface
 {
     /**
-     * @param $name
-     * @return $this
+     * Receive data
+     * @return array
      */
-    public function get($name);
+    public function getData();
 
     /**
-     * @param $name
+     * Replace data
+     * @param array $data
      * @return $this
      */
-    public function has($name);
+    public function setData(array $data = []);
 
 }
