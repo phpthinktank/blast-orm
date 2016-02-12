@@ -17,7 +17,7 @@ namespace Blast\Db;
 use Blast\Db\Data\AccessorInterface;
 use Blast\Db\Data\MutatorInterface;
 use Blast\Db\Data\MutatorTrait;
-use Blast\Db\Entity\AccessorTrait;
+use Blast\Db\Data\AccessorTrait;
 
 /**
  * Class Result

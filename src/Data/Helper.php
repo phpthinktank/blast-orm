@@ -13,9 +13,6 @@
 
 namespace Blast\Db\Data;
 
-
-use Blast\Db\Entity\DataObjectInterface;
-
 class Helper
 {
 

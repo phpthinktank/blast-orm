@@ -11,7 +11,7 @@
  *
  */
 
-namespace Blast\Db\Entity;
+namespace Blast\Db\Data;
 
 
 use Blast\Db\Data\Helper;
@@ -56,7 +56,7 @@ trait AccessorTrait
      * Check if value exists
      *
      * @param $name
-     * @return $this
+     * @return bool
      */
     public function has($name)
     {
