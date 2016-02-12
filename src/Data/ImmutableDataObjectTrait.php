@@ -22,6 +22,6 @@ trait ImmutableDataObjectTrait
      */
     public function getData()
     {
-        return Helper::receiveDataFromObject($this);
+        return isset($this->data) ? $this->data : [];
     }
 }
