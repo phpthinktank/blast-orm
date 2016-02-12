@@ -11,7 +11,7 @@ namespace Blast\Db\Entity;
 use Blast\Db\Data\ConverterTrait;
 use Blast\Db\Orm\Mapper;
 use Blast\Db\Orm\MapperAwareTrait;
-use Blast\Db\Relations\RelationManagerTrait;
+use Blast\Db\Relations\RelationAwareTrait;
 /**
  *
  * @deprecated
@@ -23,7 +23,7 @@ abstract class AbstractEntity implements EntityInterface
     use MapperAwareTrait {
         getMapper as getInternalMapper;
     }
-    use RelationManagerTrait;
+    use RelationAwareTrait;
     use ConverterTrait;
 
     /**

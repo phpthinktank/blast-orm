@@ -13,7 +13,7 @@
 
 namespace Blast\Db\Relations;
 
-trait RelationManagerTrait
+trait RelationAwareTrait
 {
     /**
      * @var AbstractRelation[]
