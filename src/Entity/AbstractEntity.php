@@ -8,11 +8,14 @@
 
 namespace Blast\Db\Entity;
 
-use Blast\Db\DataConverterTrait;
+use Blast\Db\Data\ConverterTrait;
 use Blast\Db\Orm\Mapper;
 use Blast\Db\Orm\MapperAwareTrait;
 use Blast\Db\Relations\RelationManagerTrait;
-
+/**
+ *
+ * @deprecated
+ */
 abstract class AbstractEntity implements EntityInterface
 {
 
@@ -21,7 +24,7 @@ abstract class AbstractEntity implements EntityInterface
         getMapper as getInternalMapper;
     }
     use RelationManagerTrait;
-    use DataConverterTrait;
+    use ConverterTrait;
 
     /**
      * Get mapper and lazy instantiate mapper if no mapper exists

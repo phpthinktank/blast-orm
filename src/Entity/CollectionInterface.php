@@ -12,7 +12,10 @@
 
 namespace Blast\Db\Entity;
 
-
+/**
+ *
+ * @deprecated
+ */
 interface CollectionInterface extends \Iterator
 {
 

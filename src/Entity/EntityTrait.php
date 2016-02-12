@@ -20,7 +20,10 @@ use Blast\Db\Relations\RelationAwareInterface;
 use Blast\Db\Schema\Table;
 use League\Event\Emitter;
 use League\Event\EmitterInterface;
-
+/**
+ *
+ * @deprecated
+ */
 trait EntityTrait
 {
     /**

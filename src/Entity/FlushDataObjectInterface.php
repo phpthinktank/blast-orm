@@ -13,7 +13,10 @@
 
 namespace Blast\Db\Entity;
 
-
+/**
+ *
+ * @deprecated
+ */
 interface FlushDataObjectInterface
 {
     /**

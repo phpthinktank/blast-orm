@@ -14,11 +14,15 @@ namespace Blast\Db\Entity;
 
 
 
-use Blast\Db\DataConverterTrait;
+use Blast\Db\Data\ConverterTrait;
 
+/**
+ *
+ * @deprecated
+ */
 class Collection implements CollectionInterface
 {
-    use DataConverterTrait;
+    use ConverterTrait;
 
     /**
      * @var EntityInterface[]
