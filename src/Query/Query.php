@@ -13,13 +13,16 @@
 namespace Blast\Db\Query;
 
 
-use Blast\Db\Entity\Collection;
 use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\ConnectionAwareTrait;
+use Blast\Db\Events\BuilderEvent;
+use Blast\Db\Events\ResultEvent;
+use Blast\Db\Manager;
 use Blast\Db\ManagerAwareTrait;
-use Doctrine\DBAL\Driver\Statement;
+use Blast\Db\Orm\Model\ModelInterface;
 use Doctrine\DBAL\Query\QueryBuilder;
+use League\Event\EmitterAwareInterface;
 use stdClass;
 
 /**
@@ -81,38 +84,24 @@ class Query
     use ConnectionAwareTrait;
 
     /**
-     *
-     */
-    const RESULT_COLLECTION = 'collection';
-    /**
-     *
-     */
-    const RESULT_ENTITY = 'entity';
-    const RESULT_RAW = 'raw';
-    /**
-     *
-     */
-    const RESULT_AUTO = 'auto';
-
-    /**
      * @var QueryBuilder
      */
     private $builder;
 
     /**
-     * @var EntityInterface
+     * @var ModelInterface|array|stdClass|\ArrayObject
      */
-    private $entity;
+    private $model;
 
     /**
      * Statement constructor.
-     * @param EntityInterface|array|stdClass|\ArrayObject $entity
-     * @param QueryBuilder $builder
+     * @param ModelInterface|array|stdClass|\ArrayObject $model
+     * @param Query $builder
      */
-    public function __construct($entity = null, QueryBuilder $builder = null)
+    public function __construct($model = null, $builder = null)
     {
-        $this->builder = $builder === null ? Factory::getInstance()->getConfig()->getConnection()->createQueryBuilder() : $builder;
-        $this->entity = $entity;
+        $this->builder = $builder === null ? Manager::getInstance()->getConfig()->getConnection()->createQueryBuilder() : $builder;
+        $this->model = $model;
     }
 
     /**
@@ -124,11 +113,11 @@ class Query
     }
 
     /**
-     * @return EntityInterface
+     * @return ModelInterface|array|stdClass|\ArrayObject
      */
-    public function getEntity()
+    public function getModel()
     {
-        return $this->entity;
+        return $this->model;
     }
 
     /**
@@ -138,51 +127,28 @@ class Query
      * @return array|CollectionInterface|EntityInterface
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function execute($convert = self::RESULT_AUTO)
+    public function execute($convert = 'auto')
     {
-        $builder = $this->getBuilder();
-        $isFetchable = $builder->getType() === $builder::SELECT;
-        $statement = $builder->execute();
-        $result = $isFetchable ? $statement->fetchAll() : $statement;
+        $model = $this->getModel();
 
-        return $convert === self::RESULT_RAW || $this->getEntity() === null || $result instanceof Statement || is_int($result) ? $result : $this->determineResultSet($result, $convert);
-    }
+        $builder = $this->beforeExecute($model, $this->getBuilder());
 
-    /**
-     * Determine result and return one or many results
-     *
-     * @param $data
-     * @param string $convert
-     * @return CollectionInterface|EntityInterface|null
-     */
-    protected function determineResultSet($data, $convert = self::RESULT_AUTO)
-    {
-        $count = count($data);
-        $result = NULL;
-
-        if ($count > 1 || $convert === static::RESULT_COLLECTION) { //if result set has many items, return a collection of entities
-            foreach ($data as $key => $value) {
-                /**
-                 * @todo support deprecated entity data passing
-                 */
-                if($this->getEntity() instanceof EntityInterface){
-                    $entity = clone $this->getEntity();
-                }else{
-                    $entity = new Result();
-                }
-                $data[$key] = $entity->setData($value);
-            }
-            $result = $this->getEntity() instanceof EntityInterface ? new Collection($data) : new ResultCollection();
-        } elseif ($count === 1 || $convert === static::RESULT_ENTITY) { //if result has one item, return the entity
-            if($this->getEntity() instanceof EntityInterface) {
-                $entity = clone $this->getEntity();
-            }else{
-                $entity = new Result();
-            }
-            $result = $entity->setData(array_shift($data));
+        if(!$builder){
+            return false;
         }
 
-        return $result;
+        $isFetchable = $builder->getType() === $builder::SELECT;
+        $statement = $builder->execute();
+
+        $result = $this->afterExecute($isFetchable ? $statement->fetchAll() : $statement, $model, $builder);
+
+        if(!$result){
+            return false;
+        }
+
+        $decorator = new ResultDecorator($result, $model);
+
+        return $decorator->decorate($convert);
     }
 
     /**
@@ -196,6 +162,49 @@ class Query
     {
         $result = call_user_func_array([$this->getBuilder(), $name], $arguments);
         return $result instanceof QueryBuilder ? $this : $result;
+    }
+
+    /**
+     * @param $model
+     * @param $builder
+     * @return QueryBuilder
+     */
+    private function beforeExecute($model, $builder)
+    {
+        if ($model instanceof EmitterAwareInterface) {
+            $event = $model->getEmitter()->emit(new BuilderEvent('before.' . $this->getType(), $builder));
+            if ($event->isPropagationStopped()) {
+                return false;
+            }
+
+            if ($event instanceof BuilderEvent) {
+                $builder = $event->getBuilder();
+            }
+        }
+
+        return $builder;
+    }
+
+    /**
+     * @param $result
+     * @param $model
+     * @param Query|QueryBuilder $builder
+     * @return array
+     */
+    private function afterExecute($result, $model, $builder)
+    {
+        if ($model instanceof EmitterAwareInterface) {
+            $event = $model->getEmitter()->emit(new ResultDecorator('after.' . $builder->getType(), $result), $builder);
+            if ($event->isPropagationStopped()) {
+                return false;
+            }
+
+            if ($event instanceof ResultEvent) {
+                $result = $event->getResult();
+            }
+        }
+
+        return $result;
     }
 
 }
