@@ -12,7 +12,7 @@ use Blast\Db\Orm\Model\ModelInterface;
 use Blast\Db\ConnectionAwareTrait;
 use Blast\Db\ManagerAwareTrait;
 use Blast\Db\Query\Query;
-use Blast\Db\Relations\RelationAwareInterface;
+use Blast\Db\Orm\Relations\RelationAwareInterface;
 
 /**
  * Class Mapper

@@ -11,7 +11,7 @@
  *
  */
 
-namespace Blast\Db\Relations;
+namespace Blast\Db\Orm\Relations;
 
 
 interface RelationAwareInterface

@@ -10,7 +10,7 @@
 * Time: 14:02
 */
 
-namespace Blast\Db\Relations;
+namespace Blast\Db\Orm\Relations;
 
 use Blast\Db\Entity\Collection;
 use Blast\Db\Entity\CollectionInterface;

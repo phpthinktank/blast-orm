@@ -6,26 +6,19 @@
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
  *
- * Date: 02.02.2016
- * Time: 15:56
+ * Date: 01.02.2016
+ * Time: 15:54
  *
  */
 
-namespace Blast\Db\Relations;
+namespace Blast\Db\Orm\Relations;
 
 
-use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Query;
 
-class HasMany extends AbstractRelation
+class HasOne extends AbstractRelation
 {
-
-    /**
-     * @var EntityInterface[]
-     */
-    protected $foreignEntities = [];
-
     /**
      * BelongsTo constructor.
      * @param EntityInterface $model current entity instance
@@ -45,24 +38,8 @@ class HasMany extends AbstractRelation
     }
 
     /**
-     * @return \Blast\Db\Entity\EntityInterface[]
-     */
-    public function getForeignEntities()
-    {
-        return $this->foreignEntities;
-    }
-
-    /**
-     * @param \Blast\Db\Entity\EntityInterface[] $foreignEntities
-     */
-    public function setForeignEntities($foreignEntities)
-    {
-        $this->foreignEntities = $foreignEntities;
-    }
-
-    /**
-     * @todo Entity should be able to save many entities
      * Save foreign entity and store value of foreign key into local key field
+     *
      * @return EntityInterface
      */
     public function save()
@@ -78,14 +55,14 @@ class HasMany extends AbstractRelation
     /**
      * Fetch data from foreign entity, when value of foreign key matches up with value of local key
      *
-     * @return CollectionInterface
+     * @return EntityInterface|\Blast\Db\Entity\EntityInterface[]
      */
     public function fetch()
     {
         $query = $this->getForeignEntity()->getMapper()->select();
         $result = $query->where(
             $query->expr()->eq($this->getLocalKey(), $this->getForeignEntity()->get($this->getLocalKey()))
-        )->execute(Query::RESULT_COLLECTION);
+        )->setMaxResults(1)->execute(Query::RESULT_ENTITY);
         return $this->setResults($result)->getResults();
     }
 
