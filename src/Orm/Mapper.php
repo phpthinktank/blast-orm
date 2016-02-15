@@ -8,12 +8,9 @@
 
 namespace Blast\Db\Orm;
 
-use Blast\Db\Entity\CollectionInterface;
-use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Events\ResultEvent;
+use Blast\Db\Orm\Model\ModelInterface;
 use Blast\Db\ConnectionAwareTrait;
 use Blast\Db\ManagerAwareTrait;
-use Blast\Db\Orm\Model\ModelEmitterAwareInterface;
 use Blast\Db\Query\Query;
 use Blast\Db\Relations\RelationAwareInterface;
 
@@ -31,18 +28,18 @@ class Mapper implements MapperInterface
     use ConnectionAwareTrait;
 
     /**
-     * @var EntityInterface
+     * @var ModelInterface
      */
-    private $entity;
+    private $model;
 
 
     /**
-     * Create mapper for entity
-     * @param EntityInterface
+     * Create mapper for Model
+     * @param ModelInterface
      */
-    public function __construct($entity)
+    public function __construct($model)
     {
-        $this->entity = $entity;
+        $this->model = $model;
     }
 
     /**
@@ -56,11 +53,11 @@ class Mapper implements MapperInterface
     }
 
     /**
-     * @return EntityInterface
+     * @return ModelInterface
      */
-    public function getEntity()
+    public function getModel()
     {
-        return $this->entity;
+        return $this->model;
     }
 
     /**
@@ -69,25 +66,25 @@ class Mapper implements MapperInterface
      */
     public function createQuery()
     {
-        return new Query($this->getEntity(), $this->getConnection()->createQueryBuilder());
+        return new Query($this->getModel(), $this->getConnection()->createQueryBuilder());
     }
 
     /**
      * Find result by primary key
      *
      * @param $value
-     * @return EntityInterface
+     * @return ModelInterface
      * @throws \Doctrine\DBAL\Schema\SchemaException
      */
     public function find($value)
     {
-        $field = $this->getEntity()->getTable()->getPrimaryKeyName();
+        $field = $this->getModel()->getTable()->getPrimaryKeyName();
         $query = $this->select();
         if (isset($field) && isset($value)) {
-            $query->where($query->expr()->eq($field, $query->createPositionalParameter($value, $this->getEntity()->getTable()->getColumn($field)->getType())));
+            $query->where($query->expr()->eq($field, $query->createPositionalParameter($value, $this->getModel()->getTable()->getColumn($field)->getType())));
         }
 
-        return $query->execute(Query::RESULT_ENTITY);
+        return $query->execute(Query::RESULT_Model);
     }
 
     /**
@@ -108,190 +105,140 @@ class Mapper implements MapperInterface
     {
         $query = $this->createQuery();
         $query->select($selects)
-            ->from($this->getEntity()->getTable()->getName());
+            ->from($this->getModel()->getTable()->getName());
 
         return $query;
     }
 
     /**
-     * Create a new entity or a collection of entities in storage.
+     * Create a new Model or a collection of entities in storage.
      *
-     * @param EntityInterface|EntityInterface[]|CollectionInterface $entity
+     * @param ModelInterface|ModelInterface[]|CollectionInterface $model
      * @return int|int[]|bool[]|bool
      */
-    public function create($entity)
+    public function create($model)
     {
         //execute batch if condition matches
-        if ($this->isMassProcessable($entity)) {
-            return $this->massProcess(__FUNCTION__, $entity);
+        if ($this->isMassProcessable($model)) {
+            return $this->massProcess(__FUNCTION__, $model);
         }
 
-        //prepare entity
-        $entity = $this->prepareEntity($entity);
-
-        //save relations before save entity
-        $this->saveRelations($entity);
-
-        //emit before event
-        if ($entity->getEmitter()->emit(ModelEmitterAwareInterface::BEFORE_CREATE, $entity)->isPropagationStopped()) {
-            return FALSE;
-        }
+        //save relations before save Model
+        $this->saveRelations($model);
 
         //prepare statement
         $query = $this->createQuery();
-        $query->insert($entity->getTable()->getName());
+        $query->insert($model->getTable()->getName());
 
-        foreach ($entity->getData() as $key => $value) {
-            $query->setValue($key, $query->createPositionalParameter($value, $entity->getTable()->getColumn($key)->getType()));
+        foreach ($model->getData() as $key => $value) {
+            $query->setValue($key, $query->createPositionalParameter($value, $model->getTable()->getColumn($key)->getType()));
         }
 
-        //execute statement and emit after event
-        $event = $entity->getEmitter()->emit(new ResultEvent(ModelEmitterAwareInterface::AFTER_CREATE, $query->execute()), $entity);
-
-        return $event->isPropagationStopped() ? FALSE : $event->getResult();
+        return $query->execute();
     }
 
     /**
-     * Update an existing entity or a collection of entities in storage
+     * Update an existing Model or a collection of entities in storage
      *
      * Returns false on error and 0 when nothing has been updated!
      *
      * Optional force update of entities without updates
      *
-     * @param EntityInterface|EntityInterface[]|CollectionInterface $entity
+     * @param ModelInterface|ModelInterface[]|CollectionInterface $model
      * @param bool $forceUpdate
      * @return int|int[]|bool[]|bool
      * @throws \Doctrine\DBAL\Schema\SchemaException
      */
-    public function update($entity, $forceUpdate = false)
+    public function update($model, $forceUpdate = false)
     {
         //execute batch if condition matches
-        if ($this->isMassProcessable($entity)) {
-            return $this->massProcess(__FUNCTION__, $entity);
+        if ($this->isMassProcessable($model)) {
+            return $this->massProcess(__FUNCTION__, $model);
         }
 
-        //prepare entity
-        $entity = $this->prepareEntity($entity);
+        //save relations before save Model
+        $this->saveRelations($model);
 
-        //save relations before save entity
-        $this->saveRelations($entity);
-
-        if ($entity->getEmitter()->emit(ModelEmitterAwareInterface::BEFORE_UPDATE, $entity)->isPropagationStopped()) {
-            return FALSE;
-        }
-
-        if(!$entity->isUpdated()){
+        if(!$model->isUpdated()){
             return 0;
         }
 
         //prepare statement
-        $pkName = $entity->getTable()->getPrimaryKeyName();
+        $pkName = $model->getTable()->getPrimaryKeyName();
         $query = $this->createQuery();
-        $query->update($entity->getTable()->getName());
+        $query->update($model->getTable()->getName());
 
-        foreach ($entity->getUpdatedData() as $key => $value) {
-            $query->set($key, $query->createPositionalParameter($value, $entity->getTable()->getColumn($key)->getType()));
+        foreach ($model->getUpdatedData() as $key => $value) {
+            $query->set($key, $query->createPositionalParameter($value, $model->getTable()->getColumn($key)->getType()));
         }
 
-        $query->where($query->expr()->eq($pkName, $entity->get($pkName)));
+        $query->where($query->expr()->eq($pkName, $model->get($pkName)));
 
-        //execute statement and emit after event
-        $event = $entity
-            ->getEmitter()
-            ->emit(new ResultEvent(ModelEmitterAwareInterface::AFTER_UPDATE, $query->execute()), $entity);
-
-        return $event->isPropagationStopped() ? FALSE : $event->getResult();
+        return $query->execute();
     }
 
     /**
-     * Delete an existing entity or a collection of entities in storage
+     * Delete an existing Model or a collection of entities in storage
      *
-     * @param EntityInterface|EntityInterface[]|CollectionInterface $entity
+     * @param ModelInterface|ModelInterface[]|CollectionInterface $model
      * @return int
      */
-    public function delete($entity)
+    public function delete($model)
     {
         //prepare for batch
         //delete will always batch delete
-        $entities = [$entity];
+        $entities = [$model];
 
-        if ($this->isMassProcessable($entity)) {
-            $entities = $entity instanceof CollectionInterface ? $entity->getData() : $entity;
-            $entity = array_shift($entity);
-        }
-
-        //prepare entity
-        $entity = $this->prepareEntity($entity);
-
-        //emit before event
-        if ($entity->getEmitter()->emit(ModelEmitterAwareInterface::BEFORE_DELETE, $entity)->isPropagationStopped()) {
-            return FALSE;
+        if ($this->isMassProcessable($model)) {
+            $entities = $model instanceof CollectionInterface ? $model->getData() : $model;
+            $model = array_shift($model);
         }
 
         //prepare statement
-        $pkName = $entity->getTable()->getPrimaryKeyName();
+        $pkName = $model->getTable()->getPrimaryKeyName();
         $query = $this->createQuery();
-        $query->delete($entity->getTable()->getName());
+        $query->delete($model->getTable()->getName());
 
         //add entities by pk to delete
         foreach ($entities as $instance) {
-            $instance = $this->prepareEntity($instance);
+            $instance = $this->prepareModel($instance);
             $query->orWhere($query->expr()->eq($pkName, $query->createPositionalParameter($instance->__get($pkName), $instance->getTable()->getColumn($pkName)->getType())));
         }
 
-        //execute statement and emit after event
-        $event = $entity
-            ->getEmitter()
-            ->emit(new ResultEvent(ModelEmitterAwareInterface::AFTER_DELETE, $query->execute()), $entity, $entities);
-        $result = $event->isPropagationStopped() ? FALSE : $event->getResult();
-
-        return $result;
+        return $query->execute();
     }
 
     /**
-     * Create or update an entity or a collection of entities in storage
+     * Create or update an Model or a collection of entities in storage
      *
      * Optional force update of entities without updates
      *
-     * @param EntityInterface|EntityInterface[]|array $entity
+     * @param ModelInterface|ModelInterface[]|array $model
      * @param bool $forceUpdate
      * @return int
      */
-    public function save($entity, $forceUpdate = false)
+    public function save($model, $forceUpdate = false)
     {
-        if ($this->isMassProcessable($entity)) {
-            return $this->massProcess(__FUNCTION__, $entity);
+        if ($this->isMassProcessable($model)) {
+            return $this->massProcess(__FUNCTION__, $model);
         }
 
-        return $entity->isNew() ? $this->create($entity) : $this->update($entity);
+        return $model->isNew() ? $this->create($model) : $this->update($model);
     }
 
     /**
-     * @param $entity
-     * @return EntityInterface
-     */
-    protected function prepareEntity($entity)
-    {
-        $targetEntity = $this->getEntity();
-        if(get_class($entity) != get_class($targetEntity)){
-            throw new \InvalidArgumentException('Given entity ' . (is_object($entity) ? get_class($entity) : gettype($entity)) .' needs to be an instance of ' . get_class($targetEntity));
-        }
-        return $entity;
-    }
-
-    /**
-     * Save relations for a specific entity
+     * Save relations for a specific Model
      *
-     * @param EntityInterface $entity
+     * @param ModelInterface $model
      */
-    protected function saveRelations($entity)
+    protected function saveRelations($model)
     {
-        if(!($entity instanceof RelationAwareInterface)){
+        if(!($model instanceof RelationAwareInterface)){
             return;
         }
         //maybe it is better to start an transaction
-        //save all relations before saving entity
-        $relations = $entity->getRelations();
+        //save all relations before saving Model
+        $relations = $model->getRelations();
 
         if (count($relations) > 0) {
             foreach ($relations as $relation) {
@@ -301,27 +248,27 @@ class Mapper implements MapperInterface
     }
 
     /**
-     * Check if entity is mass processable
+     * Check if Model is mass processable
      *
-     * @param $entity
+     * @param $model
      * @return bool
      */
-    protected function isMassProcessable($entity)
+    protected function isMassProcessable($model)
     {
-        return $entity instanceof CollectionInterface || is_array($entity) || $entity instanceof \ArrayObject;
+        return $model instanceof CollectionInterface || is_array($model) || $model instanceof \ArrayObject;
     }
 
     /**
      * Execute mass save, update or insert
      *
      * @param $operation
-     * @param $entity
+     * @param $model
      * @return array
      */
-    protected function massProcess($operation, $entity)
+    protected function massProcess($operation, $model)
     {
         $results = [];
-        foreach ($entity as $_) {
+        foreach ($model as $_) {
             $results[] = $this->{$operation}($_);
         }
 

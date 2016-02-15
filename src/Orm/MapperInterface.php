@@ -9,8 +9,8 @@
 namespace Blast\Db\Orm;
 
 
-use Blast\Db\Entity\CollectionInterface;
-use Blast\Db\Entity\EntityInterface;
+use Blast\Db\Model\CollectionInterface;
+use Blast\Db\Model\ModelInterface;
 use Blast\Db\Manager;
 use Blast\Db\Query;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -28,9 +28,9 @@ interface MapperInterface
     public function getFactory();
 
     /**
-     * @return EntityInterface
+     * @return ModelInterface
      */
-    public function getEntity();
+    public function getModel();
 
     /**
      * @return QueryBuilder
@@ -40,7 +40,7 @@ interface MapperInterface
     /**
      *
      * @param $value
-     * @return EntityInterface
+     * @return ModelInterface
      */
     public function find($value);
 
@@ -59,27 +59,27 @@ interface MapperInterface
     public function select($selects = ['*']);
 
     /**
-     * @param CollectionInterface|EntityInterface|array $entity
+     * @param CollectionInterface|ModelInterface|array $model
      * @return int
      */
-    public function create($entity);
+    public function create($model);
 
     /**
-     * @param CollectionInterface|EntityInterface|array $entity
+     * @param CollectionInterface|ModelInterface|array $model
      * @return int
      */
-    public function update($entity);
+    public function update($model);
 
     /**
-     * @param CollectionInterface|EntityInterface|array $entity
+     * @param CollectionInterface|ModelInterface|array $model
      * @return int
      */
-    public function delete($entity);
+    public function delete($model);
 
     /**
-     * @param CollectionInterface|EntityInterface|array $entity
+     * @param CollectionInterface|ModelInterface|array $model
      * @return int
      */
-    public function save($entity);
+    public function save($model);
 
 }

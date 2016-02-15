@@ -26,16 +26,16 @@ class ManyThroughMany extends AbstractRelation
     protected $throughEntity;
 
     /**
-     * @param EntityInterface $entity current entity instance
+     * @param EntityInterface $model current entity instance
      * @param string|EntityInterface $foreignEntity Entity which have a key field in current entity
      * @param EntityInterface $throughEntity
      * @param string|integer|null $localKey Field name on current entity which matches up with foreign key of foreign entity
      * @param string|integer|null $foreignKey name on foreign entity which matches up with local key of current entity
      */
-    public function __construct(EntityInterface $entity, EntityInterface $foreignEntity, EntityInterface $throughEntity, $localKey = null, $foreignKey = null)
+    public function __construct(EntityInterface $model, EntityInterface $foreignEntity, EntityInterface $throughEntity, $localKey = null, $foreignKey = null)
     {
         //local config
-        $this->entity = $entity;
+        $this->entity = $model;
         $this->localKey = $localKey;
 
         //foreign config
@@ -88,8 +88,8 @@ class ManyThroughMany extends AbstractRelation
 
         $query = $this->getForeignEntity()->getMapper()->select();
 
-        foreach ($through as $entity) {
-            $query->orWhere($query->expr()->eq($this->getForeignKey(), $entity->get($this->getForeignKey() . '_id')));
+        foreach ($through as $model) {
+            $query->orWhere($query->expr()->eq($this->getForeignKey(), $model->get($this->getForeignKey() . '_id')));
         }
 
         $result = $query->execute(Query::RESULT_COLLECTION);

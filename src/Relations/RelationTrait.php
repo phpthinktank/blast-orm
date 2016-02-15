@@ -27,7 +27,7 @@ trait RelationTrait
     /**
      * @var EntityInterface
      */
-    protected $entity;
+    protected $model;
 
     /**
      * @var EntityInterface
@@ -63,12 +63,12 @@ trait RelationTrait
     }
 
     /**
-     * @param EntityInterface $entity
+     * @param EntityInterface $model
      * @return RelationTrait
      */
-    public function setEntity($entity)
+    public function setEntity($model)
     {
-        $this->entity = $entity;
+        $this->entity = $model;
         return $this;
     }
 

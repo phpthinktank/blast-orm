@@ -14,13 +14,12 @@
 namespace Blast\Db\Orm\Model;
 
 
-use Blast\Db\Entity\AccessorInterface;
-use Blast\Db\Entity\DataObjectInterface;
-use Blast\Db\Entity\FlushDataObjectInterface;
-use Blast\Db\Entity\UpdatedDataObjectInterface;
+use Blast\Db\Data\AccessorInterface;
+use Blast\Db\Data\DataObjectInterface;
+use Blast\Db\Data\UpdatedDataObjectInterface;
 use Blast\Db\Orm\MapperAwareInterface;
 
-interface ModelInterface extends DataObjectInterface, UpdatedDataObjectInterface, FlushDataObjectInterface, AccessorInterface, MapperAwareInterface
+interface ModelInterface extends DataObjectInterface, UpdatedDataObjectInterface, AccessorInterface, MapperAwareInterface
 {
 
     /**
