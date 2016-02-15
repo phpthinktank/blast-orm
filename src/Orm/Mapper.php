@@ -10,7 +10,6 @@ namespace Blast\Db\Orm;
 
 use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Entity\ManagerInterface;
 use Blast\Db\Events\ResultEvent;
 use Blast\Db\ConnectionAwareTrait;
 use Blast\Db\ManagerAwareTrait;
