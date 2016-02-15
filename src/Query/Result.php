@@ -11,7 +11,7 @@
  *
  */
 
-namespace Blast\Db;
+namespace Blast\Db\Query;
 
 
 use Blast\Db\Data\AccessorInterface;
