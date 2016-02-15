@@ -163,7 +163,7 @@ Creating a new relation
 
 //...previous code
 
-use Blast\Db\Relations\BelongsTo
+use Blast\Db\Orm\Relations\BelongsTo
 
 class Post extends AbstractEntity
 {

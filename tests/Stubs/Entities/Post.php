@@ -11,7 +11,7 @@ namespace Blast\Tests\Db\Stubs\Entities;
 use Blast\Db\Entity\AbstractEntity;
 use Blast\Db\Events\ValueEvent;
 use Blast\Db\Orm\Model\ModelEmitterAwareInterface;
-use Blast\Db\Relations\BelongsTo;
+use Blast\Db\Orm\Relations\BelongsTo;
 use Blast\Db\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Stubs\Entities\User;
