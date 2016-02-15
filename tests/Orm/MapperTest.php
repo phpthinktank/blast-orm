@@ -23,7 +23,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
     /**
      * @var EntityInterface
      */
-    private $entity;
+    private $model;
 
     /**
      * @var ObjectProphecy
@@ -84,8 +84,8 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testSelect()
     {
-        $entity = $this->entity;
-        $mapper = new Mapper($entity);
+        $model = $this->entity;
+        $mapper = new Mapper($model);
 
         $query = $mapper->select();
         $result = $query->where('user_id = 1')->execute();
@@ -99,8 +99,8 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testFind()
     {
-        $entity = $this->entity;
-        $mapper = new Mapper($entity);
+        $model = $this->entity;
+        $mapper = new Mapper($model);
 
         $result = $mapper->find(1);
 
@@ -112,8 +112,8 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testBelongsTo()
     {
-        $entity = $this->entity;
-        $mapper = new Mapper($entity);
+        $model = $this->entity;
+        $mapper = new Mapper($model);
 
         $result = $mapper->find(1);
 
@@ -122,8 +122,8 @@ class MapperTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testCreateByEntity(){
-        $entity = $this->entity;
-        $mapper = new Mapper($entity);
+        $model = $this->entity;
+        $mapper = new Mapper($model);
 
         $post = new Post();
         $post->pk = 3;
