@@ -9,11 +9,11 @@
 namespace Blast\Db;
 
 
-use Doctrine\DBAL\Configuration;
+use Doctrine\DBAL\Configuration as DbalConfiguration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 
-class Config implements ConfigInterface
+class Configuration implements ConfigurationInterface
 {
     /**
      * @var \Doctrine\DBAL\Connection[]
@@ -115,7 +115,7 @@ class Config implements ConfigInterface
             }
 
             //create connection
-            $config = new Configuration();
+            $config = new DbalConfiguration();
             $connection = DriverManager::getConnection($connection, $config);
         }
 

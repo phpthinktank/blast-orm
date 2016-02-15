@@ -11,7 +11,7 @@ namespace Blast\Db;
 use Doctrine\DBAL\Connection;
 use Interop\Container\ContainerInterface;
 
-class Factory implements FactoryInterface
+class Manager implements ManagerInterface
 {
     /**
      * @var
@@ -92,22 +92,22 @@ class Factory implements FactoryInterface
         $this->container = $container;
         $this->setContainer($container);
 
-        $this->getConfig()->addConnection(ConfigInterface::DEFAULT_CONNECTION, $connection);
+        $this->getConfig()->addConnection(ConfigurationInterface::DEFAULT_CONNECTION, $connection);
     }
 
     /**
-     * @return ConfigInterface
+     * @return ConfigurationInterface
      */
     public function getConfig()
     {
         $config = $this->config;
-        if(!($config instanceof ConfigInterface)){
+        if(!($config instanceof ConfigurationInterface)){
             $container = $this->container;
-            if($container->has(ConfigInterface::class)){
-                $reflection = new \ReflectionClass($container->get(ConfigInterface::class));
+            if($container->has(ConfigurationInterface::class)){
+                $reflection = new \ReflectionClass($container->get(ConfigurationInterface::class));
                 $config = $reflection->newInstance();
             }else{
-                $config = new Config();
+                $config = new Configuration();
             }
 
             $this->setConfig($config);
@@ -117,10 +117,10 @@ class Factory implements FactoryInterface
     }
 
     /**
-     * @param ConfigInterface $config
+     * @param ConfigurationInterface $config
      * @return mixed
      */
-    public function setConfig(ConfigInterface $config)
+    public function setConfig(ConfigurationInterface $config)
     {
         $this->config = $config;
         return $this;

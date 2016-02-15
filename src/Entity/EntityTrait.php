@@ -14,7 +14,7 @@ namespace Blast\Db\Entity;
 
 
 use Blast\Db\Events\ValueEvent;
-use Blast\Db\Factory;
+use Blast\Db\Manager;
 use Blast\Db\Orm\Model\ModelEmitterAwareInterface;
 use Blast\Db\Relations\RelationAwareInterface;
 use Blast\Db\Schema\Table;
@@ -302,7 +302,7 @@ trait EntityTrait
     public function getEmitter()
     {
         if ($this->emitter === null) {
-            $container = Factory::getInstance()->getContainer();
+            $container = Manager::getInstance()->getContainer();
             $this->emitter = $container->get(EmitterInterface::class) ? $container->get(EmitterInterface::class) : new Emitter();
         }
         return $this->emitter;

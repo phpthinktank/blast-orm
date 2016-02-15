@@ -11,7 +11,7 @@ namespace Blast\Db\Orm;
 
 use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Factory;
+use Blast\Db\Manager;
 use Blast\Db\Query;
 use Doctrine\DBAL\Query\QueryBuilder;
 
@@ -23,7 +23,7 @@ interface MapperInterface
     public function getConnection();
 
     /**
-     * @return Factory
+     * @return Manager
      */
     public function getFactory();
 

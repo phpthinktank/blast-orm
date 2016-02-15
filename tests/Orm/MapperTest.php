@@ -8,10 +8,10 @@
 
 namespace Blast\Tests\Db\Orm;
 
-use Blast\Db\ConfigInterface;
+use Blast\Db\ConfigurationInterface;
 use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Factory;
+use Blast\Db\Manager;
 use Blast\Db\Orm\Mapper;
 use Blast\Tests\Db\Stubs\Entities\Post;
 use Interop\Container\ContainerInterface;
@@ -31,7 +31,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
     private $container;
 
     /**
-     * @var Factory
+     * @var Manager
      */
     private $factory;
 
@@ -42,14 +42,14 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $this->container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class);
 
         $container = $this->container->reveal();
-        $factory = Factory::create($container, [
+        $factory = Manager::create($container, [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
         ]);
 
         $this->entity = new Post();
 
-        $connection = $factory->getConfig()->getConnection(ConfigInterface::DEFAULT_CONNECTION);
+        $connection = $factory->getConfig()->getConnection(ConfigurationInterface::DEFAULT_CONNECTION);
         $connection->prepare('CREATE TABLE post (id int, user_id int, title VARCHAR(255), content TEXT)')->execute();
         $connection->prepare('CREATE TABLE user (id int, name VARCHAR(255))')->execute();
         $connection->insert('post', [
@@ -72,8 +72,8 @@ class MapperTest extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        $factory = Factory::getInstance();
-        $connection = $factory->getConfig()->getConnection(ConfigInterface::DEFAULT_CONNECTION);
+        $factory = Manager::getInstance();
+        $connection = $factory->getConfig()->getConnection(ConfigurationInterface::DEFAULT_CONNECTION);
         $connection->prepare('DROP TABLE post')->execute();
         $connection->prepare('DROP TABLE user')->execute();
         $factory->shutdown();

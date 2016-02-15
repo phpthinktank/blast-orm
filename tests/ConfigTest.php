@@ -9,7 +9,7 @@
 
 namespace Blast\Tests\Db;
 
-use Blast\Db\Config;
+use Blast\Db\Configuration;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -21,7 +21,7 @@ class ConfigTest extends PHPUnit_Framework_TestCase
 
     public function testAddConnectionString()
     {
-        $config = new Config();
+        $config = new Configuration();
         $config->addConnection('string', $this->dsn);
 
         $this->assertInstanceOf(Connection::class, $config->getConnection('string'));
@@ -29,7 +29,7 @@ class ConfigTest extends PHPUnit_Framework_TestCase
 
     public function testAddConnectionArray()
     {
-        $config = new Config();
+        $config = new Configuration();
         $config->addConnection('array', [
                 'url' => $this->dsn,
                 'memory' => true
@@ -41,7 +41,7 @@ class ConfigTest extends PHPUnit_Framework_TestCase
 
     public function testAddConnectionObject()
     {
-        $config = new Config();
+        $config = new Configuration();
 
         $dbalConfiguration = new Configuration();
         $connection = DriverManager::getConnection([
@@ -56,7 +56,7 @@ class ConfigTest extends PHPUnit_Framework_TestCase
 
     public function testGetConnections()
     {
-        $config = new Config();
+        $config = new Configuration();
         $config->addConnection('string', $this->dsn);
         $config->addConnection('string2', $this->dsn);
 

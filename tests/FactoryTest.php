@@ -9,10 +9,10 @@
 namespace Blast\Tests\Db;
 
 
-use Blast\Db\Config;
-use Blast\Db\ConfigInterface;
-use Blast\Db\Factory;
-use Blast\Db\FactoryInterface;
+use Blast\Db\Configuration;
+use Blast\Db\ConfigurationInterface;
+use Blast\Db\Manager;
+use Blast\Db\ManagerInterface;
 use Interop\Container\ContainerInterface;
 use Prophecy\Prophecy\ObjectProphecy;
 
@@ -31,41 +31,41 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
 
     public function testCreate()
     {
-        $this->assertFalse(Factory::isBooted());
+        $this->assertFalse(Manager::isBooted());
         $container = $this->container->reveal();
-        $factory = Factory::create($container, [
+        $factory = Manager::create($container, [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
         ]);
-        $this->assertTrue(Factory::isBooted());
-        $this->assertInstanceOf(FactoryInterface::class, $factory);
-        $this->assertInstanceOf(ConfigInterface::class, $factory->getConfig());
+        $this->assertTrue(Manager::isBooted());
+        $this->assertInstanceOf(ManagerInterface::class, $factory);
+        $this->assertInstanceOf(ConfigurationInterface::class, $factory->getConfig());
         $this->assertInstanceOf(ContainerInterface::class, $factory->getContainer());
 
         $factory->shutdown();
-        $this->assertFalse(Factory::isBooted());
+        $this->assertFalse(Manager::isBooted());
 
     }
 
     public function testSetConfig(){
         $container = $this->container->reveal();
-        $factory = Factory::create($container, [
+        $factory = Manager::create($container, [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
         ]);
 
-        $this->assertInstanceOf(FactoryInterface::class, $factory->setConfig(new Config()));
+        $this->assertInstanceOf(ManagerInterface::class, $factory->setConfig(new Configuration()));
         $factory->shutdown();
     }
 
     public function testSetContainer(){
         $container = $this->container->reveal();
-        $factory = Factory::create($container, [
+        $factory = Manager::create($container, [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
         ]);
 
-        $this->assertInstanceOf(FactoryInterface::class, $factory->setContainer($container));
+        $this->assertInstanceOf(ManagerInterface::class, $factory->setContainer($container));
         $factory->shutdown();
     }
 }

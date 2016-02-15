@@ -14,7 +14,7 @@
 namespace Blast\Db\Orm\Model;
 
 
-use Blast\Db\Factory;
+use Blast\Db\Manager;
 use League\Event\Emitter;
 use League\Event\EmitterAwareTrait;
 use League\Event\EmitterInterface;
@@ -30,7 +30,7 @@ class Model
     public function getEmitter()
     {
         if ($this->emitter === null) {
-            $container = Factory::getInstance()->getContainer();
+            $container = Manager::getInstance()->getContainer();
             $this->emitter = $container->get(EmitterInterface::class) ? $container->get(EmitterInterface::class) : new Emitter();
         }
         return $this->emitter;

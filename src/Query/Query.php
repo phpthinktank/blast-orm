@@ -10,14 +10,14 @@
 * Time: 16:11
 */
 
-namespace Blast\Db;
+namespace Blast\Db\Query;
 
 
 use Blast\Db\Entity\Collection;
 use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Entity\ManagerInterface;
 use Blast\Db\ConnectionAwareTrait;
+use Blast\Db\ManagerAwareTrait;
 use Doctrine\DBAL\Driver\Statement;
 use Doctrine\DBAL\Query\QueryBuilder;
 use stdClass;
@@ -77,7 +77,7 @@ use stdClass;
 class Query
 {
 
-    use FactoryAwareTrait;
+    use ManagerAwareTrait;
     use ConnectionAwareTrait;
 
     /**

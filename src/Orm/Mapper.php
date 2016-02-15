@@ -13,10 +13,9 @@ use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Entity\ManagerInterface;
 use Blast\Db\Events\ResultEvent;
 use Blast\Db\ConnectionAwareTrait;
-use Blast\Db\Factory;
-use Blast\Db\FactoryAwareTrait;
+use Blast\Db\ManagerAwareTrait;
 use Blast\Db\Orm\Model\ModelEmitterAwareInterface;
-use Blast\Db\Query;
+use Blast\Db\Query\Query;
 use Blast\Db\Relations\RelationAwareInterface;
 
 /**
@@ -29,7 +28,7 @@ use Blast\Db\Relations\RelationAwareInterface;
 class Mapper implements MapperInterface
 {
 
-    use FactoryAwareTrait;
+    use ManagerAwareTrait;
     use ConnectionAwareTrait;
 
     /**

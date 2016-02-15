@@ -10,7 +10,7 @@ namespace Blast\Db;
 
 use Interop\Container\ContainerInterface;
 
-interface FactoryInterface
+interface ManagerInterface
 {
 
     /**
@@ -32,7 +32,7 @@ interface FactoryInterface
     public function getContainer();
 
     /**
-     * @return ConfigInterface
+     * @return ConfigurationInterface
      */
     public function getConfig();
 

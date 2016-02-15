@@ -12,21 +12,21 @@
 
 namespace Blast\Db;
 
-trait FactoryAwareTrait
+trait ManagerAwareTrait
 {
 
     /**
-     * @var Factory
+     * @var Manager
      */
     private $factory = NULL;
 
     /**
-     * @return Factory
+     * @return Manager
      */
     public function getFactory()
     {
         if ($this->factory === null) {
-            $this->factory = Factory::getInstance();
+            $this->factory = Manager::getInstance();
         }
         return $this->factory;
     }

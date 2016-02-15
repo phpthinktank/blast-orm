@@ -28,7 +28,7 @@ trait ConnectionAwareTrait
     public function getConnection()
     {
         if ($this->connection === null) {
-            $this->connection = Factory::getInstance()->getConfig()->getConnection();
+            $this->connection = Manager::getInstance()->getConfig()->getConnection();
         }
         return $this->connection;
     }
