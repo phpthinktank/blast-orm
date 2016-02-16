@@ -124,7 +124,7 @@ class Query
      * Fetch data for entity. if raw is true, fetch assoc instead of entity
      *
      * @param string $convert
-     * @return array|CollectionInterface|EntityInterface
+     * @return array|Result|ResultCollection
      * @throws \Doctrine\DBAL\DBALException
      */
     public function execute($convert = 'auto')
@@ -137,10 +137,10 @@ class Query
             return false;
         }
 
-        $isFetchable = $builder->getType() === $builder::SELECT;
+        $isSelect = $builder->getType() === $builder::SELECT;
         $statement = $builder->execute();
 
-        $result = $this->afterExecute($isFetchable ? $statement->fetchAll() : $statement, $model, $builder);
+        $result = $this->afterExecute($isSelect ? $statement->fetchAll() : $statement, $model, $builder);
 
         if(!$result){
             return false;
