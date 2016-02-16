@@ -8,9 +8,13 @@
 
 namespace Blast\Db\Orm;
 
+use Blast\Db\Orm\Model\ModelAwareInterface;
+use Blast\Db\Orm\Model\ModelManager;
 use Blast\Db\Orm\Model\ModelInterface;
 use Blast\Db\ConnectionAwareTrait;
 use Blast\Db\ManagerAwareTrait;
+use Blast\Db\Orm\Relations\RelationInterface;
+use Blast\Db\Orm\Relations\RelationTrait;
 use Blast\Db\Query\Query;
 use Blast\Db\Orm\Relations\RelationAwareInterface;
 
@@ -21,11 +25,12 @@ use Blast\Db\Orm\Relations\RelationAwareInterface;
  *
  * @package Blast\Db\Orm
  */
-class Mapper implements MapperInterface
+class Mapper implements MapperInterface, ModelAwareInterface, RelationInterface
 {
 
     use ManagerAwareTrait;
     use ConnectionAwareTrait;
+    use RelationTrait;
 
     /**
      * @var ModelInterface
@@ -36,20 +41,12 @@ class Mapper implements MapperInterface
     /**
      * Create mapper for Model
      * @param ModelInterface
+     * @return $this
      */
-    public function __construct($model)
+    public function setModel($model)
     {
         $this->model = $model;
-    }
-
-    /**
-     * Change connection by name for mapper
-     *
-     * @param string $name
-     */
-    public function onConnection($name)
-    {
-        $this->connection = $this->factory->getConfig()->getConnection($name);
+        return $this;
     }
 
     /**
@@ -70,13 +67,13 @@ class Mapper implements MapperInterface
     }
 
     /**
-     * Find result by primary key
+     * Find result by field or primary key
      *
-     * @param $value
+     * @param mixed $value
+     * @param null $field
      * @return ModelInterface
-     * @throws \Doctrine\DBAL\Schema\SchemaException
      */
-    public function find($value)
+    public function find($value, $field = null)
     {
         $field = $this->getModel()->getTable()->getPrimaryKeyName();
         $query = $this->select();
