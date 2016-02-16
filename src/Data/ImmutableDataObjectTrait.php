@@ -16,6 +16,12 @@ namespace Blast\Db\Data;
 
 trait ImmutableDataObjectTrait
 {
+
+    /**
+     * @var array
+     */
+    private $data = [];
+
     /**
      * Receive data
      * @return array
