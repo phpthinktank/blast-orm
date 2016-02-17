@@ -13,26 +13,13 @@
 
 namespace Blast\Db\Data;
 
-use Blast\Db\Hook;
-
 class DataObject implements \Countable, DataObjectInterface, FilterableInterface, \Iterator
 {
     use ConverterTrait;
     use CountableTrait;
+    use MutableDataObjectTrait;
     use FilterableTrait;
     use ImmutableDataObjectTrait;
     use IteratorTrait;
 
-    /**
-     * Replace data
-     * @param array $data
-     * @return $this
-     */
-    public function setData(array $data = [])
-    {
-        $before = Hook::trigger('beforeDataSet', $this, ['data' => $data]);
-        $data = isset($before['data']) ? $before['data'] : $data;
-        $this->data = $data;
-        return $this;
-    }
 }
