@@ -22,11 +22,6 @@ class ImmutableDataObject implements \Countable, FilterableInterface, ImmutableD
     use IteratorTrait;
 
     /**
-     * @var array
-     */
-    private $data = [];
-
-    /**
      * Replace data
      * @param array $data
      */
