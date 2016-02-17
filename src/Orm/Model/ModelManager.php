@@ -57,10 +57,7 @@ class ModelManager
      */
     public function getModel($name)
     {
-        if (!isset($this->models[$name])) {
-            $this->prepareModel($name);
-        }
-        return $this->models[$name];
+        return $this->prepare($name)->models[$name];
     }
 
     /**
@@ -68,23 +65,52 @@ class ModelManager
      * @param $name
      * @return $this
      */
-    private function prepareModel($name)
+    private function prepare($name)
     {
+        //if model an mapper already prepared, do nothing
+        if (isset($this->models[$name])) {
+            return $this;
+        }
+
+        //get model
         $container = DbManager::getInstance()->getContainer();
         $model = $container->get($name);
 
-        if (isset($this->mappers[$name])) {
-            $this->bindMapper($name, $this->models[$name]);
+        if (!isset($this->mappers[$name])) {
+            if ($model instanceof MapperAwareInterface) {
+                //get mapper from model
+                $mapper = $model->getMapper();
+            } else {
+                //get default mapper by contract
+                $mapper = $container->get(MapperInterface::class);
+
+                if ($mapper instanceof MapperInterface) {
+                    throw new \RuntimeException('No mapper configured!');
+                }
+            }
+
+            if ($mapper instanceof ModelAwareInterface) {
+                $mapper->setModel($model);
+            }
+
+            $this->mappers[$name] = $mapper;
         }
 
         $mapper = $this->mappers[$name];
 
+        //attach fields to model
         if ($model instanceof ModelFieldsAwareInterface) {
             $model::attachFields($mapper, $model);
         }
 
+        //attach relations to mapper
         if ($model instanceof ModelRelationAwareInterface) {
             $model::attachRelations($mapper, $model);
+        }
+
+        //attach events to mapper
+        if ($model instanceof ModelEventsAwareInterface) {
+            $model::attachEvents($mapper, $model);
         }
 
         $this->models[$name] = $model;
@@ -95,39 +121,11 @@ class ModelManager
 
     /**
      * @param $name
-     * @param $model
-     * @return MapperInterface
-     */
-    private function bindMapper($name, $model)
-    {
-        $container = DbManager::getInstance()->getContainer();
-        if ($model instanceof MapperAwareInterface) {
-            //get mapper from model
-            $mapper = $model->getMapper();
-        } else {
-            //get default mapper by contract
-            $mapper = $container->get(MapperInterface::class);
-
-            if ($mapper instanceof MapperInterface) {
-                throw new \RuntimeException('No mapper configured!');
-            }
-        }
-
-        if($mapper instanceof ModelAwareInterface){
-            $mapper->setModel($model);
-        }
-
-        $this->mappers[$name] = $mapper;
-        return $this;
-    }
-
-    /**
-     * @param $name
      * @return mixed
      */
     public function getMapper($name)
     {
-        return $this->mappers[$name];
+        return $this->prepare($name)->mappers[$name];
     }
 
 }

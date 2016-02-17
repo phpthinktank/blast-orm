@@ -13,6 +13,8 @@ use Blast\Db\Entity\CollectionInterface;
 use Blast\Db\Entity\EntityInterface;
 use Blast\Db\Manager;
 use Blast\Db\Orm\Mapper;
+use Blast\Db\Orm\Model\ModelInterface;
+use Blast\Db\Query\ResultCollection;
 use Blast\Tests\Db\Stubs\Entities\Post;
 use Interop\Container\ContainerInterface;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -33,7 +35,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
     /**
      * @var Manager
      */
-    private $factory;
+    private $manager;
 
     protected function setUp()
     {
@@ -42,14 +44,14 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $this->container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class);
 
         $container = $this->container->reveal();
-        $factory = Manager::create($container, [
+        $manager = Manager::create($container, [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
         ]);
 
-        $this->entity = new Post();
+        $this->model = new Post();
 
-        $connection = $factory->getConfig()->getConnection(ConfigurationInterface::DEFAULT_CONNECTION);
+        $connection = $manager->getConnection(ConfigurationInterface::DEFAULT_CONNECTION);
         $connection->prepare('CREATE TABLE post (id int, user_id int, title VARCHAR(255), content TEXT)')->execute();
         $connection->prepare('CREATE TABLE user (id int, name VARCHAR(255))')->execute();
         $connection->insert('post', [
@@ -72,11 +74,11 @@ class MapperTest extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        $factory = Manager::getInstance();
-        $connection = $factory->getConfig()->getConnection(ConfigurationInterface::DEFAULT_CONNECTION);
+        $manager = Manager::getInstance();
+        $connection = $manager->getConnection(ConfigurationInterface::DEFAULT_CONNECTION);
         $connection->prepare('DROP TABLE post')->execute();
         $connection->prepare('DROP TABLE user')->execute();
-        $factory->shutdown();
+        $manager->shutdown();
     }
 
     /**
@@ -84,13 +86,13 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testSelect()
     {
-        $model = $this->entity;
+        $model = $this->model;
         $mapper = new Mapper($model);
 
         $query = $mapper->select();
         $result = $query->where('user_id = 1')->execute();
 
-        $this->assertInstanceOf(CollectionInterface::class, $result);
+        $this->assertInstanceOf(ResultCollection::class, $result);
         $this->assertEquals(2, $result->count());
     }
 
@@ -99,12 +101,12 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testFind()
     {
-        $model = $this->entity;
+        $model = $this->model;
         $mapper = new Mapper($model);
 
         $result = $mapper->find(1);
 
-        $this->assertInstanceOf(EntityInterface::class, $result);
+        $this->assertInstanceOf(ModelInterface::class, $result);
     }
 
     /**
@@ -112,7 +114,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testBelongsTo()
     {
-        $model = $this->entity;
+        $model = $this->model;
         $mapper = new Mapper($model);
 
         $result = $mapper->find(1);
@@ -122,7 +124,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testCreateByEntity(){
-        $model = $this->entity;
+        $model = $this->model;
         $mapper = new Mapper($model);
 
         $post = new Post();

@@ -8,42 +8,52 @@
 
 namespace Blast\Tests\Db\Stubs\Entities;
 
-use Blast\Db\Entity\AbstractEntity;
-use Blast\Db\Events\DecoratorEvent;
-use Blast\Db\Orm\Model\ModelEmitterAwareInterface;
-use Blast\Db\Orm\Relations\BelongsTo;
-use Blast\Db\Schema\Table;
-use Doctrine\DBAL\Types\Type;
-use Stubs\Entities\User;
+use Blast\Db\Data\ImmutableDataObjectTrait;
+use Blast\Db\Data\MutableDataObjectTrait;
+use Blast\Db\Orm\Model\ModelInterface;
+use Blast\Db\Orm\Model\ModelTrait;
 
-class Post extends AbstractEntity
+class Post implements ModelInterface
 {
+    use MutableDataObjectTrait;
+    use ImmutableDataObjectTrait;
+    use ModelTrait;
 
     /**
      * Configure entity
      */
-    public function configure()
+//    public function configure()
+//    {
+//        $table = new Table('post');
+//        $table->addColumn('id', Type::INTEGER);
+//        $table->addColumn('user_id', Type::INTEGER);
+//        $table->addColumn('title', Type::STRING)->setLength(255);
+//        $table->addColumn('content', Type::TEXT);
+//        $table->setPrimaryKey(['id']);
+//        $this->setTable($table);
+//
+//        $this->addRelation(new BelongsTo($this, new User()));
+//
+//        $this->getEmitter()->addListener(ModelEmitterAwareInterface::VALUE_GET, function(DecoratorEvent $event){
+//            if($event->getKey() === 'title'){
+//                $event->setValue(sprintf('<h1>%s</h1>', $event->getValue()));
+//            }
+//        });
+//
+//        $this->getEmitter()->addListener(ModelEmitterAwareInterface::VALUE_GET, function(DecoratorEvent $event){
+//            if($event->getKey() === 'content'){
+//                $event->setValue(strip_tags($event->getValue()));
+//            }
+//        });
+//    }
+
+    /**
+     * Get table for model
+     *
+     * @return string
+     */
+    public static function getTable()
     {
-        $table = new Table('post');
-        $table->addColumn('id', Type::INTEGER);
-        $table->addColumn('user_id', Type::INTEGER);
-        $table->addColumn('title', Type::STRING)->setLength(255);
-        $table->addColumn('content', Type::TEXT);
-        $table->setPrimaryKey(['id']);
-        $this->setTable($table);
-
-        $this->addRelation(new BelongsTo($this, new User()));
-
-        $this->getEmitter()->addListener(ModelEmitterAwareInterface::VALUE_GET, function(DecoratorEvent $event){
-            if($event->getKey() === 'title'){
-                $event->setValue(sprintf('<h1>%s</h1>', $event->getValue()));
-            }
-        });
-
-        $this->getEmitter()->addListener(ModelEmitterAwareInterface::VALUE_GET, function(DecoratorEvent $event){
-            if($event->getKey() === 'content'){
-                $event->setValue(strip_tags($event->getValue()));
-            }
-        });
+        return 'post';
     }
 }

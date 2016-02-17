@@ -20,7 +20,7 @@ use Blast\Db\Data\UpdatedDataObjectInterface;
 use Blast\Db\Orm\MapperAwareInterface;
 use Blast\Db\Orm\MapperInterface;
 
-interface ModelInterface extends DataObjectInterface, UpdatedDataObjectInterface, AccessorInterface, MapperAwareInterface
+interface ModelInterface extends DataObjectInterface, UpdatedDataObjectInterface
 {
 
     /**
