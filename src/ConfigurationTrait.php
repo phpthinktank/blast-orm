@@ -13,12 +13,14 @@ use Doctrine\DBAL\Configuration as DbalConfiguration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 
-class Configuration implements ConfigurationInterface
+trait ConfigurationTrait
 {
     /**
      * @var \Doctrine\DBAL\Connection[]
      */
     protected $connections = [];
+
+    protected $previousConnections = [];
 
     /**
      * @var Connection
@@ -62,7 +64,11 @@ class Configuration implements ConfigurationInterface
     public function setActiveConnection($name)
     {
         if ($this->hasConnection($name)) {
+            if($this->activeConnection !== null){
+                $this->previousConnections[] = $this->activeConnection;
+            }
             $this->activeConnection = $this->getConnection($name);
+
             return $this;
         }
 

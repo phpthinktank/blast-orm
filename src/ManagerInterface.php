@@ -31,10 +31,5 @@ interface ManagerInterface
      */
     public function getContainer();
 
-    /**
-     * @return ConfigurationInterface
-     */
-    public function getConfig();
-
 
 }

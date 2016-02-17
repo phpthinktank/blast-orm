@@ -11,12 +11,10 @@ namespace Blast\Db;
 use Doctrine\DBAL\Connection;
 use Interop\Container\ContainerInterface;
 
-class Manager implements ManagerInterface
+class Manager implements ManagerInterface, ConfigurationInterface
 {
-    /**
-     * @var
-     */
-    protected $config;
+
+    use ConfigurationTrait;
 
     /**
      * @var ContainerInterface
@@ -24,7 +22,7 @@ class Manager implements ManagerInterface
     protected $container;
 
     /**
-     * @var
+     * @var $this
      */
     protected static $instance;
 
@@ -56,9 +54,7 @@ class Manager implements ManagerInterface
      * disconnect all connections
      */
     public function __destruct(){
-
-        $this->shutdown();
-
+        static::shutdown();
     }
 
     /**
@@ -67,7 +63,7 @@ class Manager implements ManagerInterface
     public static function getInstance()
     {
         if (!static::isBooted()) {
-            throw new \RuntimeException('Orm not created!');
+            throw new \RuntimeException(__CLASS__ . ' is disabled. Run ' . __CLASS__ . '::create to enable!');
         }
 
         return static::$instance;
@@ -91,39 +87,7 @@ class Manager implements ManagerInterface
     {
         $this->container = $container;
         $this->setContainer($container);
-
-        $this->getConfig()->addConnection(ConfigurationInterface::DEFAULT_CONNECTION, $connection);
-    }
-
-    /**
-     * @return ConfigurationInterface
-     */
-    public function getConfig()
-    {
-        $config = $this->config;
-        if(!($config instanceof ConfigurationInterface)){
-            $container = $this->container;
-            if($container->has(ConfigurationInterface::class)){
-                $reflection = new \ReflectionClass($container->get(ConfigurationInterface::class));
-                $config = $reflection->newInstance();
-            }else{
-                $config = new Configuration();
-            }
-
-            $this->setConfig($config);
-        }
-
-        return $this->config;
-    }
-
-    /**
-     * @param ConfigurationInterface $config
-     * @return mixed
-     */
-    public function setConfig(ConfigurationInterface $config)
-    {
-        $this->config = $config;
-        return $this;
+        $this->addConnection(ConfigurationInterface::DEFAULT_CONNECTION, $connection);
     }
 
     /**
@@ -145,11 +109,15 @@ class Manager implements ManagerInterface
     }
 
     /**
-     * Close all non persistent connections
+     * Close all non persistent connections, deactivate instance and deactivate booted. You need to create a new
      */
-    public function shutdown()
+    public static function shutdown()
     {
-        $connections = $this->getConfig()->getConnections();
+        $instance = static::$instance;
+        if($instance === null){
+            return false;
+        }
+        $connections = $instance->getConnections();
 
         foreach ($connections as $connection) {
             if (!($connection instanceof Connection)) {
@@ -162,7 +130,9 @@ class Manager implements ManagerInterface
             }
         }
 
-        static::$instance = null;
-        static::$booted = false;
+        self::$instance = null;
+        self::$booted = false;
+
+        return true;
     }
 }
