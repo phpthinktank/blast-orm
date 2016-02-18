@@ -114,19 +114,18 @@ class Manager implements ManagerInterface, ConfigurationInterface
     public static function shutdown()
     {
         $instance = static::$instance;
-        if($instance === null){
-            return false;
-        }
-        $connections = $instance->getConnections();
+        if($instance instanceof ConfigurationInterface){
+            $connections = $instance->getConnections();
 
-        foreach ($connections as $connection) {
-            if (!($connection instanceof Connection)) {
-                continue;
-            }
+            foreach ($connections as $connection) {
+                if (!($connection instanceof Connection)) {
+                    continue;
+                }
 
-            //@todo persistent connections should not disconnected while destruct
-            if ($connection->isConnected()) {
-                $connection->close();
+                //@todo persistent connections should not disconnected while destruct
+                if ($connection->isConnected()) {
+                    $connection->close();
+                }
             }
         }
 
