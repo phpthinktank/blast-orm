@@ -14,11 +14,8 @@
 namespace Blast\Db\Orm\Model;
 
 
-use Blast\Db\Data\AccessorInterface;
 use Blast\Db\Data\DataObjectInterface;
 use Blast\Db\Data\UpdatedDataObjectInterface;
-use Blast\Db\Orm\MapperAwareInterface;
-use Blast\Db\Orm\MapperInterface;
 
 interface ModelInterface extends DataObjectInterface, UpdatedDataObjectInterface
 {
@@ -29,12 +26,5 @@ interface ModelInterface extends DataObjectInterface, UpdatedDataObjectInterface
      * @return boolean
      */
     public function isNew();
-
-    /**
-     * Get table for model
-     *
-     * @return string
-     */
-    public static function getTable();
 
 }

@@ -67,16 +67,13 @@ class ModelManager
      */
     private function prepare($name)
     {
-        //if model an mapper already prepared, do nothing
-        if (isset($this->models[$name])) {
-            return $this;
-        }
+        $model = $this->prepareModel($name);
 
-        //get model
-        $container = DbManager::getInstance()->getContainer();
-        $model = $container->get($name);
+
+        $this->models[$name] = $model;
 
         if (!isset($this->mappers[$name])) {
+
             if ($model instanceof MapperAwareInterface) {
                 //get mapper from model
                 $mapper = $model->getMapper();
@@ -112,9 +109,6 @@ class ModelManager
         if ($model instanceof ModelEventsAwareInterface) {
             $model::attachEvents($mapper, $model);
         }
-
-        $this->models[$name] = $model;
-
 
         return $this;
     }

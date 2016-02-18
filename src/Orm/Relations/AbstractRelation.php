@@ -14,9 +14,6 @@
 namespace Blast\Db\Orm\Relations;
 
 
-use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Orm\MapperInterface;
-
 abstract class AbstractRelation implements RelationInterface
 {
 

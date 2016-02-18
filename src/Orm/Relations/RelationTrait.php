@@ -12,10 +12,12 @@
 
 namespace Blast\Db\Orm\Relations;
 
-use Blast\Db\Entity\Collection;
-use Blast\Db\Entity\CollectionInterface;
-use Blast\Db\Entity\EntityInterface;
+use Blast\Db\Orm\Factory;
 use Blast\Db\Orm\MapperInterface;
+use Blast\Db\Orm\Model\ModelInterface;
+use Blast\Db\Orm\Model\PrimaryKeyAwareTrait;
+use Blast\Db\Query\Result;
+use Blast\Db\Query\ResultCollection;
 
 trait RelationTrait
 {
@@ -25,12 +27,12 @@ trait RelationTrait
     protected $mapper;
 
     /**
-     * @var EntityInterface
+     * @var object
      */
-    protected $model;
+    protected $entity;
 
     /**
-     * @var EntityInterface
+     * @var object
      */
     protected $foreignEntity;
 
@@ -45,7 +47,7 @@ trait RelationTrait
     protected $localKey;
 
     /**
-     * @var CollectionInterface
+     * @var ModelInterface|Result|ResultCollection
      */
     protected $results;
 
@@ -55,7 +57,7 @@ trait RelationTrait
     protected $foreignEntityUpdate = false;
 
     /**
-     * @return EntityInterface
+     * @return object
      */
     public function getEntity()
     {
@@ -63,17 +65,17 @@ trait RelationTrait
     }
 
     /**
-     * @param EntityInterface $model
+     * @param ModelInterface $model
      * @return RelationTrait
      */
     public function setEntity($model)
     {
-        $this->entity = $model;
+        $this->entity = Factory::createModel($model);
         return $this;
     }
 
     /**
-     * @return EntityInterface
+     * @return ModelInterface
      */
     public function getForeignEntity()
     {
@@ -81,12 +83,12 @@ trait RelationTrait
     }
 
     /**
-     * @param EntityInterface $foreignEntity
+     * @param ModelInterface $foreignEntity
      * @return $this
      */
     public function setForeignEntity($foreignEntity)
     {
-        $this->foreignEntity = $foreignEntity;
+        $this->foreignEntity = Factory::createModel($foreignEntity);
         return $this;
     }
 
@@ -96,7 +98,11 @@ trait RelationTrait
     public function getForeignKey()
     {
         if($this->foreignKey === null){
-            $this->foreignKey = $this->getForeignEntity()->getTable()->getPrimaryKeyName();
+            $entity = $this->getForeignEntity();
+            if($entity instanceof PrimaryKeyAwareTrait){
+                $this->foreignKey = $entity->getPrimaryKey();
+            }
+            throw new \RuntimeException('Unknown relation foreign key');
         }
         return $this->foreignKey;
     }
@@ -107,27 +113,27 @@ trait RelationTrait
     public function getLocalKey()
     {
         if($this->localKey === null){
-            $this->localKey = $this->getEntity()->getTable()->getPrimaryKeyName();
+            throw new \RuntimeException('Unknown relation foreign key');
         }
         return $this->localKey;
     }
 
     /**
-     * @return CollectionInterface|EntityInterface
+     * @return ResultCollection|Result|ModelInterface
      */
     public function getResults()
     {
-        return $this->results === null ? new Collection() : $this->results;
+        return $this->results === null ? new ResultCollection() : $this->results;
     }
 
     /**
-     * @param CollectionInterface|EntityInterface $results
+     * @param Result|ResultCollection|ModelInterface $results
      * @return $this
      */
     public function setResults($results)
     {
-        if(!($results instanceof CollectionInterface || $results instanceof EntityInterface)){
-            throw new \InvalidArgumentException('Result set needs to be an instance of ' . CollectionInterface::class . ' or ' . EntityInterface::class);
+        if(!($results instanceof Result || $results instanceof ResultCollection || $results instanceof ModelInterface)){
+            throw new \InvalidArgumentException('Invalid result set for relation');
         }
 
         $this->results = $results;

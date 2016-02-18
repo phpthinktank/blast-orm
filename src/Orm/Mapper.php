@@ -9,6 +9,7 @@
 namespace Blast\Db\Orm;
 
 use Blast\Db\Orm\Model\ModelAwareInterface;
+use Blast\Db\Orm\Model\ModelAwareTrait;
 use Blast\Db\Orm\Model\ModelManager;
 use Blast\Db\Orm\Model\ModelInterface;
 use Blast\Db\ConnectionAwareTrait;
@@ -17,6 +18,9 @@ use Blast\Db\Orm\Relations\RelationInterface;
 use Blast\Db\Orm\Relations\RelationTrait;
 use Blast\Db\Query\Query;
 use Blast\Db\Orm\Relations\RelationAwareInterface;
+use Blast\Db\Query\Result;
+use Blast\Db\Query\ResultCollection;
+use Blast\Db\Query\ResultDecorator;
 
 /**
  * Class Mapper
@@ -31,30 +35,15 @@ class Mapper implements MapperInterface, ModelAwareInterface, RelationInterface
     use ManagerAwareTrait;
     use ConnectionAwareTrait;
     use RelationTrait;
+    use ModelAwareTrait;
 
     /**
-     * @var ModelInterface
+     * Disable direct access to mapper
+     * @param $model
      */
-    private $model;
-
-
-    /**
-     * Create mapper for Model
-     * @param ModelInterface
-     * @return $this
-     */
-    public function setModel($model)
+    public function __construct($model)
     {
-        $this->model = $model;
-        return $this;
-    }
-
-    /**
-     * @return ModelInterface
-     */
-    public function getModel()
-    {
-        return $this->model;
+        $this->setModel($model);
     }
 
     /**
@@ -75,22 +64,22 @@ class Mapper implements MapperInterface, ModelAwareInterface, RelationInterface
      */
     public function find($value, $field = null)
     {
-        $field = $this->getModel()->getTable()->getPrimaryKeyName();
         $query = $this->select();
+        $query->from($this->getModel()->getTable());
         if (isset($field) && isset($value)) {
-            $query->where($query->expr()->eq($field, $query->createPositionalParameter($value, $this->getModel()->getTable()->getColumn($field)->getType())));
+            $query->where($query->expr()->eq($field, $query->createPositionalParameter($value)));
         }
 
-        return $query->execute(Query::RESULT_Model);
+        return $query->execute(ResultDecorator::RESULT_ENTITY);
     }
 
     /**
      * Get a collection of all entities
      *
-     * @return array|CollectionInterface
+     * @return ResultCollection
      */
     public function all(){
-        return $this->select()->execute(Query::RESULT_COLLECTION);
+        return $this->select()->execute(ResultDecorator::RESULT_COLLECTION);
     }
 
     /**

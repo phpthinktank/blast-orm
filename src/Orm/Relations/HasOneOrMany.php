@@ -6,27 +6,30 @@
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
  *
- * Date: 01.02.2016
- * Time: 15:54
+ * Date: 02.02.2016
+ * Time: 15:56
  *
  */
 
 namespace Blast\Db\Orm\Relations;
 
 
-use Blast\Db\Entity\EntityInterface;
+use Blast\Db\Data\DataHelper;
+use Blast\Db\Orm\Factory;
+use Blast\Db\Orm\Model\ModelInterface;
 use Blast\Db\Query;
 
-class HasOne extends AbstractRelation
+class HasOneOrMany extends AbstractRelation
 {
+
     /**
      * BelongsTo constructor.
-     * @param EntityInterface $model current entity instance
-     * @param string|EntityInterface $foreignEntity Entity which have a key field in current entity
+     * @param ModelInterface $model current entity instance
+     * @param string|ModelInterface $foreignEntity Entity which have a key field in current entity
      * @param string|integer|null $localKey Field name on current entity which matches up with foreign key of foreign entity
      * @param string|integer|null $foreignKey name on foreign entity which matches up with local key of current entity
      */
-    public function __construct(EntityInterface $model, $foreignEntity, $localKey = null, $foreignKey = null)
+    public function __construct(ModelInterface $model, $foreignEntity, $localKey = null, $foreignKey = null)
     {
         //local config
         $this->entity = $model;
@@ -38,16 +41,20 @@ class HasOne extends AbstractRelation
     }
 
     /**
+     * @todo Entity should be able to save many entities
      * Save foreign entity and store value of foreign key into local key field
-     *
-     * @return EntityInterface
+     * @return ModelInterface
      */
     public function save()
     {
         $foreignEntity = $this->getForeignEntity();
-        $model = $this->getEntity();
-        $model->__set($this->getLocalKey(), $foreignEntity->__get($this->getForeignKey()));
-        $foreignEntity->getMapper()->save($this->getResults());
+        $foreignData = DataHelper::receiveDataFromObject($foreignEntity);
+        $entity = $this->getEntity();
+        $data = DataHelper::receiveDataFromObject($entity);
+        $data[$this->getLocalKey()] = $foreignData[$this->getForeignKey()];
+        DataHelper::replaceDataFromObject($entity,$data);
+
+        Factory::createMapper($foreignEntity)->save($this->getResults());
 
         return $foreignEntity;
     }
@@ -55,14 +62,14 @@ class HasOne extends AbstractRelation
     /**
      * Fetch data from foreign entity, when value of foreign key matches up with value of local key
      *
-     * @return EntityInterface|\Blast\Db\Entity\EntityInterface[]
+     * @return Query\ResultCollection
      */
     public function fetch()
     {
-        $query = $this->getForeignEntity()->getMapper()->select();
-        $result = $query->where(
-            $query->expr()->eq($this->getLocalKey(), $this->getForeignEntity()->get($this->getLocalKey()))
-        )->setMaxResults(1)->execute(Query::RESULT_ENTITY);
+        $data = DataHelper::receiveDataFromObject($this->getEntity());
+        $result = Factory::createMapper($this->getForeignEntity())
+            ->find($data[$this->getLocalKey()], $this->getForeignKey());
+
         return $this->setResults($result)->getResults();
     }
 

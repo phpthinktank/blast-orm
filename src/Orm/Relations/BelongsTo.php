@@ -14,8 +14,13 @@
 namespace Blast\Db\Orm\Relations;
 
 
+use Blast\Db\Data\DataHelper;
 use Blast\Db\Entity\EntityInterface;
+use Blast\Db\Orm\Factory;
+use Blast\Db\Orm\Model\ModelInterface;
 use Blast\Db\Query;
+use Blast\Db\Query\Result;
+use Blast\Db\Query\ResultCollection;
 
 class BelongsTo extends AbstractRelation
 {
@@ -37,14 +42,18 @@ class BelongsTo extends AbstractRelation
 
     /**
      * Save foreign entity and store value of foreign key into local key field
-     * @return EntityInterface
+     * @return ModelInterface
      */
     public function save()
     {
         $foreignEntity = $this->getForeignEntity();
-        $model = $this->getEntity();
-        $model->__set($this->getLocalKey(), $foreignEntity->__get($this->getForeignKey()));
-        $foreignEntity->getMapper()->save($this->getResults());
+        $foreignData = DataHelper::receiveDataFromObject($foreignEntity);
+        $entity = $this->getEntity();
+        $data = DataHelper::receiveDataFromObject($entity);
+        $data[$this->getLocalKey()] = $foreignData[$this->getForeignKey()];
+        DataHelper::replaceDataFromObject($entity,$data);
+
+        Factory::createMapper($foreignEntity)->save($this->getResults());
 
         return $foreignEntity;
     }
@@ -52,14 +61,12 @@ class BelongsTo extends AbstractRelation
     /**
      * Fetch data from foreign entity, when value of foreign key matches up with value of local key
      *
-     * @return EntityInterface|\Blast\Db\Entity\EntityInterface[]
+     * @return ModelInterface|Result|ResultCollection
      */
     public function fetch()
     {
-        $query = $this->getForeignEntity()->getMapper()->select();
-        $result = $query->where(
-            $query->expr()->eq($this->getForeignKey(), $this->getEntity()->get($this->getLocalKey()))
-        )->setMaxResults(1)->execute(Query::RESULT_ENTITY);
+        $data = DataHelper::receiveDataFromObject($this->getEntity());
+        $result = Factory::createMapper($this->getForeignEntity())->find($data[$this->getLocalKey()], $this->getForeignKey());
 
         return $this->setResults($result)->getResults();
     }
