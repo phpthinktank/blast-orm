@@ -13,6 +13,7 @@
 namespace Blast\Db\Query;
 
 
+use Blast\Db\Data\DataHelper;
 use Blast\Db\Orm\Model\ModelInterface;
 use Doctrine\DBAL\Driver\Statement;
 use stdClass;
@@ -42,26 +43,26 @@ class ResultDecorator
      */
     private $data;
     /**
-     * @var array|\ArrayObject|ModelInterface|null|stdClass
+     * @var array|\ArrayObject|ModelInterface|null|stdClass|Result
      */
-    private $model;
+    private $entity;
 
     /**
      * ResultDecorator constructor.
      * @param array $data
-     * @param ModelInterface|array|stdClass|\ArrayObject $model
+     * @param ModelInterface|array|stdClass|\ArrayObject $entity
      */
-    public function __construct($data = [], $model = null)
+    public function __construct($data = [], $entity = null)
     {
         $this->data = $data;
-        $this->model = $model;
+        $this->entity = $entity;
     }
 
     /**
      * Determine result and return one or many results
      *
      * @param string $convert
-     * @return array|Result|ResultCollection
+     * @return array|Result|ResultCollection|ModelInterface|stdClass|\ArrayObject
      */
     public function decorate($convert = self::RESULT_AUTO)
     {
@@ -72,30 +73,35 @@ class ResultDecorator
         }
 
         $count = count($data);
-        $model = NULL;
+        $entity = NULL;
 
-        if ($count > 1 || $convert === static::RESULT_COLLECTION) { //if model set has many items, return a collection of entities
+        if ($count > 1 || $convert === static::RESULT_COLLECTION) { //if entity set has many items, return a collection of entities
             foreach ($data as $key => $value) {
                 $data[ $key ] = $this->newModel($value);
             }
-            $model = new ResultCollection($data);
-        } elseif ($count === 1 || $convert === static::RESULT_ENTITY) { //if model has one item, return the entity
-            $model = $this->newModel(array_shift($data));
+            $entity = new ResultCollection($data);
+        } elseif ($count === 1 || $convert === static::RESULT_ENTITY) { //if entity has one item, return the entity
+            $entity = $this->newModel(array_shift($data));
         }
 
-        return $model;
+        return $entity;
     }
 
     /**
+     * Pass data to result or model
      * @param array $data
      * @return Result
      */
     protected function newModel($data = [])
     {
-        $model = new Result();
-        $model->setData($data);
+        $entity = $this->entity;
+        if(!is_object($entity)){
+            $entity = new Result();
+        }
 
-        return $model;
+        DataHelper::replaceDataFromObject($entity, $data);
+
+        return $entity;
     }
 
     /**
@@ -106,7 +112,7 @@ class ResultDecorator
     {
         return $convert === self::RESULT_RAW ||
         $this->data instanceof Statement ||
-        $this->model === NULL ||
+        $this->entity === NULL ||
         is_int($this->data);
     }
 

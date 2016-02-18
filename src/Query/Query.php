@@ -12,9 +12,6 @@
 
 namespace Blast\Db\Query;
 
-
-use Blast\Db\Entity\CollectionInterface;
-use Blast\Db\Entity\EntityInterface;
 use Blast\Db\ConnectionAwareTrait;
 use Blast\Db\Events\BuilderEvent;
 use Blast\Db\Events\ResultEvent;
@@ -91,17 +88,17 @@ class Query
     /**
      * @var ModelInterface|array|stdClass|\ArrayObject
      */
-    private $model;
+    private $entity;
 
     /**
      * Statement constructor.
-     * @param ModelInterface|array|stdClass|\ArrayObject $model
+     * @param ModelInterface|array|stdClass|\ArrayObject $entity
      * @param Query $builder
      */
-    public function __construct($model = null, $builder = null)
+    public function __construct($entity = null, $builder = null)
     {
-        $this->builder = $builder === null ? Manager::getInstance()->getConfig()->getConnection()->createQueryBuilder() : $builder;
-        $this->model = $model;
+        $this->builder = $builder === null ? Manager::getInstance()->getConnection()->createQueryBuilder() : $builder;
+        $this->entity = $entity;
     }
 
     /**
@@ -115,13 +112,13 @@ class Query
     /**
      * @return ModelInterface|array|stdClass|\ArrayObject
      */
-    public function getModel()
+    public function getEntity()
     {
-        return $this->model;
+        return $this->entity;
     }
 
     /**
-     * Fetch data for entity. if raw is true, fetch assoc instead of entity
+     * Fetch data for entity
      *
      * @param string $convert
      * @return array|Result|ResultCollection
@@ -129,9 +126,9 @@ class Query
      */
     public function execute($convert = 'auto')
     {
-        $model = $this->getModel();
+        $entity = $this->getEntity();
 
-        $builder = $this->beforeExecute($model, $this->getBuilder());
+        $builder = $this->beforeExecute($entity, $this->getBuilder());
 
         if(!$builder){
             return false;
@@ -140,19 +137,19 @@ class Query
         $isSelect = $builder->getType() === $builder::SELECT;
         $statement = $builder->execute();
 
-        $result = $this->afterExecute($isSelect ? $statement->fetchAll() : $statement, $model, $builder);
+        $result = $this->afterExecute($isSelect ? $statement->fetchAll() : $statement, $entity, $builder);
 
         if(!$result){
             return false;
         }
 
-        $decorator = new ResultDecorator($result, $model);
+        $decorator = new ResultDecorator($result, $entity);
 
         return $decorator->decorate($convert);
     }
 
     /**
-     * Magic call of builder methods
+     * Magic call of \Doctrine\DBAL\Query\QueryBuilder methods
      *
      * @param $name
      * @param $arguments
@@ -165,14 +162,16 @@ class Query
     }
 
     /**
-     * @param $model
+     * Events before execution
+     *
+     * @param $entity
      * @param $builder
      * @return QueryBuilder
      */
-    private function beforeExecute($model, $builder)
+    private function beforeExecute($entity, $builder)
     {
-        if ($model instanceof EmitterAwareInterface) {
-            $event = $model->getEmitter()->emit(new BuilderEvent('before.' . $this->getType(), $builder));
+        if ($entity instanceof EmitterAwareInterface) {
+            $event = $entity->getEmitter()->emit(new BuilderEvent('before.' . $this->getType(), $builder));
             if ($event->isPropagationStopped()) {
                 return false;
             }
@@ -186,15 +185,17 @@ class Query
     }
 
     /**
+     * Events after execution
+     *
      * @param $result
-     * @param $model
+     * @param $entity
      * @param Query|QueryBuilder $builder
      * @return array
      */
-    private function afterExecute($result, $model, $builder)
+    private function afterExecute($result, $entity, $builder)
     {
-        if ($model instanceof EmitterAwareInterface) {
-            $event = $model->getEmitter()->emit(new ResultDecorator('after.' . $builder->getType(), $result), $builder);
+        if ($entity instanceof EmitterAwareInterface) {
+            $event = $entity->getEmitter()->emit(new ResultDecorator('after.' . $builder->getType(), $result), $builder);
             if ($event->isPropagationStopped()) {
                 return false;
             }
