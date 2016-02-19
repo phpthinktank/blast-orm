@@ -30,10 +30,10 @@ interface MapperInterface
     public function all();
 
     /**
-     * @param ModelInterface|array $model
+     * @param ModelInterface|array $entity
      * @return int
      */
-    public function delete($model);
+    public function delete($entity);
 
     /**
      * @param ModelInterface|array $model

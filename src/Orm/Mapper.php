@@ -8,9 +8,10 @@
 
 namespace Blast\Db\Orm;
 
+use Blast\Db\Data\DataHelper;
+use Blast\Db\Data\UpdatedDataObjectInterface;
 use Blast\Db\Orm\Model\ModelAwareInterface;
 use Blast\Db\Orm\Model\ModelAwareTrait;
-use Blast\Db\Orm\Model\ModelManager;
 use Blast\Db\Orm\Model\ModelInterface;
 use Blast\Db\ConnectionAwareTrait;
 use Blast\Db\ManagerAwareTrait;
@@ -18,7 +19,6 @@ use Blast\Db\Orm\Relations\RelationInterface;
 use Blast\Db\Orm\Relations\RelationTrait;
 use Blast\Db\Query\Query;
 use Blast\Db\Orm\Relations\RelationAwareInterface;
-use Blast\Db\Query\Result;
 use Blast\Db\Query\ResultCollection;
 use Blast\Db\Query\ResultDecorator;
 
@@ -62,10 +62,9 @@ class Mapper implements MapperInterface, ModelAwareInterface, RelationInterface
      * @param null $field
      * @return ModelInterface
      */
-    public function find($value, $field = null)
+    public function find($value, $field = NULL)
     {
         $query = $this->select();
-        $query->from($this->getModel()->getTable());
         if (isset($field) && isset($value)) {
             $query->where($query->expr()->eq($field, $query->createPositionalParameter($value)));
         }
@@ -78,7 +77,8 @@ class Mapper implements MapperInterface, ModelAwareInterface, RelationInterface
      *
      * @return ResultCollection
      */
-    public function all(){
+    public function all()
+    {
         return $this->select()->execute(ResultDecorator::RESULT_COLLECTION);
     }
 
@@ -90,8 +90,10 @@ class Mapper implements MapperInterface, ModelAwareInterface, RelationInterface
     public function select($selects = ['*'])
     {
         $query = $this->createQuery();
-        $query->select($selects)
-            ->from($this->getModel()->getTable()->getName());
+        $query->select($selects);
+
+        $entity = $this->getModel();
+        $query->from(MapperHelper::findOption('table', $entity));
 
         return $query;
     }
@@ -99,25 +101,25 @@ class Mapper implements MapperInterface, ModelAwareInterface, RelationInterface
     /**
      * Create a new Model or a collection of entities in storage.
      *
-     * @param ModelInterface|ModelInterface[]|CollectionInterface $model
+     * @param ModelInterface|ModelInterface[] $entity
      * @return int|int[]|bool[]|bool
      */
-    public function create($model)
+    public function create($entity)
     {
         //execute batch if condition matches
-        if ($this->isMassProcessable($model)) {
-            return $this->massProcess(__FUNCTION__, $model);
+        if ($this->isMassProcessable($entity)) {
+            return $this->massProcess(__FUNCTION__, $entity);
         }
 
         //save relations before save Model
-        $this->saveRelations($model);
+        $this->saveRelations($entity);
 
         //prepare statement
         $query = $this->createQuery();
-        $query->insert($model->getTable()->getName());
+        $query->insert(MapperHelper::findOption('table', $entity));
 
-        foreach ($model->getData() as $key => $value) {
-            $query->setValue($key, $query->createPositionalParameter($value, $model->getTable()->getColumn($key)->getType()));
+        foreach ($entity->getData() as $key => $value) {
+            $query->setValue($key, $query->createPositionalParameter($value));
         }
 
         return $query->execute();
@@ -130,35 +132,35 @@ class Mapper implements MapperInterface, ModelAwareInterface, RelationInterface
      *
      * Optional force update of entities without updates
      *
-     * @param ModelInterface|ModelInterface[]|CollectionInterface $model
-     * @param bool $forceUpdate
+     * @param ModelInterface|ModelInterface[] $entity
      * @return int|int[]|bool[]|bool
      * @throws \Doctrine\DBAL\Schema\SchemaException
      */
-    public function update($model, $forceUpdate = false)
+    public function update($entity)
     {
         //execute batch if condition matches
-        if ($this->isMassProcessable($model)) {
-            return $this->massProcess(__FUNCTION__, $model);
+        if ($this->isMassProcessable($entity)) {
+            return $this->massProcess(__FUNCTION__, $entity);
         }
 
         //save relations before save Model
-        $this->saveRelations($model);
+        $this->saveRelations($entity);
 
-        if(!$model->isUpdated()){
+        if (!$entity->isUpdated()) {
             return 0;
         }
 
         //prepare statement
-        $pkName = $model->getTable()->getPrimaryKeyName();
+        $pkName = MapperHelper::findOption('primaryKeyName', $entity);
         $query = $this->createQuery();
-        $query->update($model->getTable()->getName());
+        $query->update(MapperHelper::findOption('table', $entity));
 
-        foreach ($model->getUpdatedData() as $key => $value) {
-            $query->set($key, $query->createPositionalParameter($value, $model->getTable()->getColumn($key)->getType()));
+        $data = $entity instanceof UpdatedDataObjectInterface ? $entity->getUpdatedData() : DataHelper::receiveDataFromObject($entity);
+        foreach ($data as $key => $value) {
+            $query->set($key, $query->createPositionalParameter($value));
         }
 
-        $query->where($query->expr()->eq($pkName, $model->get($pkName)));
+        $query->where($query->expr()->eq($pkName, $data[$pkName]));
 
         return $query->execute();
     }
@@ -166,29 +168,29 @@ class Mapper implements MapperInterface, ModelAwareInterface, RelationInterface
     /**
      * Delete an existing Model or a collection of entities in storage
      *
-     * @param ModelInterface|ModelInterface[]|CollectionInterface $model
+     * @param ModelInterface|ModelInterface[] $entity
      * @return int
      */
-    public function delete($model)
+    public function delete($entity)
     {
         //prepare for batch
         //delete will always batch delete
-        $entities = [$model];
+        $entities = [$entity];
 
-        if ($this->isMassProcessable($model)) {
-            $entities = $model instanceof CollectionInterface ? $model->getData() : $model;
-            $model = array_shift($model);
+        if ($this->isMassProcessable($entity)) {
+            $entities = $entity instanceof ResultCollection ? $entity->getData() : $entity;
+            $entity = array_shift($entity);
         }
 
         //prepare statement
-        $pkName = $model->getTable()->getPrimaryKeyName();
+        $pkName = MapperHelper::findOption('primaryKeyName', $entity);
         $query = $this->createQuery();
-        $query->delete($model->getTable()->getName());
+        $query->delete(MapperHelper::findOption('table', $entity));
 
         //add entities by pk to delete
         foreach ($entities as $instance) {
-            $instance = $this->prepareModel($instance);
-            $query->orWhere($query->expr()->eq($pkName, $query->createPositionalParameter($instance->__get($pkName), $instance->getTable()->getColumn($pkName)->getType())));
+            $data = DataHelper::receiveDataFromObject($instance);
+            $query->orWhere($query->expr()->eq($pkName, $query->createPositionalParameter($data[$pkName])));
         }
 
         return $query->execute();
@@ -203,7 +205,7 @@ class Mapper implements MapperInterface, ModelAwareInterface, RelationInterface
      * @param bool $forceUpdate
      * @return int
      */
-    public function save($model, $forceUpdate = false)
+    public function save($model, $forceUpdate = FALSE)
     {
         if ($this->isMassProcessable($model)) {
             return $this->massProcess(__FUNCTION__, $model);
@@ -219,7 +221,7 @@ class Mapper implements MapperInterface, ModelAwareInterface, RelationInterface
      */
     protected function saveRelations($model)
     {
-        if(!($model instanceof RelationAwareInterface)){
+        if (!($model instanceof RelationAwareInterface)) {
             return;
         }
         //maybe it is better to start an transaction
@@ -241,7 +243,7 @@ class Mapper implements MapperInterface, ModelAwareInterface, RelationInterface
      */
     protected function isMassProcessable($model)
     {
-        return $model instanceof CollectionInterface || is_array($model) || $model instanceof \ArrayObject;
+        return $model instanceof ResultCollection || is_array($model) || $model instanceof \ArrayObject;
     }
 
     /**
