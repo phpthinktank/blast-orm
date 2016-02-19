@@ -13,12 +13,13 @@
 namespace Blast\Db\Query;
 
 
+use Blast\Db\Data\DataDecoratorInterface;
 use Blast\Db\Data\DataHelper;
 use Blast\Db\Orm\Model\ModelInterface;
 use Doctrine\DBAL\Driver\Statement;
 use stdClass;
 
-class ResultDecorator
+class ResultDataDecorator implements DataDecoratorInterface
 {
 
     /**
@@ -29,14 +30,11 @@ class ResultDecorator
      *
      */
     const RESULT_ENTITY = 'entity';
+
     /**
      *
      */
-    const RESULT_RAW = 'raw';
-    /**
-     *
-     */
-    const RESULT_AUTO = 'auto';
+    const RAW = 'raw';
 
     /**
      * @var array
@@ -52,35 +50,72 @@ class ResultDecorator
      * @param array $data
      * @param ModelInterface|array|stdClass|\ArrayObject $entity
      */
-    public function __construct($data = [], $entity = null)
+    public function __construct($data = [], $entity = NULL)
+    {
+        $this->setData($data);
+        $this->setEntity($entity);
+    }
+
+    /**
+     * @return array|\ArrayObject|ModelInterface|Result|null|stdClass
+     */
+    public function getEntity()
+    {
+        return $this->entity;
+    }
+
+    /**
+     * @param array|\ArrayObject|ModelInterface|Result|null|stdClass $entity
+     * @return $this
+     */
+    public function setEntity($entity)
+    {
+        $this->entity = $entity;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    public function setData(array $data = [])
     {
         $this->data = $data;
-        $this->entity = $entity;
+
+        return $this;
     }
 
     /**
      * Determine result and return one or many results
      *
-     * @param string $convert
+     * @param string $option
      * @return array|Result|ResultCollection|ModelInterface|stdClass|\ArrayObject
      */
-    public function decorate($convert = self::RESULT_AUTO)
+    public function decorate($option = self::AUTO)
     {
-
         $data = $this->data;
-        if($this->isRaw($convert)){
+        if ($this->isRaw($option)) {
             return $data;
         }
 
         $count = count($data);
         $entity = NULL;
 
-        if ($count > 1 || $convert === static::RESULT_COLLECTION) { //if entity set has many items, return a collection of entities
+        if ($count > 1 || $option === static::RESULT_COLLECTION) { //if entity set has many items, return a collection of entities
             foreach ($data as $key => $value) {
                 $data[ $key ] = $this->newModel($value);
             }
             $entity = new ResultCollection($data);
-        } elseif ($count === 1 || $convert === static::RESULT_ENTITY) { //if entity has one item, return the entity
+        } elseif ($count === 1 || $option === static::RESULT_ENTITY) { //if entity has one item, return the entity
             $entity = $this->newModel(array_shift($data));
         }
 
@@ -95,7 +130,7 @@ class ResultDecorator
     protected function newModel($data = [])
     {
         $entity = $this->entity;
-        if(!is_object($entity)){
+        if (!is_object($entity)) {
             $entity = new Result();
         }
 
@@ -105,12 +140,12 @@ class ResultDecorator
     }
 
     /**
-     * @param $convert
+     * @param $option
      * @return bool
      */
-    public function isRaw($convert)
+    public function isRaw($option)
     {
-        return $convert === self::RESULT_RAW ||
+        return $option === self::RAW ||
         $this->data instanceof Statement ||
         $this->entity === NULL ||
         is_int($this->data);
