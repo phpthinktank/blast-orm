@@ -17,10 +17,6 @@ use Blast\Tests\Db\Stubs\Data\DataObjectImpl;
 
 class DataObjectTest extends \PHPUnit_Framework_TestCase
 {
-    /**
-     * @covers Blast\Db\Data\AccessorTrait
-     *
-     */
     public function testAccessingData()
     {
         $data = new DataObjectImpl();
@@ -40,9 +36,6 @@ class DataObjectTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    /**
-     * @covers Blast\Db\Data\ConverterTrait
-     */
     public function testConvertData()
     {
         $data = new DataObjectImpl();
@@ -56,9 +49,6 @@ class DataObjectTest extends \PHPUnit_Framework_TestCase
         $this->assertJson($data->toJson());
     }
 
-    /**
-     * @covers Blast\Db\Data\FilterTrait
-     */
     public function testFilterData()
     {
         $data = new DataObjectImpl();
@@ -79,9 +69,6 @@ class DataObjectTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    /**
-     * @covers Blast\Db\Data\MutatorTrait
-     */
     public function testMutatingData()
     {
         $data = new DataObjectImpl();
