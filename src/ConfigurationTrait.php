@@ -25,7 +25,7 @@ trait ConfigurationTrait
     /**
      * @var Connection
      */
-    protected $activeConnection = null;
+    protected $defaultConnection = null;
 
     /**
      *
@@ -40,7 +40,7 @@ trait ConfigurationTrait
     public function addConnection($name, $connection)
     {
         if ($this->hasConnection($name)) {
-            throw new \InvalidArgumentException(sprintf('Connection with name %s already exists!'));
+            throw new \InvalidArgumentException(sprintf('Connection with name %s already exists!', $name));
         }
 
 
@@ -50,7 +50,7 @@ trait ConfigurationTrait
 
         //set first connection as active connection
         if (count($this->connections) === 1) {
-            $this->setActiveConnection($name);
+            $this->setDefaultConnection($name);
         }
 
         return $this;
@@ -61,13 +61,13 @@ trait ConfigurationTrait
      * @param string $name
      * @return $this
      */
-    public function setActiveConnection($name)
+    public function setDefaultConnection($name)
     {
         if ($this->hasConnection($name)) {
-            if($this->activeConnection !== null){
-                $this->previousConnections[] = $this->activeConnection;
+            if($this->defaultConnection !== null){
+                $this->previousConnections[] = $this->defaultConnection;
             }
-            $this->activeConnection = $this->getConnection($name);
+            $this->defaultConnection = $this->getConnection($name);
 
             return $this;
         }
@@ -76,11 +76,22 @@ trait ConfigurationTrait
     }
 
     /**
+     * @return array
+     */
+    public function getPreviousConnections()
+    {
+        return $this->previousConnections;
+    }
+
+    /**
      * @param $name
      * @return \Doctrine\DBAL\Connection
      */
-    public function getConnection($name = self::DEFAULT_CONNECTION)
+    public function getConnection($name = null)
     {
+        if($name === null){
+            return $this->defaultConnection;
+        }
         if ($this->hasConnection($name)) {
             return $this->connections[$name];
         }

@@ -9,7 +9,6 @@
 namespace Blast\Tests\Db;
 
 
-use Blast\Db\ConfigurationTrait;
 use Blast\Db\ConfigurationInterface;
 use Blast\Db\Manager;
 use Blast\Db\ManagerInterface;
@@ -18,6 +17,7 @@ use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\DriverManager;
 use Interop\Container\ContainerInterface;
 use Prophecy\Prophecy\ObjectProphecy;
+use InvalidArgumentException;
 use RuntimeException;
 
 class ManagerTest extends \PHPUnit_Framework_TestCase
@@ -113,6 +113,46 @@ class ManagerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertArrayHasKey('string', $manager->getConnections());
         $this->assertArrayHasKey('string2', $manager->getConnections());
+    }
+
+    public function testSetDefaultConnection()
+    {
+        $container = $this->container->reveal();
+        $manager = Manager::create($container, $this->dsn);
+
+        $manager->addConnection('string', $this->dsn);
+        $manager->addConnection('string2', $this->dsn);
+        $manager->setDefaultConnection('string2');
+
+        $this->assertInstanceOf(Connection::class, $manager->getConnection());
+    }
+
+    public function testExceptionWhenSetUnknownDefaultConnection(){
+        $this->setExpectedException(InvalidArgumentException::class);
+        $container = $this->container->reveal();
+        $manager = Manager::create($container, $this->dsn);
+        $manager->setDefaultConnection('string2');
+    }
+
+    public function testExceptionWhenGetUnknownConnection(){
+        $this->setExpectedException(InvalidArgumentException::class);
+        $container = $this->container->reveal();
+        $manager = Manager::create($container, $this->dsn);
+        $manager->getConnection('string2');
+    }
+
+    public function testExceptionWhenSetExistingConnection(){
+        $this->setExpectedException(InvalidArgumentException::class);
+        $container = $this->container->reveal();
+        $manager = Manager::create($container, $this->dsn);
+        $manager->addConnection(ConfigurationInterface::DEFAULT_CONNECTION, $this->dsn);
+    }
+
+    public function testExceptionWhenSetInvalidConnection(){
+        $this->setExpectedException(RuntimeException::class);
+        $container = $this->container->reveal();
+        $manager = Manager::create($container, $this->dsn);
+        $manager->addConnection('invalid', 1234);
     }
 
     public function testExceptionWhenNotCreated(){

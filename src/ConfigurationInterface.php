@@ -29,7 +29,7 @@ interface ConfigurationInterface
      * Activate a connection as default connection
      * @param string $name
      */
-    public function setActiveConnection($name);
+    public function setDefaultConnection($name);
 
     /**
      * @param $name
