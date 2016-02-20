@@ -143,7 +143,7 @@ class Query
             return false;
         }
 
-        $decorator = new ResultDecorator($result, $entity);
+        $decorator = new ResultDataDecorator($result, $entity);
 
         return $decorator->decorate($convert);
     }

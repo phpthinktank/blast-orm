@@ -15,6 +15,7 @@ namespace Blast\Db\Query;
 
 use Blast\Db\Data\DataDecoratorInterface;
 use Blast\Db\Data\DataHelper;
+use Blast\Db\Data\DataObject;
 use Blast\Db\Orm\Model\ModelInterface;
 use Doctrine\DBAL\Driver\Statement;
 use stdClass;
@@ -44,16 +45,22 @@ class ResultDataDecorator implements DataDecoratorInterface
      * @var array|\ArrayObject|ModelInterface|null|stdClass|Result
      */
     private $entity;
+    /**
+     * @var Query
+     */
+    private $query;
 
     /**
      * ResultDecorator constructor.
      * @param array $data
      * @param ModelInterface|array|stdClass|\ArrayObject $entity
+     * @param Query $query
      */
-    public function __construct($data = [], $entity = NULL)
+    public function __construct($data = [], $entity = NULL, Query $query = NULL)
     {
         $this->setData($data);
         $this->setEntity($entity);
+        $this->setQuery($query);
     }
 
     /**
@@ -95,6 +102,25 @@ class ResultDataDecorator implements DataDecoratorInterface
     }
 
     /**
+     * @return Query
+     */
+    public function getQuery()
+    {
+        return $this->query;
+    }
+
+    /**
+     * @param Query $query
+     * @return ResultDataDecorator
+     */
+    public function setQuery($query)
+    {
+        $this->query = $query;
+
+        return $this;
+    }
+
+    /**
      * Determine result and return one or many results
      *
      * @param string $option
@@ -110,13 +136,14 @@ class ResultDataDecorator implements DataDecoratorInterface
         $count = count($data);
         $entity = NULL;
 
-        if ($count > 1 || $option === static::RESULT_COLLECTION) { //if entity set has many items, return a collection of entities
+        if ($count > 1 || $option === self::RESULT_COLLECTION) { //if entity set has many items, return a collection of entities
             foreach ($data as $key => $value) {
-                $data[ $key ] = $this->newModel($value);
+                $data[ $key ] = $this->mapObject($value);
             }
-            $entity = new ResultCollection($data);
-        } elseif ($count === 1 || $option === static::RESULT_ENTITY) { //if entity has one item, return the entity
-            $entity = $this->newModel(array_shift($data));
+            $entity = new DataObject();
+            $entity->setData($data);
+        } elseif ($count === 1 || $option === self::RESULT_ENTITY) { //if entity has one item, return the entity
+            $entity = $this->mapObject(array_shift($data));
         }
 
         return $entity;
@@ -127,7 +154,7 @@ class ResultDataDecorator implements DataDecoratorInterface
      * @param array $data
      * @return Result
      */
-    protected function newModel($data = [])
+    protected function mapObject($data = [])
     {
         $entity = $this->entity;
         if (!is_object($entity)) {
@@ -147,7 +174,6 @@ class ResultDataDecorator implements DataDecoratorInterface
     {
         return $option === self::RAW ||
         $this->data instanceof Statement ||
-        $this->entity === NULL ||
         is_int($this->data);
     }
 
