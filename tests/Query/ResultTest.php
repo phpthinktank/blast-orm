@@ -22,16 +22,6 @@ use Blast\Db\Query\Result;
 class ResultTest extends \PHPUnit_Framework_TestCase
 {
 
-
-    public function testQueryAccessor()
-    {
-        $query = $this->prophesize(Query::class)->reveal();
-
-        $resultCollection = new Result($query);
-
-        $this->assertEquals($query, $resultCollection->getQuery());
-    }
-
     public function testResultExtendsDataObject()
     {
         $this->assertTrue(is_subclass_of(Result::class, DataObject::class));

@@ -15,6 +15,7 @@ namespace Blast\Db\Query;
 
 
 use Blast\Db\Data\AccessorInterface;
+use Blast\Db\Data\DataObject;
 use Blast\Db\Data\MutatorInterface;
 use Blast\Db\Data\MutatorTrait;
 use Blast\Db\Data\AccessorTrait;
@@ -23,7 +24,7 @@ use Blast\Db\Data\AccessorTrait;
  * Class Result
  * @package Blast\Db
  */
-class Result extends ResultCollection implements AccessorInterface, MutatorInterface{
+class Result extends DataObject implements AccessorInterface, MutatorInterface{
 
     use AccessorTrait;
     use MutatorTrait;
