@@ -49,6 +49,18 @@ class DataObjectTest extends \PHPUnit_Framework_TestCase
         $this->assertJson($data->toJson());
     }
 
+    public function testCountData()
+    {
+        $data = new DataObjectImpl();
+        $data->setData([
+            'services.core' => 'com.core',
+            'services.core.validate' => 'com.core.validate',
+            'services.cms' => 'com.cms',
+        ]);
+
+        $this->assertEquals(3, $data->count());
+    }
+
     public function testFilterData()
     {
         $data = new DataObjectImpl();
