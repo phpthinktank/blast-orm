@@ -59,7 +59,7 @@ class DataObjectTest extends \PHPUnit_Framework_TestCase
         ]);
 
         //filter for core components
-        $coreComponents = $data->filter(function($key, $value){
+        $coreComponents = $data->filter(function($value, $key){
             return strpos($key, 'services.core') === 0;
         });
 

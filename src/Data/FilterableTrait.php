@@ -24,7 +24,7 @@ trait FilterableTrait
      * Create a callback with key and value parameters and return a boolean.
      *
      * ```
-     * FilterableTrait::filter(function($key, $value){
+     * FilterableTrait::filter(function($value, $key){
      *  //added to result if value is scalar
      *  return is_scalar($value)
      * });
@@ -47,7 +47,7 @@ trait FilterableTrait
 
         //if filter is truthy pass key-value-pair to results
         foreach($data as $key => $value){
-            if(call_user_func($filter, $key, $value) == true){
+            if(call_user_func($filter, $value, $key) == true){
                 $results[$key] = $value;
             }
         }
