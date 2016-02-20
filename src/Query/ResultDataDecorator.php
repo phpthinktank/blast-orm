@@ -45,10 +45,6 @@ class ResultDataDecorator implements DataDecoratorInterface
      * @var array|\ArrayObject|ModelInterface|null|stdClass|Result
      */
     private $entity;
-    /**
-     * @var Query
-     */
-    private $query;
 
     /**
      * ResultDecorator constructor.
@@ -56,11 +52,10 @@ class ResultDataDecorator implements DataDecoratorInterface
      * @param ModelInterface|array|stdClass|\ArrayObject $entity
      * @param Query $query
      */
-    public function __construct($data = [], $entity = NULL, Query $query = NULL)
+    public function __construct($data = [], $entity = NULL)
     {
         $this->setData($data);
         $this->setEntity($entity);
-        $this->setQuery($query);
     }
 
     /**
@@ -97,25 +92,6 @@ class ResultDataDecorator implements DataDecoratorInterface
     public function setData(array $data = [])
     {
         $this->data = $data;
-
-        return $this;
-    }
-
-    /**
-     * @return Query
-     */
-    public function getQuery()
-    {
-        return $this->query;
-    }
-
-    /**
-     * @param Query $query
-     * @return ResultDataDecorator
-     */
-    public function setQuery($query)
-    {
-        $this->query = $query;
 
         return $this;
     }
