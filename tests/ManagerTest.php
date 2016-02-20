@@ -124,6 +124,7 @@ class ManagerTest extends \PHPUnit_Framework_TestCase
         $manager->addConnection('string2', $this->dsn);
         $manager->setDefaultConnection('string2');
 
+        $this->assertInternalType('array', $manager->getPreviousConnections());
         $this->assertInstanceOf(Connection::class, $manager->getConnection());
     }
 
