@@ -18,6 +18,7 @@ use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\DriverManager;
 use Interop\Container\ContainerInterface;
 use Prophecy\Prophecy\ObjectProphecy;
+use RuntimeException;
 
 class ManagerTest extends \PHPUnit_Framework_TestCase
 {
@@ -36,6 +37,13 @@ class ManagerTest extends \PHPUnit_Framework_TestCase
         $this->container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class);
     }
 
+    public function tearDown()
+    {
+        if(Manager::isBooted()){
+            Manager::shutdown();
+        }
+    }
+
 
     public function testCreate()
     {
@@ -51,12 +59,17 @@ class ManagerTest extends \PHPUnit_Framework_TestCase
 
     }
 
+    public function testGetInstance(){
+        $container = $this->container->reveal();
+        Manager::create($container, $this->dsn);
+        $this->assertInstanceOf(ManagerInterface::class, Manager::getInstance());
+    }
+
     public function testSetContainer(){
         $container = $this->container->reveal();
         $manager = Manager::create($container, $this->dsn);
 
         $this->assertInstanceOf(ManagerInterface::class, $manager->setContainer($container));
-        Manager::shutdown();
     }
 
     public function testAddConnectionString()
@@ -66,7 +79,6 @@ class ManagerTest extends \PHPUnit_Framework_TestCase
         $manager->addConnection('string', 'sqlite:///:memory:');
 
         $this->assertInstanceOf(Connection::class, $manager->getConnection('string'));
-        Manager::shutdown();
     }
 
     public function testAddConnectionArray()
@@ -76,7 +88,6 @@ class ManagerTest extends \PHPUnit_Framework_TestCase
         $manager->addConnection('array', $this->dsn);
 
         $this->assertInstanceOf(Connection::class, $manager->getConnection('array'));
-        Manager::shutdown();
     }
 
     public function testAddConnectionObject()
@@ -90,7 +101,6 @@ class ManagerTest extends \PHPUnit_Framework_TestCase
         $manager->addConnection('object', $connection);
 
         $this->assertInstanceOf(Connection::class, $manager->getConnection('object'));
-        Manager::shutdown();
     }
 
     public function testGetConnections()
@@ -103,6 +113,17 @@ class ManagerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertArrayHasKey('string', $manager->getConnections());
         $this->assertArrayHasKey('string2', $manager->getConnections());
-        Manager::shutdown();
+    }
+
+    public function testExceptionWhenNotCreated(){
+        $this->setExpectedException(RuntimeException::class);
+        Manager::getInstance();
+    }
+
+    public function testExceptionWhenAlreadyCreated(){
+        $this->setExpectedException(RuntimeException::class);
+        $container = $this->container->reveal();
+        Manager::create($container, $this->dsn);
+        Manager::create($container, $this->dsn);
     }
 }

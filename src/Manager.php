@@ -40,7 +40,7 @@ class Manager implements ManagerInterface, ConfigurationInterface
     public static function create(ContainerInterface $container, $connection)
     {
         if (static::isBooted()) {
-            throw new \RuntimeException('Orm already created!');
+            throw new \RuntimeException(__CLASS__ . ' is already enabled');
         }
 
         static::$instance = new self($container, $connection);
