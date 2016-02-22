@@ -59,7 +59,7 @@ class ResultDataDecorator implements DataDecoratorInterface
     }
 
     /**
-     * @return array|\ArrayObject|ModelInterface|Result|null|stdClass
+     * @return array|\ArrayObject|ModelInterface|Result|null|stdClass|Statement
      */
     public function getEntity()
     {
@@ -67,7 +67,7 @@ class ResultDataDecorator implements DataDecoratorInterface
     }
 
     /**
-     * @param array|\ArrayObject|ModelInterface|Result|null|stdClass $entity
+     * @param array|\ArrayObject|ModelInterface|Result|null|stdClass|Statement $entity
      * @return $this
      */
     public function setEntity($entity)
@@ -100,7 +100,7 @@ class ResultDataDecorator implements DataDecoratorInterface
      * Determine result and return one or many results
      *
      * @param string $option
-     * @return array|Result|ResultCollection|ModelInterface|stdClass|\ArrayObject
+     * @return array|Result|DataObject|ModelInterface|stdClass|\ArrayObject
      */
     public function decorate($option = self::AUTO)
     {
@@ -112,13 +112,17 @@ class ResultDataDecorator implements DataDecoratorInterface
         $count = count($data);
         $entity = NULL;
 
-        if ($count > 1 || $option === self::RESULT_COLLECTION) { //if entity set has many items, return a collection of entities
+        if($option === self::AUTO){
+            $option = $count > 1 || $count === 0 ? self::RESULT_COLLECTION : self::RESULT_ENTITY;
+        }
+
+        if ($option === self::RESULT_COLLECTION) { //if entity set has many items, return a collection of entities
             foreach ($data as $key => $value) {
                 $data[ $key ] = $this->mapObject($value);
             }
             $entity = new DataObject();
             $entity->setData($data);
-        } elseif ($count === 1 || $option === self::RESULT_ENTITY) { //if entity has one item, return the entity
+        } elseif ($option === self::RESULT_ENTITY) { //if entity has one item, return the entity
             $entity = $this->mapObject(array_shift($data));
         }
 
