@@ -10,7 +10,7 @@
 * Time: 13:28
 */
 
-namespace Query;
+namespace Blast\Tests\Db\Query;
 
 
 use Blast\Db\Data\DataDecoratorInterface;
