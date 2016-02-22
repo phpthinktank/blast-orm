@@ -14,6 +14,7 @@
 namespace Blast\Db\Events;
 
 
+use Blast\Db\Query\Query;
 use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\AbstractEvent;
 
@@ -25,14 +26,14 @@ class BuilderEvent extends AbstractEvent
     private $name;
 
     /**
-     * @var QueryBuilder
+     * @var Query
      */
     private $builder;
 
     /**
      * ResultEvent constructor.
      * @param string $name
-     * @param QueryBuilder $builder
+     * @param Query $builder
      */
     public function __construct($name, $builder){
         $this->name = $name;
@@ -49,7 +50,7 @@ class BuilderEvent extends AbstractEvent
     }
 
     /**
-     * @return QueryBuilder
+     * @return Query
      */
     public function getBuilder()
     {
