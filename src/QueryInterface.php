@@ -11,7 +11,7 @@
  *
  */
 
-namespace Blast\Orm\Query;
+namespace Blast\Orm;
 
 
 use Blast\Orm\Data\DataObject;

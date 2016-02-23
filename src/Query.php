@@ -73,7 +73,7 @@ use stdClass;
  *
  * @package Blast\Db\Orm
  */
-class Query implements EmitterAwareInterface
+class Query implements EmitterAwareInterface, QueryInterface
 {
 
     use EmitterAwareTrait;
