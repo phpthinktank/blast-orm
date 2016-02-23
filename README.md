@@ -16,6 +16,29 @@ Via Composer
 $ composer require blast/orm
 ```
 
+## Concept
+
+### Entities
+
+Entity classes are representations of a database objects like a table or view. There is __no need__ to extend any other 
+class. 
+
+There is __no need__ to extend any other class. Entity classes are basically plain classes and could be designed as you 
+like. You could use prepared traits and classes of `Blast\Orm\Data` package to be more efficient.
+
+Entity classes could also be instances of `stdClass`, [`ArrayObject`]() or [`DataObject`](src/Data/DataObject.php) 
+
+### Query
+
+The query acts as accessor to the persistence layer. Instead of to use a big data mapper, Blast ORM uses a query class. 
+The query class is able to process the result as raw array or a map the result to a single entity class or a collection 
+of entity classes.
+
+### Repository
+
+The repository is acting as convenient accessor to persistence layer and is using an entity class as database object 
+representation and the query as accessor to the persistence layer. 
+  
 ## Usage
 
 ### Initialize
@@ -38,42 +61,40 @@ Factory::create(new Container(), [
 
 ### Working with Entities
 
-Entities representing database tables as objects. Entities know their fields, indexes and relations. Create a table 
-instance for reference to database table.
+Entity class needs as a minimum required definition the `table` and `primaryKeyName`.
+  
+Pass `table` as a static method or static property as follows
+ 
+ - `Entity::getTable()`
+ - `Entity::table()`
+ - `Entity::$table`
+
+Similar to `table` pass `primaryKeyName` as follows
+ 
+ - `Entity::getPrimaryKeyName()`
+ - `Entity::primaryKeyName()`
+ - `Entity::$primaryKeyName`
 
 ```php
 <?php
 
-use Blast\Db\Entity\AbstractEntity;
-use Blast\Db\Schema\Table;
-use Doctrine\DBAL\Types\Type;
-
-class Post extends AbstractEntity
+class Post
 {
 
     /**
-     * Configure entity
+     * Get table for model
+     *
+     * @return string
      */
-    public function configure()
+    public static function getTable()
     {
-        $table = new Table('post');
-        $table->addColumn('id', Type::INTEGER)
-            ->setAutoincrement(true)
-            ->setLength(10);
-        $table->addColumn('title', Type::STRING);
-        $table->addColumn('content', Type::TEXT);
-        $table->addColumn('date', Type::DATETIME)
-            ->setDefault(new \DateTime());
-        $table->setPrimaryKey(['id']);
-
-        //set entity table
-        $this->setTable($table);
+        return 'post';
     }
 }
 
 ```
 
-#### Accessor
+#### Accessor with `Blast\Orm\Data\AccessorTrait`
 
 Accessing data with `get`
 
