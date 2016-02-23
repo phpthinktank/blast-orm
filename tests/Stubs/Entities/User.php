@@ -14,35 +14,17 @@
 namespace Stubs\Entities;
 
 
-use Blast\Db\Data\AccessorTrait;
-use Blast\Db\Data\ImmutableDataObjectTrait;
-use Blast\Db\Data\MutableDataObjectTrait;
-use Blast\Db\Orm\MapperAwareTrait;
-use Blast\Db\Orm\Model\ModelInterface;
-use Blast\Db\Orm\Model\ModelTrait;
-use Blast\Db\Schema\Table;
-use Doctrine\DBAL\Types\Type;
+use Blast\Orm\Data\AccessorTrait;
+use Blast\Orm\Data\DataObjectInterface;
+use Blast\Orm\Data\ImmutableDataObjectTrait;
+use Blast\Orm\Data\MutableDataObjectTrait;
 
-class User implements ModelInterface
+class User implements DataObjectInterface
 {
 
     use AccessorTrait;
     use ImmutableDataObjectTrait;
-    use MapperAwareTrait;
-    use ModelTrait;
     use MutableDataObjectTrait;
-
-    /**
-     * Configure entity
-     */
-//    public function configure()
-//    {
-//        $table = new Table('user');
-//        $table->addColumn('id', Type::INTEGER);
-//        $table->addColumn('name', Type::STRING);
-//        $table->setPrimaryKey(['id']);
-//        $this->setTable($table);
-//    }
 
     public static function getTable(){
         return 'user';

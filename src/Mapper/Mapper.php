@@ -34,7 +34,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
 
     /**
      * Disable direct access to mapper
-     * @param array|\ArrayObject|stdClass|DataObject $entity
+     * @param array|\ArrayObject|stdClass|DataObject|object $entity
      */
     public function __construct($entity)
     {

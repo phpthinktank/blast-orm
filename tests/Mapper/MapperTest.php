@@ -6,54 +6,29 @@
  * Time: 16:09
  */
 
-namespace Blast\Tests\Db\Orm;
+namespace Blast\Tests\Orm\Mapper;
 
-use Blast\Db\ConfigurationInterface;
-use Blast\Db\Entity\CollectionInterface;
-use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Manager;
-use Blast\Db\Orm\Mapper;
-use Blast\Db\Orm\Model\ModelInterface;
-use Blast\Db\Query\ResultCollection;
-use Blast\Tests\Db\Stubs\Entities\Post;
+use Blast\Orm\ConnectionCollectionInterface;
+use Blast\Orm\Manager;
+use Blast\Orm\Mapper\Mapper;
+use Blast\Tests\Orm\Stubs\Entities\Post;
 use Interop\Container\ContainerInterface;
-use Prophecy\Prophecy\ObjectProphecy;
 use Stubs\Entities\User;
 
 class MapperTest extends \PHPUnit_Framework_TestCase
 {
-    /**
-     * @var EntityInterface
-     */
-    private $model;
-
-    /**
-     * @var ObjectProphecy
-     */
-    private $container;
-
-    /**
-     * @var Manager
-     */
-    private $manager;
 
     protected function setUp()
     {
-        $this->markTestSkipped('Mapper is still in development!');
-
-        $this->container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class);
-
-        $container = $this->container->reveal();
+        $container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class)->reveal();
         $manager = Manager::create($container, [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
         ]);
 
-        $this->model = new Post();
-
-        $connection = $manager->getConnection(ConfigurationInterface::DEFAULT_CONNECTION);
-        $connection->prepare('CREATE TABLE post (id int, user_id int, title VARCHAR(255), content TEXT)')->execute();
-        $connection->prepare('CREATE TABLE user (id int, name VARCHAR(255))')->execute();
+        $connection = $manager->getConnection();
+        $connection->exec('CREATE TABLE post (id int, user_id int, title VARCHAR(255), content TEXT)');
+        $connection->exec('CREATE TABLE user (id int, name VARCHAR(255))');
         $connection->insert('post', [
             'id' => 1,
             'user_id' => 1,
@@ -75,10 +50,10 @@ class MapperTest extends \PHPUnit_Framework_TestCase
     protected function tearDown()
     {
         $manager = Manager::getInstance();
-        $connection = $manager->getConnection(ConfigurationInterface::DEFAULT_CONNECTION);
-        $connection->prepare('DROP TABLE post')->execute();
-        $connection->prepare('DROP TABLE user')->execute();
-        $manager->shutdown();
+        $connection = $manager->getConnection(ConnectionCollectionInterface::DEFAULT_CONNECTION);
+        $connection->exec('DROP TABLE post');
+        $connection->exec('DROP TABLE user');
+        Manager::shutdown();
     }
 
     /**
@@ -86,8 +61,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testSelect()
     {
-        $model = $this->model;
-        $mapper = new Mapper($model);
+        $mapper = new Mapper(new Post());
 
         $query = $mapper->select();
         $result = $query->where('user_id = 1')->execute();
