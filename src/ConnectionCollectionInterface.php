@@ -6,10 +6,10 @@
  * Time: 16:19
  */
 
-namespace Blast\Db;
+namespace Blast\Orm;
 
 
-interface ConfigurationInterface
+interface ConnectionCollectionInterface
 {
     const DEFAULT_CONNECTION = 'default';
 
