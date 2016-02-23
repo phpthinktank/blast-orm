@@ -11,7 +11,7 @@
  *
  */
 
-namespace Blast\Db;
+namespace Blast\Orm;
 
 
 class Hook

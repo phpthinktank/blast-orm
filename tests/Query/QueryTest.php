@@ -11,17 +11,17 @@
  *
  */
 
-namespace Blast\Tests\Db\Query;
+namespace Blast\Tests\Orm\Query;
 
 
-use Blast\Db\ConfigurationInterface;
-use Blast\Db\Data\DataObject;
-use Blast\Db\Events\BuilderEvent;
-use Blast\Db\Events\ResultEvent;
-use Blast\Db\Manager;
-use Blast\Db\Query\Query;
-use Blast\Db\Query\Result;
-use Blast\Db\Query\ResultDataDecorator;
+use Blast\Orm\ConnectionCollectionInterface;
+use Blast\Orm\Data\DataObject;
+use Blast\Orm\Events\BuilderEvent;
+use Blast\Orm\Events\ResultEvent;
+use Blast\Orm\Manager;
+use Blast\Orm\Query;
+use Blast\Orm\Query\Result;
+use Blast\Orm\Query\ResultDataDecorator;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Interop\Container\ContainerInterface;
 use stdClass;
@@ -31,10 +31,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-
-        $this->container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class);
-
-        $container = $this->container->reveal();
+        $container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class)->reveal();
         $manager = Manager::create($container, [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
@@ -64,7 +61,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
     protected function tearDown()
     {
         $manager = Manager::getInstance();
-        $connection = $manager->getConnection(ConfigurationInterface::DEFAULT_CONNECTION);
+        $connection = $manager->getConnection(ConnectionCollectionInterface::DEFAULT_CONNECTION);
         $connection->exec('DROP TABLE post');
         $connection->exec('DROP TABLE user');
         Manager::shutdown();

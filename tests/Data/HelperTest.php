@@ -11,14 +11,14 @@
  *
  */
 
-namespace Blast\Tests\Db\Data;
+namespace Blast\Tests\Orm\Data;
 
 
-use Blast\Db\Data\DataObject;
-use Blast\Db\Data\DataHelper;
-use Blast\Db\Data\ImmutableDataObject;
-use Blast\Tests\Db\Stubs\Data\ArrayObject;
-use Blast\Tests\Db\Stubs\Data\PlainObject;
+use Blast\Orm\Data\DataObject;
+use Blast\Orm\Data\DataHelper;
+use Blast\Orm\Data\ImmutableDataObject;
+use Blast\Tests\Orm\Stubs\Data\ArrayObject;
+use Blast\Tests\Orm\Stubs\Data\PlainObject;
 
 /**
  * @coversDefaultClass \Blast\Db\Data\Helper

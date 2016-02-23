@@ -11,7 +11,7 @@
  *
  */
 
-namespace Blast\Db\Data;
+namespace Blast\Orm\Data;
 
 class ImmutableDataObject implements \Countable, FilterableInterface, ImmutableDataObjectInterface,\Iterator
 {

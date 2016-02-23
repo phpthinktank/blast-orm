@@ -11,10 +11,10 @@
  *
  */
 
-namespace Blast\Tests\Db;
+namespace Blast\Tests\Orm;
 
 
-use Blast\Db\Hook;
+use Blast\Orm\Hook;
 use Stubs\HookSubject;
 
 class HookTest extends \PHPUnit_Framework_TestCase

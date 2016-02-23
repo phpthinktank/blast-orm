@@ -10,7 +10,7 @@
 * Time: 13:29
 */
 
-namespace Blast\Db\Data;
+namespace Blast\Orm\Data;
 
 
 interface DataDecoratorInterface extends DataObjectInterface

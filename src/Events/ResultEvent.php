@@ -11,7 +11,7 @@
  *
  */
 
-namespace Blast\Db\Events;
+namespace Blast\Orm\Events;
 
 
 use League\Event\AbstractEvent;

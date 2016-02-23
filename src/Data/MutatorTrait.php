@@ -11,10 +11,10 @@
  *
  */
 
-namespace Blast\Db\Data;
+namespace Blast\Orm\Data;
 
 
-use Blast\Db\Hook;
+use Blast\Orm\Hook;
 
 trait MutatorTrait
 {

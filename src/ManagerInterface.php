@@ -6,7 +6,7 @@
  * Time: 16:39
  */
 
-namespace Blast\Db;
+namespace Blast\Orm;
 
 use Interop\Container\ContainerInterface;
 

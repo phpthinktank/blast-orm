@@ -11,9 +11,9 @@
  *
  */
 
-namespace Blast\Tests\Db\Data;
+namespace Blast\Tests\Orm\Data;
 
-use Blast\Tests\Db\Stubs\Data\DataObjectImpl;
+use Blast\Tests\Orm\Stubs\Data\DataObjectImpl;
 
 class DataObjectTest extends \PHPUnit_Framework_TestCase
 {

@@ -11,10 +11,10 @@
  *
  */
 
-namespace Blast\Db\Events;
+namespace Blast\Orm\Events;
 
 
-use Blast\Db\Query\Query;
+use Blast\Orm\Query\Query;
 use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\AbstractEvent;
 

@@ -11,12 +11,12 @@
  *
  */
 
-namespace Blast\Tests\Db\Stubs\Data;
+namespace Blast\Tests\Orm\Stubs\Data;
 
 
-use Blast\Db\Data\DataObject;
-use Blast\Db\Data\MutatorTrait;
-use Blast\Db\Data\AccessorTrait;
+use Blast\Orm\Data\DataObject;
+use Blast\Orm\Data\MutatorTrait;
+use Blast\Orm\Data\AccessorTrait;
 
 class DataObjectImpl extends DataObject
 {

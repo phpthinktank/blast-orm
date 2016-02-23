@@ -10,13 +10,13 @@
 * Time: 22:55
 */
 
-namespace Blast\Db\Query;
+namespace Blast\Orm\Query;
 
 
-use Blast\Db\Data\DataDecoratorInterface;
-use Blast\Db\Data\DataHelper;
-use Blast\Db\Data\DataObject;
-use Blast\Db\Orm\Model\ModelInterface;
+use Blast\Orm\Data\DataDecoratorInterface;
+use Blast\Orm\Data\DataHelper;
+use Blast\Orm\Data\DataObject;
+use Blast\Orm\Mapper\Model\ModelInterface;
 use Doctrine\DBAL\Driver\Statement;
 use stdClass;
 
@@ -42,15 +42,14 @@ class ResultDataDecorator implements DataDecoratorInterface
      */
     private $data;
     /**
-     * @var array|\ArrayObject|ModelInterface|null|stdClass|Result
+     * @var array|\ArrayObject|null|stdClass|Result
      */
     private $entity;
 
     /**
      * ResultDecorator constructor.
      * @param array $data
-     * @param ModelInterface|array|stdClass|\ArrayObject $entity
-     * @param Query $query
+     * @param array|stdClass|\ArrayObject $entity
      */
     public function __construct($data = [], $entity = NULL)
     {
@@ -59,7 +58,7 @@ class ResultDataDecorator implements DataDecoratorInterface
     }
 
     /**
-     * @return array|\ArrayObject|ModelInterface|Result|null|stdClass|Statement
+     * @return array|\ArrayObject|Result|null|stdClass|Statement
      */
     public function getEntity()
     {
@@ -67,7 +66,7 @@ class ResultDataDecorator implements DataDecoratorInterface
     }
 
     /**
-     * @param array|\ArrayObject|ModelInterface|Result|null|stdClass|Statement $entity
+     * @param array|\ArrayObject|Result|null|stdClass|Statement $entity
      * @return $this
      */
     public function setEntity($entity)
@@ -100,7 +99,7 @@ class ResultDataDecorator implements DataDecoratorInterface
      * Determine result and return one or many results
      *
      * @param string $option
-     * @return array|Result|DataObject|ModelInterface|stdClass|\ArrayObject
+     * @return array|Result|DataObject|stdClass|\ArrayObject
      */
     public function decorate($option = self::AUTO)
     {

@@ -11,7 +11,7 @@
  *
  */
 
-namespace Blast\Db\Data;
+namespace Blast\Orm\Data;
 
 interface MutatorInterface
 {

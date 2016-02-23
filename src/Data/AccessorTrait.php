@@ -11,11 +11,11 @@
  *
  */
 
-namespace Blast\Db\Data;
+namespace Blast\Orm\Data;
 
 
-use Blast\Db\Data\DataHelper;
-use Blast\Db\Hook;
+use Blast\Orm\Data\DataHelper;
+use Blast\Orm\Hook;
 
 /**
  * Accessing values from data

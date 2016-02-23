@@ -10,7 +10,7 @@
 * Time: 15:17
 */
 
-namespace Blast\Db\Data;
+namespace Blast\Orm\Data;
 
 
 trait ConverterTrait

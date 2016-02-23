@@ -10,15 +10,15 @@
 * Time: 13:28
 */
 
-namespace Blast\Tests\Db\Query;
+namespace Blast\Tests\Orm\Query;
 
 
-use Blast\Db\Data\DataDecoratorInterface;
-use Blast\Db\Data\DataObject;
-use Blast\Db\Query\Query;
-use Blast\Db\Query\Result;
-use Blast\Db\Query\ResultCollection;
-use Blast\Db\Query\ResultDataDecorator;
+use Blast\Orm\Data\DataDecoratorInterface;
+use Blast\Orm\Data\DataObject;
+use Blast\Orm\Query\Query;
+use Blast\Orm\Query\Result;
+use Blast\Orm\Query\ResultCollection;
+use Blast\Orm\Query\ResultDataDecorator;
 use stdClass;
 
 class ResultDataDecoratorTest extends \PHPUnit_Framework_TestCase

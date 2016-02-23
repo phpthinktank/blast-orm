@@ -6,12 +6,12 @@
  * Time: 11:34
  */
 
-namespace Blast\Tests\Db;
+namespace Blast\Tests\Orm;
 
 
-use Blast\Db\ConfigurationInterface;
-use Blast\Db\Manager;
-use Blast\Db\ManagerInterface;
+use Blast\Orm\ConnectionCollectionInterface;
+use Blast\Orm\Manager;
+use Blast\Orm\ManagerInterface;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -146,7 +146,7 @@ class ManagerTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException(InvalidArgumentException::class);
         $container = $this->container->reveal();
         $manager = Manager::create($container, $this->dsn);
-        $manager->addConnection(ConfigurationInterface::DEFAULT_CONNECTION, $this->dsn);
+        $manager->addConnection(ConnectionCollectionInterface::DEFAULT_CONNECTION, $this->dsn);
     }
 
     public function testExceptionWhenSetInvalidConnection(){

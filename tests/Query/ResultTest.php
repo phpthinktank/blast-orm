@@ -10,14 +10,14 @@
 * Time: 13:12
 */
 
-namespace Blast\Tests\Db\Query;
+namespace Blast\Tests\Orm\Query;
 
 
-use Blast\Db\Data\AccessorInterface;
-use Blast\Db\Data\DataObject;
-use Blast\Db\Data\MutatorInterface;
-use Blast\Db\Query\Query;
-use Blast\Db\Query\Result;
+use Blast\Orm\Data\AccessorInterface;
+use Blast\Orm\Data\DataObject;
+use Blast\Orm\Data\MutatorInterface;
+use Blast\Orm\Query\Query;
+use Blast\Orm\Query\Result;
 
 class ResultTest extends \PHPUnit_Framework_TestCase
 {
