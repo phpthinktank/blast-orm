@@ -16,7 +16,6 @@ namespace Blast\Orm\Query;
 use Blast\Orm\Data\DataDecoratorInterface;
 use Blast\Orm\Data\DataHelper;
 use Blast\Orm\Data\DataObject;
-use Blast\Orm\Mapper\Model\ModelInterface;
 use Doctrine\DBAL\Driver\Statement;
 use stdClass;
 
@@ -111,13 +110,13 @@ class ResultDataDecorator implements DataDecoratorInterface
         $count = count($data);
         $entity = NULL;
 
-        if($option === self::AUTO){
+        if ($option === self::AUTO) {
             $option = $count > 1 || $count === 0 ? self::RESULT_COLLECTION : self::RESULT_ENTITY;
         }
 
         if ($option === self::RESULT_COLLECTION) { //if entity set has many items, return a collection of entities
             foreach ($data as $key => $value) {
-                $data[ $key ] = $this->mapObject($value);
+                $data[$key] = $this->mapObject($value);
             }
             $entity = new DataObject();
             $entity->setData($data);
@@ -153,7 +152,8 @@ class ResultDataDecorator implements DataDecoratorInterface
     {
         return $option === self::RAW ||
         $this->data instanceof Statement ||
-        is_int($this->data);
+        is_numeric($this->data) ||
+        is_bool($this->data);
     }
 
 }
