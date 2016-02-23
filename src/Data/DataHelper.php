@@ -115,10 +115,16 @@ class DataHelper
                         $object->{$property->getName()} = $value;
                     }
                 }
+
+                unset($data[$property->getName()]);
+            }
+
+            //pass remaining data as dynamic property
+            //workaround for stdClass
+            foreach($data as $key => $value){
+                $object->$key = $value;
             }
         }
-
-        return $object;
     }
 
 }
