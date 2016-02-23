@@ -91,6 +91,13 @@ class Query implements EmitterAwareInterface
      */
     public function __construct($entity = null, $builder = null)
     {
+        if(is_string($entity)){
+            $container = Manager::getInstance()->getContainer();
+            if($container->has($entity)){
+                $entity = $container->get($entity);
+            }
+        }
+
         $this->builder = $builder === null ? Manager::getInstance()->getConnection()->createQueryBuilder() : $builder;
         $this->entity = $entity;
     }
