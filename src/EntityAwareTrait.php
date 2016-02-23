@@ -30,11 +30,17 @@ trait EntityAwareTrait
     }
 
     /**
-     * @param array|\ArrayObject|\stdClass|object $entity
+     * @param array|\ArrayObject|\stdClass|object|string $entity
      * @return Query
      */
     public function setEntity($entity)
     {
+        if(is_string($entity)){
+            $container = Manager::getInstance()->getContainer();
+            if($container->has($entity)){
+                $entity = $container->get($entity);
+            }
+        }
         $this->entity = $entity;
         return $this;
     }

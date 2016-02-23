@@ -86,18 +86,11 @@ class Query implements EmitterAwareInterface
 
     /**
      * Statement constructor.
-     * @param array|stdClass|\ArrayObject|object $entity
+     * @param array|stdClass|\ArrayObject|object|string $entity
      * @param Query $builder
      */
     public function __construct($entity = null, $builder = null)
     {
-        if(is_string($entity)){
-            $container = Manager::getInstance()->getContainer();
-            if($container->has($entity)){
-                $entity = $container->get($entity);
-            }
-        }
-
         $this->builder = $builder === null ? Manager::getInstance()->getConnection()->createQueryBuilder() : $builder;
         $this->entity = $entity;
     }
