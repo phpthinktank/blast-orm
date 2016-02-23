@@ -10,7 +10,7 @@
 * Time: 11:20
 */
 
-namespace Blast\Db\Orm;
+namespace Blast\Orm\Mapper;
 
 
 class MapperHelper
@@ -19,10 +19,10 @@ class MapperHelper
     /**
      * @param $name
      * @param $instance
+     * @param $default
      * @return mixed|null
-     * @throws \Exception
      */
-    public static function findOption($name, $instance){
+    public static function findOption($name, $instance, $default = null){
         $reflection = new \ReflectionClass($instance);
         $value = null;
         if ($reflection->hasProperty($name)) {
@@ -40,7 +40,7 @@ class MapperHelper
             }
             $value = $method->invoke($instance);
         }else{
-            throw new \Exception('Unable to find ' . $name . ' in ' . get_class($instance));
+            $value = $default;
         }
 
         return $value;

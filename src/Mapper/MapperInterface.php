@@ -6,10 +6,10 @@
  * Time: 15:40
  */
 
-namespace Blast\Db\Orm;
+namespace Blast\Orm\Mapper;
 
-use Blast\Db\Orm\Model\ModelInterface;
-use Blast\Db\Query\ResultCollection;
+use Blast\Orm\Mapper\Model\ModelInterface;
+use Blast\Orm\Query\ResultCollection;
 
 interface MapperInterface
 {
@@ -36,9 +36,9 @@ interface MapperInterface
     public function delete($entity);
 
     /**
-     * @param ModelInterface|array $model
+     * @param ModelInterface|array $entity
      * @return int
      */
-    public function save($model);
+    public function save($entity);
 
 }
