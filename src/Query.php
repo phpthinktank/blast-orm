@@ -10,13 +10,13 @@
 * Time: 16:11
 */
 
-namespace Blast\Db\Query;
+namespace Blast\Orm;
 
-use Blast\Db\Data\DataObject;
-use Blast\Db\Events\BuilderEvent;
-use Blast\Db\Events\ResultEvent;
-use Blast\Db\Manager;
-use Blast\Db\Orm\Model\ModelInterface;
+use Blast\Orm\Data\DataObject;
+use Blast\Orm\Events\BuilderEvent;
+use Blast\Orm\Events\ResultEvent;
+use Blast\Orm\Query\Result;
+use Blast\Orm\Query\ResultDataDecorator;
 use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\EmitterAwareInterface;
 use League\Event\EmitterAwareTrait;
@@ -77,6 +77,7 @@ class Query implements EmitterAwareInterface
 {
 
     use EmitterAwareTrait;
+    use EntityAwareTrait;
 
     /**
      * @var QueryBuilder
@@ -84,13 +85,8 @@ class Query implements EmitterAwareInterface
     private $builder;
 
     /**
-     * @var ModelInterface|array|stdClass|\ArrayObject
-     */
-    private $entity;
-
-    /**
      * Statement constructor.
-     * @param ModelInterface|array|stdClass|\ArrayObject $entity
+     * @param array|stdClass|\ArrayObject|object $entity
      * @param Query $builder
      */
     public function __construct($entity = null, $builder = null)
@@ -105,24 +101,6 @@ class Query implements EmitterAwareInterface
     public function getBuilder()
     {
         return $this->builder;
-    }
-
-    /**
-     * @return ModelInterface|array|stdClass|\ArrayObject
-     */
-    public function getEntity()
-    {
-        return $this->entity;
-    }
-
-    /**
-     * @param array|\ArrayObject|ModelInterface|stdClass $entity
-     * @return Query
-     */
-    public function setEntity($entity)
-    {
-        $this->entity = $entity;
-        return $this;
     }
 
     /**
