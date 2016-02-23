@@ -35,11 +35,9 @@ trait EntityAwareTrait
      */
     public function setEntity($entity)
     {
-        if(is_string($entity)){
+        if (is_string($entity)) {
             $container = Manager::getInstance()->getContainer();
-            if($container->has($entity)){
-                $entity = $container->get($entity);
-            }
+            $entity = $container->has($entity) ? $container->get($entity) : (new \ReflectionClass($entity))->newInstance();
         }
         $this->entity = $entity;
         return $this;
