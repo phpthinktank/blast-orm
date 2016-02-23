@@ -8,8 +8,8 @@
 
 namespace Blast\Orm\Mapper;
 
-use Blast\Orm\Mapper\Model\ModelInterface;
-use Blast\Orm\Query\ResultCollection;
+use Blast\Orm\Data\DataObject;
+use Blast\Orm\Query\Result;
 
 interface MapperInterface
 {
@@ -17,26 +17,31 @@ interface MapperInterface
     /**
      *
      * @param mixed $value
-     * @param null|string $field
-     * @return ModelInterface
+     * @return \ArrayObject|\stdClass|Result|DataObject|object
      */
-    public function find($value, $field = null);
+    public function find($value);
 
     /**
      * Get a collection of all entities
      *
-     * @return array|ResultCollection
+     * @return \ArrayObject|\stdClass|DataObject|object
      */
     public function all();
 
     /**
-     * @param ModelInterface|array $entity
+     * Delete attached entity by identifiers
+     *
+     * @param array|int|string $identifiers
      * @return int
      */
-    public function delete($entity);
+    public function delete($identifiers);
 
     /**
-     * @param ModelInterface|array $entity
+     * Create or update an entity
+     *
+     * Optional force update of entities without updates
+     *
+     * @param DataObject|\ArrayObject|\stdClass|Result|object $entity
      * @return int
      */
     public function save($entity);

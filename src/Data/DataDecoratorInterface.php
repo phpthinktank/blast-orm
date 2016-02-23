@@ -13,7 +13,7 @@
 namespace Blast\Orm\Data;
 
 
-interface DataDecoratorInterface extends DataObjectInterface
+interface DataDecoratorInterface
 {
     /**
      *

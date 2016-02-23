@@ -11,6 +11,7 @@ namespace Blast\Orm\Mapper;
 use ArrayObject;
 use Blast\Orm\Data\DataHelper;
 use Blast\Orm\Data\DataObject;
+use Blast\Orm\Data\DataObjectInterface;
 use Blast\Orm\Data\UpdatedDataObjectInterface;
 use Blast\Orm\EntityAwareInterface;
 use Blast\Orm\EntityAwareTrait;
@@ -34,11 +35,11 @@ class Mapper implements MapperInterface, EntityAwareInterface
 
     /**
      * Disable direct access to mapper
-     * @param array|\ArrayObject|stdClass|DataObject|object $entity
+     * @param array|\ArrayObject|stdClass|DataObject|object|string $entity
      */
     public function __construct($entity)
     {
-        if(method_exists($entity, 'attachRelations')){
+        if (method_exists($entity, 'attachRelations')) {
             $entity->attachRelations($this);
         }
         $this->setEntity($entity);
@@ -57,15 +58,12 @@ class Mapper implements MapperInterface, EntityAwareInterface
      * Find result by field or primary key
      *
      * @param mixed $value
-     * @param null $field
      * @return ArrayObject|stdClass|Result
      */
-    public function find($value, $field = null)
+    public function find($value)
     {
         $query = $this->select();
-        if ($field === null) {
-            $field = MapperHelper::findOption('primaryKeyName', $this->getEntity(), 'id');
-        }
+        $field = MapperHelper::findOption('primaryKeyName', $this->getEntity(), 'id');
         $query->where($query->expr()->eq($field, $query->createPositionalParameter($value)));
         return $query->execute(ResultDataDecorator::RESULT_ENTITY);
     }
@@ -73,7 +71,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     /**
      * Get a collection of all entities
      *
-     * @return DataObject
+     * @return \ArrayObject|\stdClass|DataObject|object
      */
     public function all()
     {
@@ -98,7 +96,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     /**
      * Create a new Model or a collection of entities in storage.
      *
-     * @param DataObject|ArrayObject|stdClass|Result $entity
+     * @param DataObject|ArrayObject|stdClass|Result|object $entity
      * @return int|int[]|bool[]|bool
      */
     public function create($entity)
@@ -106,8 +104,14 @@ class Mapper implements MapperInterface, EntityAwareInterface
         //prepare statement
         $query = $this->createQuery();
         $query->insert(MapperHelper::findOption('table', $entity));
+        $data = $entity instanceof DataObjectInterface ? $entity->getData() : DataHelper::receiveDataFromObject($entity);
 
-        foreach ($entity->getData() as $key => $value) {
+        //cancel if $data has no entries
+        if(count($data) < 1){
+            return 0;
+        }
+
+        foreach ($data as $key => $value) {
             $query->setValue($key, $query->createPositionalParameter($value));
         }
 
@@ -121,7 +125,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
      *
      * Optional force update of entities without updates
      *
-     * @param DataObject|ArrayObject|stdClass|Result $entity
+     * @param DataObject|ArrayObject|stdClass|Result|object $entity
      * @return int|int[]|bool[]|bool
      * @throws \Doctrine\DBAL\Schema\SchemaException
      */
@@ -133,6 +137,12 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $query->update(MapperHelper::findOption('table', $entity));
 
         $data = $entity instanceof UpdatedDataObjectInterface ? $entity->getUpdatedData() : DataHelper::receiveDataFromObject($entity);
+
+        //cancel if $data has no entries
+        if(count($data) < 1){
+            return 0;
+        }
+
         foreach ($data as $key => $value) {
             $query->set($key, $query->createPositionalParameter($value));
         }
@@ -143,14 +153,14 @@ class Mapper implements MapperInterface, EntityAwareInterface
     }
 
     /**
-     * Delete an existing Model or a collection of entities in storage
+     * Delete attached entity by identifiers
      *
-     * @param null $identifiers
+     * @param array|int|string $identifiers
      * @return int
      */
-    public function delete($identifiers = null)
+    public function delete($identifiers)
     {
-        if(!is_array($identifiers)){
+        if (!is_array($identifiers)) {
             $identifiers = [$identifiers];
         }
 
@@ -170,28 +180,27 @@ class Mapper implements MapperInterface, EntityAwareInterface
     }
 
     /**
-     * Create or update an entity or a collection of entities in storage
+     * Create or update an entity
      *
      * Optional force update of entities without updates
      *
-     * @param DataObject|ArrayObject|stdClass|Result $entity
-     * @param bool $forceUpdate
+     * @param DataObject|\ArrayObject|\stdClass|Result|object $entity
      * @return int
      */
-    public function save($entity, $forceUpdate = FALSE)
+    public function save($entity)
     {
         return $this->isNewEntity($entity) ? $this->create($entity) : $this->update($entity);
     }
 
     /**
-     * @param $entity
+     * @param DataObject|\ArrayObject|\stdClass|Result|object $entity
      * @return bool
      */
     public function isNewEntity($entity)
     {
-        if(method_exists($entity, 'isNew')){
+        if (method_exists($entity, 'isNew')) {
             return $entity->isNew();
-        }elseif(property_exists($entity, 'new')){
+        } elseif (property_exists($entity, 'new')) {
             return $entity->new;
         }
 

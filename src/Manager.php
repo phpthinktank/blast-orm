@@ -16,8 +16,6 @@ use Interop\Container\ContainerInterface;
 class Manager implements ManagerInterface, ConnectionCollectionInterface
 {
 
-    use ConfigurationTrait;
-
     /**
      * @var \Doctrine\DBAL\Connection[]
      */

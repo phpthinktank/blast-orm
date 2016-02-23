@@ -101,6 +101,8 @@ class HelperTest extends \PHPUnit_Framework_TestCase
 
         $config['method'] = __METHOD__;
 
+
+
         DataHelper::replaceDataFromObject($object, $config);
 
         $this->assertArrayHasKey('method', DataHelper::receiveDataFromObject($object));

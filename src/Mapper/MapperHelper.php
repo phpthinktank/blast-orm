@@ -34,7 +34,7 @@ class MapperHelper
         }elseif($reflection->hasConstant($name) || $reflection->hasConstant(strtoupper($name))){
             $value = $reflection->hasConstant($name) ? $reflection->getConstant($name) : $reflection->getConstant(strtoupper($name));
         }elseif($reflection->hasMethod($name) || $reflection->hasMethod('get' . ucfirst($name))){
-            $method = $reflection->hasMethod($name) ? $reflection->getMethod($name) : $reflection->hasMethod('get' . ucfirst($name));
+            $method = $reflection->hasMethod($name) ? $reflection->getMethod($name) : $reflection->getMethod('get' . ucfirst($name));
             if(!$method->isPublic()){
                 $method->setAccessible(true);
             }

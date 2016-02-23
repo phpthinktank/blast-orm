@@ -30,7 +30,37 @@ class DataHelper
         } elseif ($object instanceof \ArrayObject) {
             $data = $object->getArrayCopy();
         } elseif (is_object($object)) {
-            $data = (array) $object;
+
+            $reflection = new \ReflectionObject($object);
+            $properties = $reflection->getProperties();
+            foreach($properties as $property){
+                if($reflection->hasMethod('get' . ucfirst($property->getName()))){ //check if property has a getter
+                    $method = $reflection->getMethod('get' . ucfirst($property->getName()));
+
+                    //ignore static
+                    if($method->isStatic()){
+                        continue;
+                    }
+                    if(!$method->isPublic()){
+                        $method->setAccessible(true);
+                    }
+                    $value = $method->invoke($object);
+                }else{ //make property accessible and get value
+
+                    //ignore static
+                    if($property->isStatic()){
+                        continue;
+                    }
+                    if(!$property->isPublic()){
+                        $property->setAccessible(true);
+                    }
+
+                    $value = $property->getValue($object);
+                }
+
+                $data[$property->getName()] = $value;
+            }
+
         }
         return $data;
     }
@@ -51,10 +81,44 @@ class DataHelper
         } elseif ($object instanceof \ArrayObject) {
             $object->exchangeArray($data);
         } elseif (is_object($object)) {
-            foreach($data as $key => $value){
-                $object->$key = $value;
+            $reflection = new \ReflectionObject($object);
+            $properties = $reflection->getProperties();
+            foreach($properties as $property){
+                if(!isset($data[$property->getName()])){
+                    continue;
+                }
+                $value = $data[$property->getName()];
+
+                if($reflection->hasMethod('set' . ucfirst($property->getName()))){ //check if property has a setter
+                    $method = $reflection->getMethod('set' . ucfirst($property->getName()));
+
+                    //ignore static
+                    if($method->isStatic()){
+                        continue;
+                    }
+                    if(!$method->isPublic()){
+                        $method->setAccessible(true);
+                    }
+                    $method->invokeArgs($object, [$value]);
+                }else{ //make property accessible and get value
+
+                    //ignore static
+                    if($property->isStatic()){
+                        continue;
+                    }
+                    if(!$property->isPublic()){
+                        $property->setAccessible(true);
+                    }
+                    try{
+                        $property->setValue($object, $value);
+                    }catch(\ReflectionException $e){
+                        $object->{$property->getName()} = $value;
+                    }
+                }
             }
         }
+
+        return $object;
     }
 
 }

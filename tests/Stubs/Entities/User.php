@@ -19,14 +19,61 @@ use Blast\Orm\Data\DataObjectInterface;
 use Blast\Orm\Data\ImmutableDataObjectTrait;
 use Blast\Orm\Data\MutableDataObjectTrait;
 
-class User implements DataObjectInterface
+class User
 {
+    /**
+     * @var int
+     */
+    private $id;
 
-    use AccessorTrait;
-    use ImmutableDataObjectTrait;
-    use MutableDataObjectTrait;
+    /**
+     * @var string
+     */
+    private $name;
 
     public static function getTable(){
         return 'user';
     }
+
+    public static function getPrimaryKeyName(){
+        return 'pk';
+    }
+
+    /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param int $id
+     * @return User
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param string $name
+     * @return User
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+
 }

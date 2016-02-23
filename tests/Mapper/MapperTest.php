@@ -9,6 +9,7 @@
 namespace Blast\Tests\Orm\Mapper;
 
 use Blast\Orm\ConnectionCollectionInterface;
+use Blast\Orm\Data\DataObject;
 use Blast\Orm\Manager;
 use Blast\Orm\Mapper\Mapper;
 use Blast\Tests\Orm\Stubs\Entities\Post;
@@ -28,7 +29,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
 
         $connection = $manager->getConnection();
         $connection->exec('CREATE TABLE post (id int, user_id int, title VARCHAR(255), content TEXT)');
-        $connection->exec('CREATE TABLE user (id int, name VARCHAR(255))');
+        $connection->exec('CREATE TABLE user (pk int, name VARCHAR(255))');
         $connection->insert('post', [
             'id' => 1,
             'user_id' => 1,
@@ -42,7 +43,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
             'content' => 'More text to read'
         ]);
         $connection->insert('user', [
-            'id' => 1,
+            'pk' => 1,
             'name' => 'Franz'
         ]);
     }
@@ -66,7 +67,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $query = $mapper->select();
         $result = $query->where('user_id = 1')->execute();
 
-        $this->assertInstanceOf(ResultCollection::class, $result);
+        $this->assertInstanceOf(DataObject::class, $result);
         $this->assertEquals(2, $result->count());
     }
 
@@ -75,40 +76,70 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testFind()
     {
-        $model = $this->model;
-        $mapper = new Mapper($model);
-
-        $result = $mapper->find(1);
-
-        $this->assertInstanceOf(ModelInterface::class, $result);
-    }
-
-    /**
-     * find by pk
-     */
-    public function testBelongsTo()
-    {
-        $model = $this->model;
-        $mapper = new Mapper($model);
+        $mapper = new Mapper(new Post);
 
         $result = $mapper->find(1);
 
         $this->assertInstanceOf(Post::class, $result);
-        $this->assertInstanceOf(User::class, $result->user);
     }
 
-    public function testCreateByEntity(){
-        $model = $this->model;
-        $mapper = new Mapper($model);
+    /**
+     * find all
+     */
+    public function testAll()
+    {
+        $mapper = new Mapper(new Post);
+
+        $result = $mapper->all();
+
+        $this->assertInstanceOf(DataObject::class, $result);
+        $this->assertNotInstanceOf(Post::class, $result);
+    }
+
+    /**
+     * create new entry
+     */
+    public function testCreate(){
+        $mapper = new Mapper(new Post);
 
         $post = new Post();
-        $post->pk = 3;
+        $post->id = 3;
         $post->user_id = 1;
-        $post->ttile = 'first created post';
+        $post->title = 'first created post';
         $post->content = 'A new post!';
 
         $result = $mapper->create($post);
 
-        $this->assertTrue(is_numeric($result) && !is_bool($result));
+        $this->assertEquals($result, 1);
+    }
+
+    /**
+     * update existing entry
+     */
+    public function testUpdate()
+    {
+        $mapper = new Mapper(new Post);
+        $result = $mapper->find(1);
+        $this->assertInstanceOf(Post::class, $result);
+        $result->title .= ' Again!';
+
+        $this->assertEquals(1, $mapper->update($result));
+    }
+
+    /**
+     * delete entry by pk
+     */
+    public function testDelete(){
+        $mapper = new Mapper(new Post);
+        $result = $mapper->delete(1);
+
+        $this->assertEquals($result, 1);
+    }
+
+    public function testPlainObjectImplementation(){
+        $mapper = new Mapper(User::class);
+        $user = $mapper->find(1);
+
+        $this->assertInstanceOf(User::class, $user);
     }
 }
