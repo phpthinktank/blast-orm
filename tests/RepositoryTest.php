@@ -6,17 +6,17 @@
  * Time: 16:09
  */
 
-namespace Blast\Tests\Orm\Mapper;
+namespace Blast\Tests\Orm;
 
 use Blast\Orm\ConnectionCollectionInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Manager;
-use Blast\Orm\Mapper\Mapper;
+use Blast\Orm\Repository;
 use Blast\Tests\Orm\Stubs\Entities\Post;
 use Interop\Container\ContainerInterface;
 use Stubs\Entities\User;
 
-class MapperTest extends \PHPUnit_Framework_TestCase
+class RepositoryTest extends \PHPUnit_Framework_TestCase
 {
 
     protected function setUp()
@@ -62,7 +62,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testSelect()
     {
-        $mapper = new Mapper(new Post());
+        $mapper = new Repository(new Post());
 
         $query = $mapper->select();
         $result = $query->where('user_id = 1')->execute();
@@ -76,7 +76,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testFind()
     {
-        $mapper = new Mapper(new Post);
+        $mapper = new Repository(new Post);
 
         $result = $mapper->find(1);
 
@@ -88,7 +88,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testAll()
     {
-        $mapper = new Mapper(new Post);
+        $mapper = new Repository(new Post);
 
         $result = $mapper->all();
 
@@ -100,7 +100,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      * create new entry
      */
     public function testCreate(){
-        $mapper = new Mapper(new Post);
+        $mapper = new Repository(new Post);
 
         $post = new Post();
         $post->id = 3;
@@ -118,7 +118,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testUpdate()
     {
-        $mapper = new Mapper(new Post);
+        $mapper = new Repository(new Post);
         $result = $mapper->find(1);
         $this->assertInstanceOf(Post::class, $result);
         $result->title .= ' Again!';
@@ -130,14 +130,14 @@ class MapperTest extends \PHPUnit_Framework_TestCase
      * delete entry by pk
      */
     public function testDelete(){
-        $mapper = new Mapper(new Post);
+        $mapper = new Repository(new Post);
         $result = $mapper->delete(1);
 
         $this->assertEquals($result, 1);
     }
 
     public function testPlainObjectImplementation(){
-        $mapper = new Mapper(User::class);
+        $mapper = new Repository(User::class);
         $user = $mapper->find(1);
 
         $this->assertInstanceOf(User::class, $user);

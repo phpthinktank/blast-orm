@@ -6,7 +6,7 @@
  * Time: 17:39
  */
 
-namespace Blast\Orm\Mapper;
+namespace Blast\Orm;
 
 use ArrayObject;
 use Blast\Orm\Data\DataHelper;
@@ -28,7 +28,7 @@ use stdClass;
  *
  * @package Blast\Db\Orm
  */
-class Mapper implements MapperInterface, EntityAwareInterface
+class Repository implements RepositoryInterface, EntityAwareInterface
 {
 
     use EntityAwareTrait;
@@ -63,7 +63,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     public function find($value)
     {
         $query = $this->select();
-        $field = MapperHelper::findOption('primaryKeyName', $this->getEntity(), 'id');
+        $field = EntityHelper::findOption('primaryKeyName', $this->getEntity(), 'id');
         $query->where($query->expr()->eq($field, $query->createPositionalParameter($value)));
         return $query->execute(ResultDataDecorator::RESULT_ENTITY);
     }
@@ -87,7 +87,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     {
         $query = $this->createQuery();
         $query->select($selects);
-        $table = MapperHelper::findOption('table', $this->getEntity());
+        $table = EntityHelper::findOption('table', $this->getEntity());
         $query->from($table);
 
         return $query;
@@ -103,7 +103,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     {
         //prepare statement
         $query = $this->createQuery();
-        $query->insert(MapperHelper::findOption('table', $entity));
+        $query->insert(EntityHelper::findOption('table', $entity));
         $data = $entity instanceof DataObjectInterface ? $entity->getData() : DataHelper::receiveDataFromObject($entity);
 
         //cancel if $data has no entries
@@ -132,9 +132,9 @@ class Mapper implements MapperInterface, EntityAwareInterface
     public function update($entity)
     {
         //prepare statement
-        $pkName = MapperHelper::findOption('primaryKeyName', $this->getEntity(), 'id');
+        $pkName = EntityHelper::findOption('primaryKeyName', $this->getEntity(), 'id');
         $query = $this->createQuery();
-        $query->update(MapperHelper::findOption('table', $entity));
+        $query->update(EntityHelper::findOption('table', $entity));
 
         $data = $entity instanceof UpdatedDataObjectInterface ? $entity->getUpdatedData() : DataHelper::receiveDataFromObject($entity);
 
@@ -167,9 +167,9 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $entity = $this->getEntity();
 
         //prepare statement
-        $pkName = MapperHelper::findOption('primaryKeyName', $this->getEntity(), 'id');
+        $pkName = EntityHelper::findOption('primaryKeyName', $this->getEntity(), 'id');
         $query = $this->createQuery();
-        $query->delete(MapperHelper::findOption('table', $entity));
+        $query->delete(EntityHelper::findOption('table', $entity));
 
         //add entities by pk to delete
         foreach ($identifiers as $identifier) {
@@ -205,7 +205,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
         }
 
         $data = DataHelper::receiveDataFromObject($entity);
-        $pk = MapperHelper::findOption('primaryKeyName', $entity);
+        $pk = EntityHelper::findOption('primaryKeyName', $entity);
         $isNew = true;
 
         if (!isset($data[$pk])) {

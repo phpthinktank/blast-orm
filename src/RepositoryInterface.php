@@ -6,12 +6,12 @@
  * Time: 15:40
  */
 
-namespace Blast\Orm\Mapper;
+namespace Blast\Orm;
 
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Query\Result;
 
-interface MapperInterface
+interface RepositoryInterface
 {
 
     /**

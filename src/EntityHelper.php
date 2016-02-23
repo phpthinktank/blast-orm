@@ -10,10 +10,10 @@
 * Time: 11:20
 */
 
-namespace Blast\Orm\Mapper;
+namespace Blast\Orm;
 
 
-class MapperHelper
+class EntityHelper
 {
 
     /**
