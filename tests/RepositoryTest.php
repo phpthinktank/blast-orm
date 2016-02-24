@@ -64,6 +64,8 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
     {
         $mapper = new Repository(new Post());
 
+        var_dump($mapper->loadAdapter($mapper->getEntity())->getPrimaryKeyName());
+
         $query = $mapper->select();
         $result = $query->where('user_id = 1')->execute();
 

@@ -14,6 +14,8 @@ use Blast\Orm\Data\DataObject;
 use Blast\Orm\Data\DataObjectInterface;
 use Blast\Orm\Data\UpdatedDataObjectInterface;
 use Blast\Orm\Entity\EntityAdapter;
+use Blast\Orm\Entity\EntityAdapterInterface;
+use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Query;
 use Blast\Orm\Query\Result;
 use stdClass;
@@ -29,6 +31,12 @@ class Repository implements RepositoryInterface, EntityAwareInterface
 {
 
     use EntityAwareTrait;
+    use EntityAdapterLoaderTrait;
+
+    /**
+     * @var EntityAdapterInterface
+     */
+    private $adapter;
 
     /**
      * Disable direct access to mapper
@@ -36,10 +44,8 @@ class Repository implements RepositoryInterface, EntityAwareInterface
      */
     public function __construct($entity)
     {
-        if (method_exists($entity, 'attachRelations')) {
-            $entity->attachRelations($this);
-        }
         $this->setEntity($entity);
+        $this->adapter = $this->loadAdapter($this->getEntity());
     }
 
     /**
@@ -52,6 +58,14 @@ class Repository implements RepositoryInterface, EntityAwareInterface
     }
 
     /**
+     * @return EntityAdapterInterface
+     */
+    public function getAdapter()
+    {
+        return $this->adapter;
+    }
+
+    /**
      * Find result by field or primary key
      *
      * @param mixed $value
@@ -60,7 +74,7 @@ class Repository implements RepositoryInterface, EntityAwareInterface
     public function find($value)
     {
         $query = $this->select();
-        $field = EntityHelper::findOption('primaryKeyName', $this->getEntity(), 'id');
+        $field = $this->getAdapter()->getPrimaryKeyName();
         $query->where($query->expr()->eq($field, $query->createPositionalParameter($value)));
         return $query->execute(EntityAdapter::RESULT_ENTITY);
     }
@@ -84,8 +98,7 @@ class Repository implements RepositoryInterface, EntityAwareInterface
     {
         $query = $this->createQuery();
         $query->select($selects);
-        $table = EntityHelper::findOption('table', $this->getEntity());
-        $query->from($table);
+        $query->from($this->getAdapter()->getTableName());
 
         return $query;
     }
@@ -100,8 +113,9 @@ class Repository implements RepositoryInterface, EntityAwareInterface
     {
         //prepare statement
         $query = $this->createQuery();
-        $query->insert(EntityHelper::findOption('table', $entity));
-        $data = $entity instanceof DataObjectInterface ? $entity->getData() : DataHelper::receiveDataFromObject($entity);
+        $adapter = $this->loadAdapter($entity);
+        $query->insert($adapter->getTableName());
+        $data = $adapter->getData();
 
         //cancel if $data has no entries
         if(count($data) < 1){
@@ -129,11 +143,13 @@ class Repository implements RepositoryInterface, EntityAwareInterface
     public function update($entity)
     {
         //prepare statement
-        $pkName = EntityHelper::findOption('primaryKeyName', $this->getEntity(), 'id');
-        $query = $this->createQuery();
-        $query->update(EntityHelper::findOption('table', $entity));
 
-        $data = $entity instanceof UpdatedDataObjectInterface ? $entity->getUpdatedData() : DataHelper::receiveDataFromObject($entity);
+        $adapter = $this->loadAdapter($entity);
+        $pkName = $adapter->getPrimaryKeyName();
+        $query = $this->createQuery();
+        $query->update($adapter->getTableName());
+
+        $data = $adapter->getData();
 
         //cancel if $data has no entries
         if(count($data) < 1){
@@ -162,11 +178,12 @@ class Repository implements RepositoryInterface, EntityAwareInterface
         }
 
         $entity = $this->getEntity();
+        $adapter = $this->getAdapter();
 
         //prepare statement
-        $pkName = EntityHelper::findOption('primaryKeyName', $this->getEntity(), 'id');
+        $pkName = $adapter->getPrimaryKeyName();
         $query = $this->createQuery();
-        $query->delete(EntityHelper::findOption('table', $entity));
+        $query->delete($adapter->getTableName());
 
         //add entities by pk to delete
         foreach ($identifiers as $identifier) {
@@ -186,29 +203,6 @@ class Repository implements RepositoryInterface, EntityAwareInterface
      */
     public function save($entity)
     {
-        return $this->isNewEntity($entity) ? $this->create($entity) : $this->update($entity);
-    }
-
-    /**
-     * @param DataObject|\ArrayObject|\stdClass|Result|object $entity
-     * @return bool
-     */
-    public function isNewEntity($entity)
-    {
-        if (method_exists($entity, 'isNew')) {
-            return $entity->isNew();
-        } elseif (property_exists($entity, 'new')) {
-            return $entity->new;
-        }
-
-        $data = DataHelper::receiveDataFromObject($entity);
-        $pk = EntityHelper::findOption('primaryKeyName', $entity);
-        $isNew = true;
-
-        if (!isset($data[$pk])) {
-            $isNew = empty($data[$pk]);
-        }
-
-        return $isNew;
+        return $this->loadAdapter($entity)->isNew() ? $this->create($entity) : $this->update($entity);
     }
 }

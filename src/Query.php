@@ -15,6 +15,7 @@ namespace Blast\Orm;
 use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
+use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Events\BuilderEvent;
 use Blast\Orm\Events\ResultEvent;
 use Blast\Orm\Query\Result;
@@ -79,6 +80,7 @@ class Query implements EmitterAwareInterface, QueryInterface
 
     use EmitterAwareTrait;
     use EntityAwareTrait;
+    use EntityAdapterLoaderTrait;
 
     /**
      * @var QueryBuilder
@@ -93,7 +95,7 @@ class Query implements EmitterAwareInterface, QueryInterface
     public function __construct($entity = null, $builder = null)
     {
         $this->builder = $builder === null ? Manager::getInstance()->getConnection()->createQueryBuilder() : $builder;
-        $this->entity = $entity;
+        $this->setEntity($entity);
     }
 
     /**
@@ -115,7 +117,8 @@ class Query implements EmitterAwareInterface, QueryInterface
     {
         //execute before events and proceed with builder from event
         $builder = $this->beforeExecute($this->getEntity());
-        $entity = new EntityAdapter($builder->getEntity());
+
+        $entity = $this->loadAdapter($builder->getEntity());
 
         if (!$builder) {
             return false;

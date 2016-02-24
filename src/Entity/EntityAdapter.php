@@ -79,7 +79,7 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
     {
         return $this->access('tableName',
             ltrim(strtolower(preg_replace('/[A-Z]/', '_$0', $this->getReflection()->getShortName())), '_'),
-            \ReflectionMethod::IS_STATIC);
+            null, \ReflectionMethod::IS_STATIC);
     }
 
     /**
@@ -89,7 +89,7 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
      */
     public function getPrimaryKeyName()
     {
-        return $this->access('primaryKeyName', static::DEFAULT_PRIMARY_KEY_NAME, \ReflectionMethod::IS_STATIC);
+        return $this->access('primaryKeyName', static::DEFAULT_PRIMARY_KEY_NAME, null, \ReflectionMethod::IS_STATIC);
     }
 
     /**
@@ -97,17 +97,17 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
      */
     public function getFields()
     {
-        return $this->access('fields', [], \ReflectionMethod::IS_STATIC);
+        return $this->access('fields', [], null, \ReflectionMethod::IS_STATIC);
     }
 
     public function getIndexes()
     {
-        return $this->access('index', [], \ReflectionMethod::IS_STATIC);
+        return $this->access('index', [], null, \ReflectionMethod::IS_STATIC);
     }
 
     public function getRelations()
     {
-        return $this->access('relations', [], \ReflectionMethod::IS_STATIC);
+        return $this->access('relations', [], null, \ReflectionMethod::IS_STATIC);
     }
 
     public function hydrate($data = [], $option = self::AUTO)
@@ -145,6 +145,29 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
     public function getQuery()
     {
         return $this->access('query', $this->query, \ReflectionMethod::IS_STATIC);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNew()
+    {
+        $entity = $this->getObject();
+        if (method_exists($entity, 'isNew')) {
+            return $entity->isNew();
+        } elseif (property_exists($entity, 'new')) {
+            return $entity->new;
+        }
+
+        $data = $this->getData();
+        $pk = $this->getPrimaryKeyName();
+        $isNew = true;
+
+        if (!isset($data[$pk])) {
+            $isNew = empty($data[$pk]);
+        }
+
+        return $isNew;
     }
 
     /**

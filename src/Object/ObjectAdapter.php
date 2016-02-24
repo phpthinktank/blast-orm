@@ -27,12 +27,12 @@ class ObjectAdapter implements ObjectAdapterInterface
     /**
      * @var object
      */
-    private $object = null;
+    private $object = NULL;
 
     /**
      * @var ReflectionObject
      */
-    private $reflection = null;
+    private $reflection = NULL;
 
     /**
      * @return object
@@ -62,12 +62,12 @@ class ObjectAdapter implements ObjectAdapterInterface
      */
     public function getReflection()
     {
-        if($this->reflection === null){
+        if ($this->reflection === NULL) {
             $this->reflection = new ReflectionObject($this->getObject());
         }
+
         return $this->reflection;
     }
-
 
 
     /**
@@ -82,25 +82,25 @@ class ObjectAdapter implements ObjectAdapterInterface
      * @param int $only
      * @return mixed|null
      */
-    public function access($name, $default = null, $instance = null, $filter = 0, $only = 0)
+    public function access($name, $default = NULL, $instance = NULL, $filter = 0, $only = 0)
     {
-        if ($instance === null) {
+        if ($instance === NULL) {
             $instance = $this->getObject();
         }
         $reflection = $this->getReflection();
 
-        if (!$this->canAccess($reflection, $name, $filter)) {
-            return false;
+        $visitMethod = 'get' . ucfirst($name);
+
+        if (!($this->canAccess($reflection, $name, $filter) || $this->canAccess($reflection, $visitMethod, $filter))) {
+            return $default;
         }
 
-        $value = null;
+        $value = NULL;
 
-        $visitMethod = 'get' . ucfirst($name);
         if (
             //return value of method or property getter but ignore constants
             ($reflection->hasMethod($name) && $only & static::IS_METHOD) ||
             (
-                $only & static::IS_PROPERTY &&
                 $reflection->hasMethod($visitMethod) && !(
                     $reflection->hasConstant($name) || $reflection->hasConstant(strtoupper($name))
                 )
@@ -108,7 +108,7 @@ class ObjectAdapter implements ObjectAdapterInterface
         ) {
             $method = $reflection->hasMethod($name) ? $reflection->getMethod($name) : $reflection->getMethod($visitMethod);
             if (!$method->isPublic()) {
-                $method->setAccessible(true);
+                $method->setAccessible(TRUE);
             }
             $value = $method->invoke($instance);
         } elseif ($only & static::IS_CONSTANT && ($reflection->hasConstant($name) || $reflection->hasConstant(strtoupper($name)))) {
@@ -135,9 +135,9 @@ class ObjectAdapter implements ObjectAdapterInterface
      * @param int $only
      * @return mixed|null
      */
-    public function mutate($name, $value = null, $instance = null, $filter = 0, $only = 0)
+    public function mutate($name, $value = NULL, $instance = NULL, $filter = 0, $only = 0)
     {
-        if ($instance === null) {
+        if ($instance === NULL) {
             $instance = $this->getObject();
         }
 
@@ -148,7 +148,7 @@ class ObjectAdapter implements ObjectAdapterInterface
         $reflection = $this->getReflection();
 
         if (!$this->canAccess($reflection, $name, $filter)) {
-            return false;
+            return FALSE;
         }
 
         $visitMethod = 'set' . ucfirst($name);
@@ -161,7 +161,7 @@ class ObjectAdapter implements ObjectAdapterInterface
         ) {
             $method = $reflection->hasMethod($name) ? $reflection->getMethod($name) : $reflection->getMethod($visitMethod);
             if (!$method->isPublic()) {
-                $method->setAccessible(true);
+                $method->setAccessible(TRUE);
             }
             $method->invoke($instance, $value);
         } elseif ($reflection->hasProperty($name) && $only & static::IS_PROPERTY) {
@@ -169,9 +169,9 @@ class ObjectAdapter implements ObjectAdapterInterface
             if (!$property->isPublic()) {
                 $property->setAccessible(TRUE);
             }
-            try{
+            try {
                 $property->setValue($instance, $value);
-            }catch(\ReflectionException $e){
+            } catch (\ReflectionException $e) {
                 $instance->{$property->getName()} = $value;
             }
         } else {
@@ -201,21 +201,22 @@ class ObjectAdapter implements ObjectAdapterInterface
         $methods = $reflection->getMethods($options);
         $properties = $reflection->getProperties($options);
 
-        $cond = false;
+        $cond = FALSE;
 
         if ($only & static::IS_METHOD) {
-            $cond = $cond || isset($methods[$name]);
+            $cond = $cond || isset($methods[ $name ]);
         }
 
         if ($only & static::IS_PROPERTY) {
-            $cond = $cond || isset($properties[$name]);
+            $cond = $cond || isset($properties[ $name ]);
         }
 
         return $cond;
     }
 
-    protected function reset(){
+    protected function reset()
+    {
         $this->setObject($this->getReflection()->newInstance());
-        $this->reflection = null;
+        $this->reflection = NULL;
     }
 }
