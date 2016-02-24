@@ -13,12 +13,9 @@ use Blast\Orm\Data\DataHelper;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Data\DataObjectInterface;
 use Blast\Orm\Data\UpdatedDataObjectInterface;
-use Blast\Orm\EntityAwareInterface;
-use Blast\Orm\EntityAwareTrait;
-use Blast\Orm\Manager;
+use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Query;
 use Blast\Orm\Query\Result;
-use Blast\Orm\Query\ResultDataDecorator;
 use stdClass;
 
 /**
@@ -65,7 +62,7 @@ class Repository implements RepositoryInterface, EntityAwareInterface
         $query = $this->select();
         $field = EntityHelper::findOption('primaryKeyName', $this->getEntity(), 'id');
         $query->where($query->expr()->eq($field, $query->createPositionalParameter($value)));
-        return $query->execute(ResultDataDecorator::RESULT_ENTITY);
+        return $query->execute(EntityAdapter::RESULT_ENTITY);
     }
 
     /**
@@ -75,7 +72,7 @@ class Repository implements RepositoryInterface, EntityAwareInterface
      */
     public function all()
     {
-        return $this->select()->execute(ResultDataDecorator::RESULT_COLLECTION);
+        return $this->select()->execute(EntityAdapter::RESULT_COLLECTION);
     }
 
     /**

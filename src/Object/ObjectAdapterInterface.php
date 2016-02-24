@@ -6,27 +6,26 @@
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
  *
- * Date: 11.02.2016
- * Time: 10:31
+ * Date: 24.02.2016
+ * Time: 10:42
  *
  */
 
-namespace Blast\Orm\Data;
+namespace Blast\Orm\Object;
 
 
-interface DataObjectInterface
+interface ObjectAdapterInterface
 {
-    /**
-     * Receive data
-     * @return array
-     */
-    public function getData();
 
     /**
-     * Replace data
-     * @param array $data
+     * @return mixed
+     */
+    public function getObject();
+
+    /**
+     * @param string|object $class
      * @return $this
      */
-    public function setData($data = []);
+    public function setObject($class);
 
 }

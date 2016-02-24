@@ -12,11 +12,12 @@
 
 namespace Blast\Orm;
 
+use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
+use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Events\BuilderEvent;
 use Blast\Orm\Events\ResultEvent;
 use Blast\Orm\Query\Result;
-use Blast\Orm\Query\ResultDataDecorator;
 use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\EmitterAwareInterface;
 use League\Event\EmitterAwareTrait;
@@ -110,11 +111,11 @@ class Query implements EmitterAwareInterface, QueryInterface
      * @return array|Result|DataObject
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function execute($option = ResultDataDecorator::AUTO)
+    public function execute($option = DataHydratorInterface::AUTO)
     {
         //execute before events and proceed with builder from event
         $builder = $this->beforeExecute($this->getEntity());
-        $entity = $builder->getEntity();
+        $entity = new EntityAdapter($builder->getEntity());
 
         if (!$builder) {
             return false;
@@ -142,9 +143,7 @@ class Query implements EmitterAwareInterface, QueryInterface
             return false;
         }
 
-        $decorator = new ResultDataDecorator($result, $entity);
-
-        return $decorator->decorate($option);
+        return $entity->hydrate($result, $option);
     }
 
     /**

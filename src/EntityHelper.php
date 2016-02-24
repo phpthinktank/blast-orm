@@ -13,6 +13,8 @@
 namespace Blast\Orm;
 
 
+use ReflectionClass;
+
 class EntityHelper
 {
 
@@ -23,7 +25,7 @@ class EntityHelper
      * @return mixed|null
      */
     public static function findOption($name, $instance, $default = null){
-        $reflection = new \ReflectionClass($instance);
+        $reflection = $instance instanceof ReflectionClass ? $instance : new ReflectionClass($instance);
         $value = null;
         if ($reflection->hasProperty($name)) {
             $property = $reflection->getProperty($name);

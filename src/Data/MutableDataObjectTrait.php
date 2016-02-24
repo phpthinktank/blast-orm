@@ -23,7 +23,7 @@ trait MutableDataObjectTrait
      * @param array $data
      * @return $this
      */
-    public function setData(array $data = [])
+    public function setData($data = [])
     {
         $before = Hook::trigger('beforeDataSet', $this, ['data' => $data]);
         $data = isset($before['data']) ? $before['data'] : $data;

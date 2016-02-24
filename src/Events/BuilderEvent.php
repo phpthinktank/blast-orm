@@ -14,7 +14,7 @@
 namespace Blast\Orm\Events;
 
 
-use Blast\Orm\Query\Query;
+use Blast\Orm\Query;
 use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\AbstractEvent;
 

@@ -11,7 +11,7 @@
  *
  */
 
-namespace Stubs;
+namespace Blast\Tests\Orm\Stubs;
 
 class HookSubject
 {

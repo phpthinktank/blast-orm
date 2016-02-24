@@ -15,7 +15,7 @@ namespace Blast\Tests\Orm;
 
 
 use Blast\Orm\Hook;
-use Stubs\HookSubject;
+use Blast\Tests\Orm\Stubs\HookSubject;
 
 class HookTest extends \PHPUnit_Framework_TestCase
 {

@@ -13,7 +13,7 @@
 namespace Blast\Orm\Data;
 
 
-interface DataDecoratorInterface
+interface DataHydratorInterface
 {
     /**
      *
@@ -23,8 +23,9 @@ interface DataDecoratorInterface
     /**
      * Decorate data
      *
+     * @param array $data
      * @param string $option
      * @return mixed
      */
-    public function decorate($option = self::AUTO);
+    public function hydrate($data = [], $option = self::AUTO);
 }

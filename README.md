@@ -61,15 +61,55 @@ Factory::create(new Container(), [
 
 ### Working with Entities
 
-Entity class needs as a minimum required definition the `table` and `primaryKeyName`.
+Entity classes are independent of Blast ORM as follows.
+
+```php
+<?php
+
+class Post
+{
+
+}
+```
+
+#### Table
+
+If you entity class does not define a table name, the table name is determined automatically by class name without namespace. 
   
-Pass `table` as a static method or static property as follows
+`App\Entities\Post` will have `post` as table name.
+
+Pass a custom `table` as a static method or static property as follows
  
  - `Entity::getTable()`
  - `Entity::table()`
  - `Entity::$table`
 
-Similar to `table` pass `primaryKeyName` as follows
+```php
+<?php
+
+class Post
+{
+
+    /**
+     * Get table for model
+     *
+     * @return string
+     */
+    public static function getTable()
+    {
+        return 'post';
+    }
+}
+
+```
+
+
+
+#### Primary key name
+
+Blast ORM is automatically using `id` as primary key.
+
+Similar to `table` you could a customize `primaryKeyName` as follows
  
  - `Entity::getPrimaryKeyName()`
  - `Entity::primaryKeyName()`
@@ -93,6 +133,12 @@ class Post
 }
 
 ```
+
+#### Mutating data
+
+
+
+
 
 #### Accessor with `Blast\Orm\Data\AccessorTrait`
 
