@@ -19,6 +19,7 @@ use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Query;
 use Doctrine\DBAL\Driver\Statement;
+use Doctrine\DBAL\Schema\Index;
 use League\Event\EmitterAwareTrait;
 
 class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataHydratorInterface
@@ -58,21 +59,42 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
         $this->setObject($object);
     }
 
+    /**
+     * Get entity class name
+     *
+     * @return string
+     */
     public function getClassName()
     {
         return $this->getReflection()->getName();
     }
 
+    /**
+     * Get table name from entity. If no table name is declared determine from class name and convert camelcase to
+     * underscore
+     *
+     * @return string
+     */
     public function getTableName()
     {
-        return $this->access('tableName', $this->getReflection()->getShortName(), \ReflectionMethod::IS_STATIC);
+        return $this->access('tableName',
+            ltrim(strtolower(preg_replace('/[A-Z]/', '_$0', $this->getReflection()->getShortName())), '_'),
+            \ReflectionMethod::IS_STATIC);
     }
 
+    /**
+     * Get entity primary key name
+     *
+     * @return string
+     */
     public function getPrimaryKeyName()
     {
         return $this->access('primaryKeyName', static::DEFAULT_PRIMARY_KEY_NAME, \ReflectionMethod::IS_STATIC);
     }
 
+    /**
+     * @return mixed|null
+     */
     public function getFields()
     {
         return $this->access('fields', [], \ReflectionMethod::IS_STATIC);
@@ -90,7 +112,7 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
 
     public function hydrate($data = [], $option = self::AUTO)
     {
-        if ($this->isRaw($option)) {
+        if ($this->isRaw($data, $option)) {
             return $data;
         }
 
@@ -142,9 +164,8 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
      * @param $option
      * @return bool
      */
-    protected function isRaw($option)
+    protected function isRaw($data, $option)
     {
-        $data = $this->getData();
         return $option === self::RESULT_RAW ||
         $data instanceof Statement ||
         is_numeric($data) ||
