@@ -13,8 +13,8 @@ use Blast\Orm\Data\DataObject;
 use Blast\Orm\Manager;
 use Blast\Orm\Repository;
 use Blast\Tests\Orm\Stubs\Entities\Post;
+use Blast\Tests\Orm\Stubs\Entities\User;
 use Interop\Container\ContainerInterface;
-use Stubs\Entities\User;
 
 class RepositoryTest extends \PHPUnit_Framework_TestCase
 {

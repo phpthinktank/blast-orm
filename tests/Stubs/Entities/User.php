@@ -11,7 +11,7 @@
  *
  */
 
-namespace Stubs\Entities;
+namespace Blast\Tests\Orm\Stubs\Entities;
 
 
 use Blast\Orm\Data\AccessorTrait;
