@@ -29,7 +29,7 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
     public function testGetData(){
         $adapter = new EntityAdapter();
 
-        $data = $adapter->hydrate([['name' => 'bob']]);
+        $data = $adapter->setData([['name' => 'bob']])->getData();
         $this->assertArrayHasKey('name', array_shift($data));
     }
 
@@ -40,9 +40,9 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testDecorateRaw(){
-        $adapter = new EntityAdapter([['name' => 'bob']]);
+        $adapter = new EntityAdapter();
 
-        $this->assertInternalType('array', $adapter->hydrate(EntityAdapter::RESULT_RAW));
+        $this->assertInternalType('array', $adapter->hydrate([['name' => 'bob']], EntityAdapter::RESULT_RAW));
     }
 
     public function testDecorateGenericEntity(){
@@ -52,9 +52,7 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testDecorateGivenEntity(){
-        $adapter = new EntityAdapter(new stdClass());
-
-        $this->assertInstanceOf(stdClass::class, $adapter->hydrate([['name' => 'bob']], EntityAdapter::RESULT_ENTITY));
+        $this->assertInstanceOf(stdClass::class, (new EntityAdapter(new stdClass()))->hydrate([['name' => 'bob']], EntityAdapter::RESULT_ENTITY));
     }
 
     public function testDecorateCollection(){

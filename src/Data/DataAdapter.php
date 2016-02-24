@@ -84,5 +84,7 @@ class DataAdapter extends ObjectAdapter implements DataObjectInterface
             }
 
         }
+
+        return $this;
     }
 }
