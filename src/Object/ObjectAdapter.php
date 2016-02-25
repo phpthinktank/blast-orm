@@ -99,8 +99,9 @@ class ObjectAdapter implements ObjectAdapterInterface
 
         if (
             //return value of method or property getter but ignore constants
-            ($reflection->hasMethod($name) && $only & static::IS_METHOD) ||
+            ($reflection->hasMethod($name) && ($only & static::IS_METHOD) === static::IS_METHOD) ||
             (
+                (($only & static::IS_METHOD) === static::IS_METHOD || ($only & static::IS_PROPERTY) === static::IS_PROPERTY) &&
                 $reflection->hasMethod($visitMethod) && !(
                     $reflection->hasConstant($name) || $reflection->hasConstant(strtoupper($name))
                 )
@@ -111,9 +112,9 @@ class ObjectAdapter implements ObjectAdapterInterface
                 $method->setAccessible(TRUE);
             }
             $value = $method->invoke($instance);
-        } elseif ($only & static::IS_CONSTANT && ($reflection->hasConstant($name) || $reflection->hasConstant(strtoupper($name)))) {
+        } elseif (($only & static::IS_CONSTANT) === static::IS_CONSTANT && ($reflection->hasConstant($name) || $reflection->hasConstant(strtoupper($name)))) {
             $value = $reflection->hasConstant($name) ? $reflection->getConstant($name) : $reflection->getConstant(strtoupper($name));
-        } elseif ($only & static::IS_PROPERTY && $reflection->hasProperty($name)) {
+        } elseif (($only & static::IS_PROPERTY) === static::IS_PROPERTY && $reflection->hasProperty($name)) {
             $property = $reflection->getProperty($name);
             if (!$property->isPublic()) {
                 $property->setAccessible(TRUE);
@@ -147,14 +148,15 @@ class ObjectAdapter implements ObjectAdapterInterface
 
         $reflection = $this->getReflection();
 
-        if (!$this->canAccess($reflection, $name, $filter)) {
+        $visitMethod = 'set' . ucfirst($name);
+
+        if (!($this->canAccess($reflection, $name, $filter) || $this->canAccess($reflection, $visitMethod, $filter))) {
             return FALSE;
         }
 
-        $visitMethod = 'set' . ucfirst($name);
 
         if (
-            ($reflection->hasMethod($name) && $only & static::IS_METHOD) ||
+            ($reflection->hasMethod($name) && ($only & static::IS_METHOD) === static::IS_METHOD)  ||
             ($only & static::IS_PROPERTY && $reflection->hasMethod($visitMethod) &&
                 $this->canAccess($reflection, $visitMethod, $filter, static::IS_METHOD)
             )
@@ -164,7 +166,7 @@ class ObjectAdapter implements ObjectAdapterInterface
                 $method->setAccessible(TRUE);
             }
             $method->invoke($instance, $value);
-        } elseif ($reflection->hasProperty($name) && $only & static::IS_PROPERTY) {
+        } elseif ($reflection->hasProperty($name) && ($only & static::IS_PROPERTY) === static::IS_PROPERTY) {
             $property = $reflection->getProperty($name);
             if (!$property->isPublic()) {
                 $property->setAccessible(TRUE);
@@ -175,7 +177,7 @@ class ObjectAdapter implements ObjectAdapterInterface
                 $instance->{$property->getName()} = $value;
             }
         } else {
-            if ($only & static::IS_PROPERTY) {
+            if (($only & static::IS_PROPERTY) === static::IS_PROPERTY) {
                 $instance->$name = $value;
             }
         }
@@ -203,11 +205,11 @@ class ObjectAdapter implements ObjectAdapterInterface
 
         $cond = FALSE;
 
-        if ($only & static::IS_METHOD) {
+        if (($only & static::IS_METHOD) === static::IS_METHOD) {
             $cond = $cond || isset($methods[ $name ]);
         }
 
-        if ($only & static::IS_PROPERTY) {
+        if (($only & static::IS_PROPERTY) === static::IS_PROPERTY) {
             $cond = $cond || isset($properties[ $name ]);
         }
 
