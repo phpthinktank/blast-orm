@@ -43,11 +43,11 @@ trait FilterableTrait
             return array_filter($data, $filter, ARRAY_FILTER_USE_BOTH);
         }
 
-        //@codeCoverageIgnore
-        //this is a fallback for php versions < 5.6.x
+        // @codeCoverageIgnoreStart
+        // this is a fallback for php versions < 5.6.x
         $results = [];
 
-        //if filter is truthy pass key-value-pair to results
+        // if filter is truthy pass key-value-pair to results
         foreach($data as $key => $value){
             if(call_user_func($filter, $value, $key) == true){
                 $results[$key] = $value;
@@ -55,6 +55,6 @@ trait FilterableTrait
         }
 
         return $results;
-        //@codeCoverageIgnore
+        // @codeCoverageIgnoreEnd
     }
 }
