@@ -115,6 +115,20 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * create new entry
+     */
+    public function testCreateNothing()
+    {
+        $mapper = new Repository(new Post);
+
+        $post = new Post();
+
+        $result = $mapper->create($post);
+
+        $this->assertEquals(0, $result);
+    }
+
+    /**
      * update existing entry
      */
     public function testUpdate()
@@ -125,6 +139,48 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
         $result->title .= ' Again!';
 
         $this->assertEquals(1, $mapper->update($result));
+    }
+
+    /**
+     * update existing entry
+     */
+    public function testUpdateNothing()
+    {
+        $mapper = new Repository(new Post);
+        $result = $mapper->find(1);
+        $this->assertInstanceOf(Post::class, $result);
+        $this->assertEquals(0, $mapper->update($result));
+    }
+
+    /**
+     * update existing entry
+     */
+    public function testSaveANewEntry()
+    {
+        $mapper = new Repository(new Post);
+
+        $post = new Post();
+        $post->id = 3;
+        $post->user_id = 1;
+        $post->title = 'first created post';
+        $post->content = 'A new post!';
+
+        $result = $mapper->save($post);
+
+        $this->assertEquals($result, 1);
+    }
+
+    /**
+     * update existing entry
+     */
+    public function testSaveExisting()
+    {
+        $mapper = new Repository(new Post);
+        $result = $mapper->find(1);
+        $this->assertInstanceOf(Post::class, $result);
+        $result->title .= ' Again!';
+
+        $this->assertEquals(1, $mapper->save($result));
     }
 
     /**
