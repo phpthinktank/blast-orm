@@ -168,11 +168,11 @@ class Query implements EmitterAwareInterface, QueryInterface
             case QueryBuilder::DELETE:
                 return 'delete';
             default:
-                //this could only happen if query will be extended and a custom getType is return invalid type
                 // @codeCoverageIgnoreStart
+                //this could only happen if query will be extended and a custom getType is return invalid type
                 throw new \Exception('Unknown query type ' . $this->getType());
-                // @codeCoverageIgnoreEnd
         }
+        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -247,9 +247,9 @@ class Query implements EmitterAwareInterface, QueryInterface
      *
      * @return $this Query instance
      */
-    public function select(array $select = ['*'])
+    public function select(array $select = [])
     {
-        if (empty($select)) {
+        if (count($select) < 1) {
             $select = ['*'];
         }
 
