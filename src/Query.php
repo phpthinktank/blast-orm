@@ -117,7 +117,7 @@ class Query implements EmitterAwareInterface, QueryInterface
         //execute before events and proceed with builder from event
         $event = $this->beforeExecute($this->getEntity());
 
-        if (!$event->isCanceled()) {
+        if ($event->isCanceled()) {
             return false;
         }
 
@@ -140,7 +140,7 @@ class Query implements EmitterAwareInterface, QueryInterface
                 $statement,
             $entity, $builder);
 
-        if (!$event->isCanceled()) {
+        if ($event->isCanceled()) {
             return false;
         }
 
