@@ -23,13 +23,19 @@ trait ConverterTrait
         $data = DataHelper::receiveDataFromObject($this);
 
         if(is_object($data)){ //convert object to array
+            // @codeCoverageIgnoreStart
             $data = (array) $data;
+            // @codeCoverageIgnoreEnd
         }elseif(is_scalar($data)){ //convert scalar to array
+            // @codeCoverageIgnoreStart
             $data = [$data];
+            // @codeCoverageIgnoreEnd
         }
 
         if(!is_array($data)){
+            // @codeCoverageIgnoreStart
             throw new \InvalidArgumentException('Unable to convert data to an array!');
+            // @codeCoverageIgnoreEnd
         }
 
         return $data;
