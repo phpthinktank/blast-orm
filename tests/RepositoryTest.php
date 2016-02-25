@@ -144,17 +144,6 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
     /**
      * update existing entry
      */
-    public function testUpdateNothing()
-    {
-        $mapper = new Repository(new Post);
-        $result = $mapper->find(1);
-        $this->assertInstanceOf(Post::class, $result);
-        $this->assertEquals(0, $mapper->update($result));
-    }
-
-    /**
-     * update existing entry
-     */
     public function testSaveANewEntry()
     {
         $mapper = new Repository(new Post);

@@ -151,11 +151,6 @@ class Repository implements RepositoryInterface, EntityAwareInterface
 
         $data = $adapter->getData();
 
-        //cancel if $data has no entries
-        if(count($data) < 1){
-            return 0;
-        }
-
         foreach ($data as $key => $value) {
             $query->set($key, $query->createPositionalParameter($value));
         }
