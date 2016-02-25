@@ -17,10 +17,10 @@ namespace Blast\Tests\Orm\Query;
 use Blast\Orm\ConnectionCollectionInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\Events\BuilderEvent;
-use Blast\Orm\Events\ResultEvent;
 use Blast\Orm\Manager;
 use Blast\Orm\Query;
+use Blast\Orm\Query\Events\QueryBuilderEvent;
+use Blast\Orm\Query\Events\QueryResultEvent;
 use Blast\Orm\Query\Result;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Interop\Container\ContainerInterface;
@@ -121,7 +121,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $query = new Query();
 
         //force entity to be a stdClass
-        $query->getEmitter()->addListener('before.select', function (BuilderEvent $event) {
+        $query->getEmitter()->addListener('before.select', function (QueryBuilderEvent $event) {
             $event->getBuilder()->setEntity(new \stdClass());
         });
 
@@ -135,12 +135,31 @@ class QueryTest extends \PHPUnit_Framework_TestCase
     /**
      * Assert that event is emitted before execution
      */
+    public function testBeforeEventAndCancel()
+    {
+        $query = new Query();
+
+        //force entity to be a stdClass
+        $query->getEmitter()->addListener('before.select', function (QueryBuilderEvent $event) {
+            $event->setCanceled(true);
+        });
+
+        $result = $query->select()->from('post')->execute();
+        $this->assertFalse($result);
+
+        $query->getEmitter()->removeAllListeners('before.select');
+
+    }
+
+    /**
+     * Assert that event is emitted before execution
+     */
     public function testAfterEvent()
     {
         $query = new Query();
 
         //add additional value to result set
-        $query->getEmitter()->addListener('after.select', function (ResultEvent $event, Query $builder) {
+        $query->getEmitter()->addListener('after.select', function (QueryResultEvent $event, Query $builder) {
             $result = $event->getResult();
 
             foreach($result as $key => $value){
@@ -155,6 +174,25 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $data = $result->getData();
 
         $this->assertEquals($data['contentSize'], strlen($data['content']));
+    }
+
+    /**
+     * Assert that event is emitted before execution
+     */
+    public function testAfterEventAndCancel()
+    {
+        $query = new Query();
+
+        //force entity to be a stdClass
+        $query->getEmitter()->addListener('after.select', function (QueryResultEvent $event) {
+            $event->setCanceled(true);
+        });
+
+        $result = $query->select()->from('post')->execute();
+        $this->assertFalse($result);
+
+        $query->getEmitter()->removeAllListeners('after.select');
+
     }
 
     /**

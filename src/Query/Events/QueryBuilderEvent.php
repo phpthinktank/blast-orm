@@ -11,12 +11,14 @@
  *
  */
 
-namespace Blast\Orm\Events;
+namespace Blast\Orm\Query\Events;
 
 
+use Blast\Orm\Query;
+use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\AbstractEvent;
 
-class ResultEvent extends AbstractEvent
+class QueryBuilderEvent extends AbstractQueryEvent
 {
     /**
      * @var string
@@ -24,18 +26,18 @@ class ResultEvent extends AbstractEvent
     private $name;
 
     /**
-     * @var boolean|array
+     * @var Query
      */
-    private $result;
+    private $builder;
 
     /**
      * ResultEvent constructor.
      * @param string $name
-     * @param boolean|array $result
+     * @param Query $builder
      */
-    public function __construct($name, $result){
+    public function __construct($name, $builder){
         $this->name = $name;
-        $this->result = $result;
+        $this->builder = $builder;
     }
 
     /**
@@ -48,19 +50,11 @@ class ResultEvent extends AbstractEvent
     }
 
     /**
-     * @return array|bool
+     * @return Query
      */
-    public function getResult()
+    public function getBuilder()
     {
-        return $this->result;
-    }
-
-    /**
-     * @param array|bool $result
-     */
-    public function setResult($result)
-    {
-        $this->result = $result;
+        return $this->builder;
     }
 
 

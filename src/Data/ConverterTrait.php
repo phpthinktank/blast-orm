@@ -22,15 +22,13 @@ trait ConverterTrait
     public function toArray(){
         $data = DataHelper::receiveDataFromObject($this);
 
+        // @codeCoverageIgnoreStart
         if(is_object($data)){ //convert object to array
-            // @codeCoverageIgnoreStart
             $data = (array) $data;
-            // @codeCoverageIgnoreEnd
         }elseif(is_scalar($data)){ //convert scalar to array
-            // @codeCoverageIgnoreStart
             $data = [$data];
-            // @codeCoverageIgnoreEnd
         }
+        // @codeCoverageIgnoreEnd
 
         if(!is_array($data)){
             // @codeCoverageIgnoreStart

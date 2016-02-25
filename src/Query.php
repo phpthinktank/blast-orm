@@ -14,10 +14,9 @@ namespace Blast\Orm;
 
 use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
-use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
-use Blast\Orm\Events\BuilderEvent;
-use Blast\Orm\Events\ResultEvent;
+use Blast\Orm\Query\Events\QueryBuilderEvent;
+use Blast\Orm\Query\Events\QueryResultEvent;
 use Blast\Orm\Query\Result;
 use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\EmitterAwareInterface;
@@ -110,22 +109,21 @@ class Query implements EmitterAwareInterface, QueryInterface
      * Fetch data for entity
      *
      * @param string $option
-     * @return array|Result|DataObject
+     * @return array|Result|DataObject|bool
      * @throws \Doctrine\DBAL\DBALException
      */
     public function execute($option = DataHydratorInterface::AUTO)
     {
         //execute before events and proceed with builder from event
-        $builder = $this->beforeExecute($this->getEntity());
+        $event = $this->beforeExecute($this->getEntity());
 
-        $entity = $this->loadAdapter($builder->getEntity());
-
-        if (!$builder) {
+        if (!$event->isCanceled()) {
             return false;
         }
 
+        $builder = $event->getBuilder();
+        $entity = $this->loadAdapter($builder->getEntity());
         $connection = Manager::getInstance()->getConnection();
-
         $isSelect = $builder->getType() === QueryBuilder::SELECT;
 
         $statement = $isSelect ?
@@ -136,17 +134,17 @@ class Query implements EmitterAwareInterface, QueryInterface
             $connection->executeUpdate($this->getSQL(), $this->getParameters(), $this->getParameterTypes());
 
         //execute after events and proceed with result from event
-        $result = $this->afterExecute(
+        $event = $this->afterExecute(
             $isSelect ?
                 $statement->fetchAll() :
                 $statement,
             $entity, $builder);
 
-        if (!$result) {
+        if (!$event->isCanceled()) {
             return false;
         }
 
-        return $entity->hydrate($result, $option);
+        return $entity->hydrate($event->getResult(), $option);
     }
 
     /**
@@ -166,7 +164,10 @@ class Query implements EmitterAwareInterface, QueryInterface
             case QueryBuilder::DELETE:
                 return 'delete';
             default:
+                //this could only happen if query will be extended and a custom getType is return invalid type
+                // @codeCoverageIgnoreStart
                 throw new \Exception('Unknown query type ' . $this->getType());
+                // @codeCoverageIgnoreEnd
         }
     }
 
@@ -187,23 +188,18 @@ class Query implements EmitterAwareInterface, QueryInterface
      * Emit events before query handling and if entity is able to emit events execute entity events
      *
      * @param $entity
-     * @return Query
+     * @return QueryBuilderEvent
      */
     private function beforeExecute($entity)
     {
         $builder = $this;
-        $event = $this->getEmitter()->emit(new BuilderEvent('before.' . $this->getTypeName(), $builder));
+        $event = $this->getEmitter()->emit(new QueryBuilderEvent('before.' . $this->getTypeName(), $builder));
 
         if ($entity instanceof EmitterAwareInterface) {
             $event = $entity->getEmitter()->emit($event, $builder);
         }
 
-        if ($event instanceof BuilderEvent) {
-            $builder = $event->getBuilder();
-        }
-
-
-        return $builder;
+        return $event;
     }
 
     /**
@@ -212,22 +208,18 @@ class Query implements EmitterAwareInterface, QueryInterface
      * @param mixed $result Raw result
      * @param mixed $entity Entity which contains the events
      * @param Query $builder
-     * @return array
+     * @return QueryResultEvent
      */
     private function afterExecute($result, $entity, $builder)
     {
 
-        $event = $this->getEmitter()->emit(new ResultEvent('after.' . $builder->getTypeName(), $result), $builder);
+        $event = $this->getEmitter()->emit(new QueryResultEvent('after.' . $builder->getTypeName(), $result), $builder);
 
         if ($entity instanceof EmitterAwareInterface) {
             $event = $entity->getEmitter()->emit($event, $builder);
         }
 
-        if ($event instanceof ResultEvent) {
-            $result = $event->getResult();
-        }
-
-        return $result;
+        return $event;
     }
 
     /*
