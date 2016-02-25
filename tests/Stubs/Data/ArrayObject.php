@@ -16,6 +16,9 @@ namespace Blast\Tests\Orm\Stubs\Data;
 
 use Blast\Orm\Data\AccessorTrait;
 
+/**
+ * @codeCoverageIgnore
+ */
 class ArrayObject extends \ArrayObject
 {
 

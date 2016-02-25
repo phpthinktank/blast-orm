@@ -18,6 +18,9 @@ use Blast\Orm\Data\DataObject;
 use Blast\Orm\Data\MutatorTrait;
 use Blast\Orm\Data\AccessorTrait;
 
+/**
+ * @codeCoverageIgnore
+ */
 class DataObjectImpl extends DataObject
 {
     use AccessorTrait;
