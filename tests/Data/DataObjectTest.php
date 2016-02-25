@@ -81,6 +81,28 @@ class DataObjectTest extends \PHPUnit_Framework_TestCase
 
     }
 
+    public function testIteratingData(){
+        $data = new DataObjectImpl();
+        $data->setData([
+            'class' => __CLASS__,
+            'method' => __METHOD__,
+        ]);
+
+        $this->assertTrue($data->valid());
+        $this->assertEquals('class', $data->key());
+        $this->assertEquals(__CLASS__, $data->current());
+        $this->assertEquals(__METHOD__, $data->next());
+        $this->assertTrue($data->valid());
+        $this->assertEquals('method', $data->key());
+        $this->assertEquals(__METHOD__, $data->current());
+        $this->assertFalse($data->next());
+        $this->assertFalse($data->valid());
+        $this->assertFalse($data->current());
+        $data->rewind();
+        $this->assertTrue($data->valid());
+        $this->assertEquals(__CLASS__, $data->current());
+    }
+
     public function testMutatingData()
     {
         $data = new DataObjectImpl();
