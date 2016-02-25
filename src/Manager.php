@@ -92,13 +92,9 @@ class Manager implements ManagerInterface, ConnectionCollectionInterface
             $connections = $instance->getConnections();
 
             foreach ($connections as $connection) {
-                if (!($connection instanceof Connection)) {
-                    continue;
-                }
-
-                //@todo persistent connections should not disconnected while destruct
                 if ($connection->isConnected()) {
                     $connection->close();
+                    gc_collect_cycles();
                 }
             }
         }

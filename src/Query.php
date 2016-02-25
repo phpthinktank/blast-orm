@@ -148,7 +148,10 @@ class Query implements EmitterAwareInterface, QueryInterface
             return false;
         }
 
-        return $adapter->hydrate($event->getResult(), $option);
+        $data = $adapter->hydrate($event->getResult(), $option);
+        gc_collect_cycles();
+
+        return $data;
     }
 
     /**
@@ -167,8 +170,8 @@ class Query implements EmitterAwareInterface, QueryInterface
                 return 'update';
             case QueryBuilder::DELETE:
                 return 'delete';
+            // @codeCoverageIgnoreStart
             default:
-                // @codeCoverageIgnoreStart
                 //this could only happen if query will be extended and a custom getType is return invalid type
                 throw new \Exception('Unknown query type ' . $this->getType());
         }
