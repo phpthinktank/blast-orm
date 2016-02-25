@@ -115,14 +115,18 @@ class Query implements EmitterAwareInterface, QueryInterface
     public function execute($option = DataHydratorInterface::AUTO)
     {
         //execute before events and proceed with builder from event
-        $event = $this->beforeExecute($this->getEntity());
+        $adapter = $this->loadAdapter($this->getEntity());
+        $event = $this->beforeExecute($adapter);
 
         if ($event->isCanceled()) {
             return false;
         }
 
         $builder = $event->getBuilder();
-        $entity = $this->loadAdapter($builder->getEntity());
+
+        //convert entity to adapter again
+        $adapter = $this->loadAdapter($builder->getEntity());
+
         $connection = Manager::getInstance()->getConnection();
         $isSelect = $builder->getType() === QueryBuilder::SELECT;
 
@@ -138,13 +142,13 @@ class Query implements EmitterAwareInterface, QueryInterface
             $isSelect ?
                 $statement->fetchAll() :
                 $statement,
-            $entity, $builder);
+            $adapter, $builder);
 
         if ($event->isCanceled()) {
             return false;
         }
 
-        return $entity->hydrate($event->getResult(), $option);
+        return $adapter->hydrate($event->getResult(), $option);
     }
 
     /**
