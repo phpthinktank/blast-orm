@@ -33,7 +33,7 @@ trait AccessorTrait
      */
     public function get($name, $default = null)
     {
-        $data = DataHelper::receiveDataFromObject($this);
+        $data = (new DataAdapter($this))->getData();
 
         //hook before receive data
         $before = Hook::trigger('beforeGet', $this, ['name' => $name, 'data' => $data]);
@@ -60,7 +60,7 @@ trait AccessorTrait
      */
     public function has($name)
     {
-        $data = DataHelper::receiveDataFromObject($this);
+        $data = (new DataAdapter($this))->getData();
 
         //hooking before check data
         $before = Hook::trigger('beforeHas', $this, ['name' => $name, 'data' => $data]);

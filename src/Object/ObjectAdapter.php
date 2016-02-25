@@ -35,6 +35,14 @@ class ObjectAdapter implements ObjectAdapterInterface
     private $reflection = NULL;
 
     /**
+     * @param object $object
+     */
+    public function __construct($object = null)
+    {
+        $this->setObject($object);
+    }
+
+    /**
      * @return object
      */
     public function getObject()

@@ -37,7 +37,7 @@ trait FilterableTrait
      */
     public function filter(callable $filter)
     {
-        $data = DataHelper::receiveDataFromObject($this);
+        $data = (new DataAdapter($this))->getData();
 
         if(defined('ARRAY_FILTER_USE_BOTH') && version_compare(PHP_VERSION, '5.6.0') >= 0){
             return array_filter($data, $filter, ARRAY_FILTER_USE_BOTH);

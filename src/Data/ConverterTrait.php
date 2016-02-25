@@ -20,7 +20,7 @@ trait ConverterTrait
      * @return array
      */
     public function toArray(){
-        $data = DataHelper::receiveDataFromObject($this);
+        $data = $data = (new DataAdapter($this))->getData();
 
         // @codeCoverageIgnoreStart
         if(is_object($data)){ //convert object to array
