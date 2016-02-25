@@ -13,6 +13,11 @@
 
 namespace Blast\Orm\Data;
 
+/**
+ * @codeCoverageIgnore
+ * @deprecated This will be replaced by DataAdapter
+ *
+ */
 class DataHelper
 {
 

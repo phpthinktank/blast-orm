@@ -16,6 +16,9 @@ use Blast\Orm\Data\MutableDataObjectTrait;
 use Blast\Orm\Data\MutatorInterface;
 use Blast\Orm\Data\MutatorTrait;
 
+/**
+ * @codeCoverageIgnore
+ */
 class Post implements DataObjectInterface, AccessorInterface, MutatorInterface
 {
     use MutableDataObjectTrait;

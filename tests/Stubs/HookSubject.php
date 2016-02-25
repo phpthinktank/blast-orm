@@ -13,6 +13,9 @@
 
 namespace Blast\Tests\Orm\Stubs;
 
+/**
+ * @codeCoverageIgnore
+ */
 class HookSubject
 {
 

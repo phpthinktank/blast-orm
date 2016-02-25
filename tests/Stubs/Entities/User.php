@@ -19,6 +19,9 @@ use Blast\Orm\Data\DataObjectInterface;
 use Blast\Orm\Data\ImmutableDataObjectTrait;
 use Blast\Orm\Data\MutableDataObjectTrait;
 
+/**
+ * @codeCoverageIgnore
+ */
 class User
 {
     /**
