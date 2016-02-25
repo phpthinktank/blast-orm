@@ -43,6 +43,8 @@ trait FilterableTrait
             return array_filter($data, $filter, ARRAY_FILTER_USE_BOTH);
         }
 
+        //@codeCoverageIgnore
+        //this is a fallback for php versions < 5.6.x
         $results = [];
 
         //if filter is truthy pass key-value-pair to results
@@ -53,5 +55,6 @@ trait FilterableTrait
         }
 
         return $results;
+        //@codeCoverageIgnore
     }
 }
