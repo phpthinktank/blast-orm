@@ -87,6 +87,9 @@ class ObjectAdapter implements ObjectAdapterInterface
         if ($instance === NULL) {
             $instance = $this->getObject();
         }
+        if($only === 0){
+            $only = static::IS_PROPERTY|static::IS_METHOD|static::IS_CONSTANT;
+        }
         $reflection = $this->getReflection();
 
         $visitMethod = 'get' . ucfirst($name);
@@ -206,11 +209,21 @@ class ObjectAdapter implements ObjectAdapterInterface
         $cond = FALSE;
 
         if (($only & static::IS_METHOD) === static::IS_METHOD) {
-            $cond = $cond || isset($methods[ $name ]);
+            foreach($methods as $method){
+                if($name === $method->getName()){
+                    $cond = $cond || true;
+                    break;
+                }
+            }
         }
 
         if (($only & static::IS_PROPERTY) === static::IS_PROPERTY) {
-            $cond = $cond || isset($properties[ $name ]);
+            foreach($properties as $property){
+                if($name === $property->getName()){
+                    $cond = $cond || true;
+                    break;
+                }
+            }
         }
 
         return $cond;

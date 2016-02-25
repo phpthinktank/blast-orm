@@ -64,8 +64,6 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
     {
         $mapper = new Repository(new Post());
 
-        var_dump($mapper->loadAdapter($mapper->getEntity())->getPrimaryKeyName());
-
         $query = $mapper->select();
         $result = $query->where('user_id = 1')->execute();
 
@@ -101,7 +99,8 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
     /**
      * create new entry
      */
-    public function testCreate(){
+    public function testCreate()
+    {
         $mapper = new Repository(new Post);
 
         $post = new Post();
@@ -131,14 +130,16 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
     /**
      * delete entry by pk
      */
-    public function testDelete(){
+    public function testDelete()
+    {
         $mapper = new Repository(new Post);
         $result = $mapper->delete(1);
 
         $this->assertEquals($result, 1);
     }
 
-    public function testPlainObjectImplementation(){
+    public function testPlainObjectImplementation()
+    {
         $mapper = new Repository(User::class);
         $user = $mapper->find(1);
 
