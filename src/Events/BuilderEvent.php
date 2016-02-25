@@ -59,6 +59,7 @@ class BuilderEvent extends AbstractEvent
 
     /**
      * @param QueryBuilder $builder
+     * @codeCoverageIgnore
      */
     public function setBuilder($builder)
     {
