@@ -20,6 +20,7 @@ trait EntityAdapterLoaderTrait
      */
     public function loadAdapter($entity)
     {
+        // @todo instead of creating a new instance use a cached entity instance
         return new EntityAdapter($entity);
     }
 }
