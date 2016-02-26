@@ -1,9 +1,9 @@
 # Blast orm
 
-[![Latest Version on Packagist][https://img.shields.io/packagist/v/blast/orm.svg?style=flat-square]][https://packagist.org/packages/blast/orm]
-[![Software License][https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square]](LICENSE.md)
-[![Build Status][https://img.shields.io/travis/phpthinktank/blast-orm/master.svg?style=flat-square]][https://travis-ci.org/phpthinktank/blast-orm]
-[![Total Downloads][https://img.shields.io/packagist/dt/blast/orm.svg?style=flat-square]][https://packagist.org/packages/blast/orm]
+[![Latest Version on Packagist][ico-version]][link-packagist]
+[![Software License][ico-license]](LICENSE.md)
+[![Build Status][ico-travis]][link-travis]
+[![Total Downloads][ico-downloads]][link-downloads]
 [![Coverage Status](https://img.shields.io/coveralls/phpthinktank/blast-orm/master.svg?style=flat-square)](https://coveralls.io/github/phpthinktank/blast-orm?branch=1.0.x-dev)
 
 Framework agnostic data access and persistence based on Doctrine 2 DBAL.
@@ -356,9 +356,21 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 If you discover any security related issues, please email :author_email instead of using the issue tracker.
 
 ## Credits
-- [Marco Bunge](https://github.com/mbunge)
-- [All contributors](../../contributors)
+
+- [Marco Bunge][link-author]
+- [All contributors][link-contributors]
 
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+
+[ico-version]: https://img.shields.io/packagist/v/blast/orm.svg?style=flat-square
+[ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
+[ico-travis]: https://img.shields.io/travis/phpthinktank/blast-orm/master.svg?style=flat-square
+[ico-downloads]: https://img.shields.io/packagist/dt/blast/orm.svg?style=flat-square
+
+[link-packagist]: https://packagist.org/packages/blast/orm
+[link-travis]: https://travis-ci.org/phpthinktank/blast-orm
+[link-downloads]: https://packagist.org/packages/blast/orm
+[link-author]: https://github.com/mbunge
+[link-contributors]: ../../contributors
