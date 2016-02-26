@@ -28,12 +28,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Blast\\Db\\": "src"
+      "Blast\\Orm\\": "src"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Blast\\Tests\\Db\\": "tests"
+      "Blast\\Tests\\Orm\\": "tests"
     }
   },
   "extra": {

@@ -10,19 +10,21 @@
 * Time: 16:11
 */
 
-namespace Blast\Db;
+namespace Blast\Orm;
 
-
-use Blast\Db\Entity\Collection;
-use Blast\Db\Entity\CollectionInterface;
-use Blast\Db\Entity\EntityInterface;
-use Blast\Db\Entity\ManagerInterface;
-use Blast\Db\ConnectionAwareTrait;
-use Doctrine\DBAL\Driver\Statement;
+use Blast\Orm\Data\DataHydratorInterface;
+use Blast\Orm\Data\DataObject;
+use Blast\Orm\Entity\EntityAdapterLoaderTrait;
+use Blast\Orm\Query\Events\QueryBuilderEvent;
+use Blast\Orm\Query\Events\QueryResultEvent;
+use Blast\Orm\Query\Result;
 use Doctrine\DBAL\Query\QueryBuilder;
+use League\Event\EmitterAwareInterface;
+use League\Event\EmitterAwareTrait;
+use stdClass;
 
 /**
- * Class Statement
+ * Class Query
  *
  * @method \Doctrine\DBAL\Query\Expression\ExpressionBuilder expr()
  * @method int getType()
@@ -39,7 +41,6 @@ use Doctrine\DBAL\Query\QueryBuilder;
  * @method Query setMaxResults($maxResults)
  * @method int getMaxResults()
  * @method Query add($sqlPartName, $sqlPart, $append = false)
- * @method Query select($select = null)
  * @method Query addSelect($select = null)
  * @method Query delete($delete = null, $alias = null)
  * @method Query update($update = null, $alias = null)
@@ -73,25 +74,12 @@ use Doctrine\DBAL\Query\QueryBuilder;
  *
  * @package Blast\Db\Orm
  */
-class Query
+class Query implements EmitterAwareInterface, QueryInterface
 {
 
-    use FactoryAwareTrait;
-    use ConnectionAwareTrait;
-
-    /**
-     *
-     */
-    const RESULT_COLLECTION = 'collection';
-    /**
-     *
-     */
-    const RESULT_ENTITY = 'entity';
-    const RESULT_RAW = 'raw';
-    /**
-     *
-     */
-    const RESULT_AUTO = 'auto';
+    use EmitterAwareTrait;
+    use EntityAwareTrait;
+    use EntityAdapterLoaderTrait;
 
     /**
      * @var QueryBuilder
@@ -99,19 +87,14 @@ class Query
     private $builder;
 
     /**
-     * @var EntityInterface
-     */
-    private $entity;
-
-    /**
      * Statement constructor.
-     * @param EntityInterface $entity
-     * @param QueryBuilder $builder
+     * @param array|stdClass|\ArrayObject|object|string $entity
+     * @param Query $builder
      */
-    public function __construct(EntityInterface $entity = null, QueryBuilder $builder = null)
+    public function __construct($entity = null, $builder = null)
     {
-        $this->builder = $builder === null ? Factory::getInstance()->getConfig()->getConnection()->createQueryBuilder() : $builder;
-        $this->entity = $entity;
+        $this->builder = $builder === null ? Manager::getInstance()->getConnection()->createQueryBuilder() : $builder;
+        $this->setEntity($entity);
     }
 
     /**
@@ -123,68 +106,157 @@ class Query
     }
 
     /**
-     * @return EntityInterface
-     */
-    public function getEntity()
-    {
-        return $this->entity;
-    }
-
-    /**
-     * Fetch data for entity. if raw is true, fetch assoc instead of entity
+     * Fetch data for entity
      *
-     * @param string $convert
-     * @param bool $raw
-     * @return array|CollectionInterface|EntityInterface
+     * @param string $option
+     * @return array|Result|DataObject|bool
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function execute($convert = self::RESULT_AUTO)
+    public function execute($option = DataHydratorInterface::AUTO)
     {
-        $builder = $this->getBuilder();
-        $isFetchable = $builder->getType() === $builder::SELECT;
-        $statement = $builder->execute();
-        $result = $isFetchable ? $statement->fetchAll() : $statement;
+        //execute before events and proceed with builder from event
+        $adapter = $this->loadAdapter($this->getEntity());
+        $event = $this->beforeExecute($adapter);
 
-        return $convert === self::RESULT_RAW || $this->getEntity() === null || $result instanceof Statement || is_int($result) ? $result : $this->determineResultSet($result, $convert);
-    }
-
-    /**
-     * Determine result and return one or many results
-     *
-     * @param $data
-     * @param string $convert
-     * @return CollectionInterface|EntityInterface|null
-     */
-    protected function determineResultSet($data, $convert = self::RESULT_AUTO)
-    {
-        $count = count($data);
-        $result = NULL;
-
-        if ($count > 1 || $convert === static::RESULT_COLLECTION) { //if result set has many items, return a collection of entities
-            foreach ($data as $key => $value) {
-                $entity = clone $this->getEntity();
-                $data[$key] = $entity->setData($value);
-            }
-            $result = new Collection($data);
-        } elseif ($count === 1 || $convert === static::RESULT_ENTITY) { //if result has one item, return the entity
-            $entity = clone $this->getEntity();
-            $result = $entity->setData(array_shift($data));
+        if ($event->isCanceled()) {
+            return false;
         }
 
-        return $result;
+        $builder = $event->getBuilder();
+
+        //convert entity to adapter again
+        $adapter = $this->loadAdapter($builder->getEntity());
+
+        $connection = Manager::getInstance()->getConnection();
+        $isSelect = $builder->getType() === QueryBuilder::SELECT;
+
+        $statement = $isSelect ?
+            //execute query and receive a statement
+            $connection->executeQuery($this->getSQL(), $this->getParameters(), $this->getParameterTypes()) :
+
+            //execute query and receive a count of affected rows
+            $connection->executeUpdate($this->getSQL(), $this->getParameters(), $this->getParameterTypes());
+
+        //execute after events and proceed with result from event
+        $event = $this->afterExecute(
+            $isSelect ?
+                $statement->fetchAll() :
+                $statement,
+            $adapter, $builder);
+
+        if ($event->isCanceled()) {
+            return false;
+        }
+
+        $data = $adapter->hydrate($event->getResult(), $option);
+        gc_collect_cycles();
+
+        return $data;
     }
 
     /**
-     * Magic call of builder methods
+     * Get query type name
+     * @return string
+     * @throws \Exception
+     */
+    public function getTypeName()
+    {
+        switch ($this->getType()) {
+            case QueryBuilder::SELECT:
+                return 'select';
+            case QueryBuilder::INSERT:
+                return 'insert';
+            case QueryBuilder::UPDATE:
+                return 'update';
+            case QueryBuilder::DELETE:
+                return 'delete';
+            // @codeCoverageIgnoreStart
+            default:
+                //this could only happen if query will be extended and a custom getType is return invalid type
+                throw new \Exception('Unknown query type ' . $this->getType());
+        }
+        // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * Magic call of \Doctrine\DBAL\Query\QueryBuilder methods
      *
-     * @param $name
-     * @param $arguments
+     * @param string|callable $name
+     * @param array $arguments
      * @return mixed
      */
-    public function __call($name, $arguments)
+    public function __call($name, array $arguments = [])
     {
         $result = call_user_func_array([$this->getBuilder(), $name], $arguments);
         return $result instanceof QueryBuilder ? $this : $result;
+    }
+
+    /**
+     * Emit events before query handling and if entity is able to emit events execute entity events
+     *
+     * @param $entity
+     * @return QueryBuilderEvent
+     */
+    private function beforeExecute($entity)
+    {
+        $builder = $this;
+        $event = $this->getEmitter()->emit(new QueryBuilderEvent('before.' . $this->getTypeName(), $builder));
+
+        if ($entity instanceof EmitterAwareInterface) {
+            $event = $entity->getEmitter()->emit($event, $builder);
+        }
+
+        return $event;
+    }
+
+    /**
+     * Emit events after query handling and if entity is able to emit events execute entity events
+     *
+     * @param mixed $result Raw result
+     * @param mixed $entity Entity which contains the events
+     * @param Query $builder
+     * @return QueryResultEvent
+     */
+    private function afterExecute($result, $entity, $builder)
+    {
+
+        $event = $this->getEmitter()->emit(new QueryResultEvent('after.' . $builder->getTypeName(), $result), $builder);
+
+        if ($entity instanceof EmitterAwareInterface) {
+            $event = $entity->getEmitter()->emit($event, $builder);
+        }
+
+        return $event;
+    }
+
+    /*
+     * --------------------------------------------------------------------------
+     *              IMPROVED QUERY BUILDER METHODS
+     * --------------------------------------------------------------------------
+     */
+
+    /**
+     * Specifies an item that is to be returned in the query result.
+     * Replaces any previously specified selections, if any.
+     *
+     * <code>
+     *     $qb = $conn->createQueryBuilder()
+     *         ->select('u.id', 'p.id')
+     *         ->from('users', 'u')
+     *         ->leftJoin('u', 'phonenumbers', 'p', 'u.id = p.user_id');
+     * </code>
+     *
+     * @param array $select The selection expressions.
+     *
+     * @return $this Query instance
+     */
+    public function select(array $select = [])
+    {
+        if (count($select) < 1) {
+            $select = ['*'];
+        }
+
+        return $this->__call(__FUNCTION__, [$select]);
     }
 
 }

@@ -11,25 +11,72 @@
  *
  */
 
-namespace Stubs\Entities;
+namespace Blast\Tests\Orm\Stubs\Entities;
 
 
-use Blast\Db\Entity\AbstractEntity;
-use Blast\Db\Schema\Table;
-use Doctrine\DBAL\Types\Type;
+use Blast\Orm\Data\AccessorTrait;
+use Blast\Orm\Data\DataObjectInterface;
+use Blast\Orm\Data\ImmutableDataObjectTrait;
+use Blast\Orm\Data\MutableDataObjectTrait;
 
-class User extends AbstractEntity
+/**
+ * @codeCoverageIgnore
+ */
+class User
 {
+    /**
+     * @var int
+     */
+    private $id;
 
     /**
-     * Configure entity
+     * @var string
      */
-    public function configure()
-    {
-        $table = new Table('user');
-        $table->addColumn('id', Type::INTEGER);
-        $table->addColumn('name', Type::STRING);
-        $table->setPrimaryKey(['id']);
-        $this->setTable($table);
+    private $name;
+
+    public static function getTable(){
+        return 'user';
     }
+
+    public static function getPrimaryKeyName(){
+        return 'pk';
+    }
+
+    /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param int $id
+     * @return User
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param string $name
+     * @return User
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+
 }

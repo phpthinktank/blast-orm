@@ -16,6 +16,28 @@ Via Composer
 $ composer require blast/orm
 ```
 
+## Concept
+
+### Entities
+
+Entity classes are representations of a database objects like a table or view. There is __no need__ to extend any other 
+class. 
+
+There is __no need__ to extend any other class. Entity classes are basically plain classes and could be designed as you 
+like. You could use prepared traits and classes of `Blast\Orm\Data` package to be more efficient.
+
+Entity classes could also be instances of [`stdClass`](http://php.net/manual/en/reserved.classes.php), [`ArrayObject`](http://php.net/manual/de/class.arrayobject.php) or [`DataObject`](src/Data/DataObject.php) 
+
+### Query
+
+The query acts as accessor to the persistence layer. Instead of to use a big data repository, Blast ORM uses a query class. 
+The query class is able to process the result as raw array or a map the result to a single entity class or a collection 
+of entity classes.
+
+### Repository
+
+The repository The repository mediates between query (dbal) and entities.
+  
 ## Usage
 
 ### Initialize
@@ -25,246 +47,267 @@ Create a factory with [container-interopt](https://github.com/container-interop/
 ```php
 <?php
 
-use Blast\Db\Factory;
+use Blast\Orm\Manager;
 use League\Container;
 
 
-Factory::create(new Container(), [
+Manager::create(new Container(), [
     'url' => 'sqlite:///:memory:',
     'memory' => 'true'
 ]);
 
 ```
 
-### Working with Entities
-
-Entities representing database tables as objects. Entities know their fields, indexes and relations. Create a table 
-instance for reference to database table.
-
-```php
-<?php
-
-use Blast\Db\Entity\AbstractEntity;
-use Blast\Db\Schema\Table;
-use Doctrine\DBAL\Types\Type;
-
-class Post extends AbstractEntity
-{
-
-    /**
-     * Configure entity
-     */
-    public function configure()
-    {
-        $table = new Table('post');
-        $table->addColumn('id', Type::INTEGER)
-            ->setAutoincrement(true)
-            ->setLength(10);
-        $table->addColumn('title', Type::STRING);
-        $table->addColumn('content', Type::TEXT);
-        $table->addColumn('date', Type::DATETIME)
-            ->setDefault(new \DateTime());
-        $table->setPrimaryKey(['id']);
-
-        //set entity table
-        $this->setTable($table);
-    }
-}
-
-```
-
-#### Accessor
-
-Accessing data with `get`
-
-```php
-<?php
-
-$content = $post->get('content');
-```
-
-Accessing data by property, which is internal calling `get`
-
-```php
-<?php
-
-$content = $post->content;
-
-//or with magic accessor
-$content = $post->getContent();
-```
-
-Manipulating accessor with `value.get` event, for example passing html markup to post title.
-
-```php
-<?php
-
-$post->getEmitter()->addListener($post::VALUE_GET, function(ValueEvent $event){
-    if($event->getKey() === 'same'){
-        $event->setValue(sprintf('<h1>%s</h1>', $event->getValue()));
-    }
-});
-```
-
-Events could als attached on `AbstractEntity::configure`
-
-#### Mutator
-
-Passing data with `set` to entity
-
-```php
-<?php
-
-$post->set('content', 'A lot of content');
-```
-
-Accessing data by property, which is internal calling `get`
-
-```php
-<?php
-
-$post->content = 'A lot of content';
-
-//or with magic accessor
-$post->setContent('A lot of content');
-```
-
-Manipulating mutator with `value.set` event, for example stripping html markup from post content.
-
-```php
-<?php
-
-$post->getEmitter()->addListener($post::VALUE_SET, function(ValueEvent $event){
-    if($event->getKey() === 'content'){
-        $event->setValue(strip_tags($event->getValue()));
-    }
-});
-```
-
-Events could als attached on `AbstractEntity::configure`
-
-#### Relations
-
-Blast Db is providing a way to connect entities with relations.
-
-Relation types: 
-
-- `HasMany`
-- `HasOne`
-- `BelongsTo`
-- `ManyThrough`
-
-All relations do have the same architecture.
-
-Creating a new relation
-
-```php
-<?php
-
-//...previous code
-
-use Blast\Db\Relations\BelongsTo
-
-class Post extends AbstractEntity
-{
-
-    /**
-     * Configure entity
-     */
-    public function configure()
-    {
-        //... previous configuration
-        $this->addRelation(new BelongsTo($this, new User(), 'id'));
-    }
-}
-```
-
-Get related entity from entity like any field
-
-```php
-<?php
-
-$user = $post->user;
-
-//or with accssor
-$user = $post->get('user');
-
-//or with magic accessor
-$user = $post->getUser();
-```
-
-Update entity with related entity
-
-```php
-<?php
-
-$post->user->name = "fred";
-$mapper->save($post);
-```
-
-Add a new related entity
-
-```php
-<?php
-
-$user = new User();
-$user->name = "Peter Pan";
-
-$post->user = $user;
-$mapper->save($post);
-```
-
-If an entity is deleted, it's related entities will not deleted or updated!
-
-Access relation object
-
-```php
-<?php
-
-$userRelation = $post->getRelation('user');
-```
-
-Check if relation exists
-
-```php
-<?php
-
-$hasRelation = $post->hasRelation('user');
-```
-
 ### Query
 
-The query object is the foundation of accessing and persisting data. It is providing all high level API methods of 
-[doctrine 2 query builder](http://doctrine-orm.readthedocs.org/projects/doctrine-orm/en/latest/reference/query-builder.html#high-level-api-methods).
+The query object is is providing all high level API methods of [doctrine 2 query builder](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/query-builder.html#security-safely-preventing-sql-injection).
 
 Create a new query for entity
 
 ```php
 <?php
 
-$query = new Query($post);
+$query = new Query();
 ```
 
-Do a complex query
+#### select
 
-```php
-<?php
-$query->select() // string 'u' is converted to array internally
-   ->from($post->getTable()->getName(), 'p')
-   ->where($qb->expr()->orX(
-       $query->expr()->eq('p.id', 1),
-       $query->expr()->like('p.title', "Hello%")
-   ))
-   ->orderBy('p.date', 'ASC'));
-```
-
-Execute query and get result
+Get all posts as `Blast\Orm\Data\DataObject` containing post as `Blast\Orm\Query\Result` 
 
 ```php
 <?php
 
-$result = $query->execute();
+$result = $query->select()->from('post', 'p')->execute();
+
+//get data from result
+$title = $result->get('title');
+$content = $result->get('content');
+
 ```
+
+Get post by id as `Blast\Orm\Query\Result`
+
+```php
+<?php
+
+$id = 1;
+$results = $query->select()
+    ->from('post', 'p')
+    ->where('id = :id')
+    ->setParameter('id', $id)
+    ->execute();
+
+//loop results and get data 
+foreach($results as $result){
+    $title = $result->get('title');
+    $content = $result->get('content');
+}
+
+```
+
+#### create
+
+Create a new entry and get number of affected rows
+
+```php
+<?php
+
+$affectedRows = $query->insert()
+    ->setValue('title', 'New Blog post')
+    ->setValue('content', 'some blog content')
+    ->execute();
+```
+
+#### update
+
+Update an entry and get number of affected rows
+
+```php
+<?php
+
+$affectedRows = $query->update()
+    ->set('title', 'New Blog post')
+    ->where('id = :id')
+    ->setParameter('id', 1)
+    ->execute();
+```
+
+#### delete
+
+Delete entries and get number of affected rows
+
+```php
+<?php
+
+$affectedRows = $query->delete()
+    ->where('id = :id')
+    ->setParameter('id', 1)
+    ->execute();
+```
+
+```php
+<?php 
+
+### Working with Entities
+
+Entity classes are independent of Blast ORM. Blast ORM is using an entity adaption to access entity data and definition
+
+```php
+<?php
+
+class Post
+{
+
+}
+```
+
+#### Table name
+
+If entity class does not define a table name, the table name is determined automatically by class name without namespace. 
+  
+`App\Entities\Post` will have `post` as table name.
+
+Pass a custom `table` as a static method or static property as follows
+ 
+ - `Entity::getTable()`
+ - `Entity::table()`
+ - `Entity::$table`
+
+```php
+<?php
+
+class Post
+{
+
+    /**
+     * Get table for model
+     *
+     * @return string
+     */
+    public static function getTable()
+    {
+        return 'post';
+    }
+}
+
+```
+
+#### Primary key name
+
+If entity class does not define a primary key name, the primary key name is `id`.
+
+Similar to `table` you could a customize `primaryKeyName` as follows
+ 
+ - `Entity::getPrimaryKeyName()`
+ - `Entity::primaryKeyName()`
+ - `Entity::$primaryKeyName`
+
+```php
+<?php
+
+class Post
+{
+
+    /**
+     * Get table for model
+     *
+     * @return string
+     */
+    public static function getPrimaryKeyName()
+    {
+        return 'id';
+    }
+}
+
+```
+
+### Repository
+
+#### Get repository
+
+```php
+<?php
+
+use Blast\Orm;
+
+$repository = new Repository($post);
+
+```
+
+#### find
+
+Fetch one entry by primary key
+
+```php
+<?php
+
+$post = $repository->find(1);
+
+```
+
+#### select
+
+Custom select query
+
+```php
+<?php
+
+$first = $repository->select()->where('title = "Hello world"')->setMaxResults(1)->execute(Query::RESULT_ENTITY);
+```
+
+#### all
+
+Fetch all entries
+
+```php
+<?php
+//find all posts as collection
+$posts = $repository->all();
+
+foreach($posts as $post){
+
+    //do something
+
+}
+
+```
+
+#### save
+
+Save is determining whether to create or update an entity, but you could also use `update` or `create` instead of save.
+
+```php
+<?php
+
+$post->title = 'Hello World';
+$post->content = 'Some content about hello world.';
+$post->date = new \DateTime();
+
+//create or update entity
+$repository->save($post);
+```
+
+#### delete
+
+`delete` expects an primary key or an array of primary keys.
+
+Delete onw entry
+
+```php
+<?php
+
+$repository->delete(1);
+```
+
+Delete many entries
+
+```php
+<?php
+
+$repository->delete([1, 2]);
+```
+
+### Advanced execution for select
 
 Execute query and get result as entity
 
@@ -289,137 +332,6 @@ Execute query and get raw result as array
 
 $result = $query->execute(Query::RESULT_RAW);
 ```
-
-### Object relational mapper - ORM
-
-ORM is utilizing convenient CRUD (create, read, update, delete) methods of accessing and persisting data. It uses previous introduced Query as foundation
-and acts as addition for he query object instead of a foundation for database communication.
-
-#### Get mapper
-
-Get mapper from entity.
-
-```php
-<?php
-
-$post = new Post;
-$mapper = $post->getMapper();
-```
-
-Create new mapper with entity
-
-```php
-<?php
-
-use Blast\Db\Orm;
-
-$mapper = new Mapper($post);
-
-```
-
-#### Save data
-
-Save is determining whether to create or update an entity, but you could also use update or create instead of save. All work as the same!
-
-```php
-<?php
-
-$post->title = 'Hello World';
-$post->content = 'Some content about hello world.';
-$post->date = new \DateTime();
-
-//create or update entity
-$mapper->save($post);
-```
-
-Save many entries as array
-
-```php
-<?php
-
-$mapper->save([$post, $post2]);
-```
-
-Save many entries from collection, e.g. from manipulated previous result
-
-```php
-<?php
-
-use Blast\Db\Entity\Collection;
- 
-$collection = new Collection([$post, $post2]);
-
-$mapper->save($collection);
-```
-
-#### Delete data
-
-Delete is following the same behaviour like save, create or update, but is removing instead of manipulating data
-
-Delete onw entry
-
-```php
-<?php
-
-$mapper->delete($post);
-```
-
-Delete many entries
-
-```php
-<?php
-
-$mapper->delete([$post, $post2]);
-```
-
-Delete a collection of entries
-
-```php
-<?php
-
-use Blast\Db\Entity\Collection;
- 
-$collection = new Collection([$post, $post2]);
-$mapper->delete($collection);
-```
-
-#### Working with data
-
-Fetch one entry by primary key
-
-```php
-<?php
-
-$post = $mapper->find(1);
-
-```
-
-Fetch one entry by query
-
-```php
-<?php
-
-$first = $mapper->select()->where('title = "Hello world"')->setMaxResults(1)->execute(Query::RESULT_ENTITY);
-```
-
-Fetch all entries
-
-```php
-<?php
-//find all posts as collection
-$posts = $mapper->all();
-
-foreach($posts as $post){
-
-    //do somesthing
-
-}
-
-```
-
-### Data conversion
-
-Convert a collection or entity into an array or json with `toArray` and `toJson`;
 
 ## Further development
 

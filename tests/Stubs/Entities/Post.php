@@ -6,43 +6,33 @@
  * Time: 17:04
  */
 
-namespace Blast\Tests\Db\Stubs\Entities;
+namespace Blast\Tests\Orm\Stubs\Entities;
 
-use Blast\Db\Entity\AbstractEntity;
-use Blast\Db\Events\ValueEvent;
-use Blast\Db\Relations\BelongsTo;
-use Blast\Db\Schema\Table;
-use Doctrine\DBAL\Types\Type;
-use Stubs\Entities\User;
+use Blast\Orm\Data\AccessorInterface;
+use Blast\Orm\Data\AccessorTrait;
+use Blast\Orm\Data\DataObjectInterface;
+use Blast\Orm\Data\ImmutableDataObjectTrait;
+use Blast\Orm\Data\MutableDataObjectTrait;
+use Blast\Orm\Data\MutatorInterface;
+use Blast\Orm\Data\MutatorTrait;
 
-class Post extends AbstractEntity
+/**
+ * @codeCoverageIgnore
+ */
+class Post implements DataObjectInterface, AccessorInterface, MutatorInterface
 {
+    use MutableDataObjectTrait;
+    use AccessorTrait;
+    use MutatorTrait;
+    use ImmutableDataObjectTrait;
 
     /**
-     * Configure entity
+     * Get table for model
+     *
+     * @return string
      */
-    public function configure()
+    public static function getTable()
     {
-        $table = new Table('post');
-        $table->addColumn('id', Type::INTEGER);
-        $table->addColumn('user_id', Type::INTEGER);
-        $table->addColumn('title', Type::STRING)->setLength(255);
-        $table->addColumn('content', Type::TEXT);
-        $table->setPrimaryKey(['id']);
-        $this->setTable($table);
-
-        $this->addRelation(new BelongsTo($this, new User()));
-
-        $this->getEmitter()->addListener(self::VALUE_GET, function(ValueEvent $event){
-            if($event->getKey() === 'title'){
-                $event->setValue(sprintf('<h1>%s</h1>', $event->getValue()));
-            }
-        });
-
-        $this->getEmitter()->addListener(self::VALUE_GET, function(ValueEvent $event){
-            if($event->getKey() === 'content'){
-                $event->setValue(strip_tags($event->getValue()));
-            }
-        });
+        return 'post';
     }
 }
