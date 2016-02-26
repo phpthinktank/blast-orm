@@ -111,9 +111,16 @@ class Repository implements RepositoryInterface, EntityAwareInterface
      */
     public function create($entity)
     {
+        //load entity adaption
+        $adapter = $this->loadAdapter($entity);
+
+        //disallow differing entities
+        if($adapter->getClassName() !== $this->getAdapter()->getClassName()){
+            return 0;
+        }
+
         //prepare statement
         $query = $this->createQuery();
-        $adapter = $this->loadAdapter($entity);
         $query->insert($adapter->getTableName());
         $data = $adapter->getData();
 
@@ -142,13 +149,21 @@ class Repository implements RepositoryInterface, EntityAwareInterface
      */
     public function update($entity)
     {
-        //prepare statement
-
+        //load entity adaption
         $adapter = $this->loadAdapter($entity);
+
+        //disallow differing entities
+        if($adapter->getClassName() !== $this->getAdapter()->getClassName()){
+            return 0;
+        }
+
         $pkName = $adapter->getPrimaryKeyName();
+
+        //prepare statement
         $query = $this->createQuery();
         $query->update($adapter->getTableName());
 
+        //pass data
         $data = $adapter->getData();
 
         foreach ($data as $key => $value) {
@@ -172,7 +187,6 @@ class Repository implements RepositoryInterface, EntityAwareInterface
             $identifiers = [$identifiers];
         }
 
-        $entity = $this->getEntity();
         $adapter = $this->getAdapter();
 
         //prepare statement
