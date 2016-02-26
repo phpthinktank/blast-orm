@@ -145,9 +145,6 @@ $affectedRows = $query->delete()
     ->execute();
 ```
 
-```php
-<?php 
-
 ### Working with Entities
 
 Entity classes are independent of Blast ORM. Blast ORM is using an entity adaption to access entity data and definition
@@ -159,6 +156,7 @@ class Post
 {
 
 }
+
 ```
 
 #### Table name
