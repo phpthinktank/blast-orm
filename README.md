@@ -47,11 +47,11 @@ Create a factory with [container-interopt](https://github.com/container-interop/
 ```php
 <?php
 
-use Blast\Db\Factory;
+use Blast\Orm\Manager;
 use League\Container;
 
 
-Factory::create(new Container(), [
+Manager::create(new Container(), [
     'url' => 'sqlite:///:memory:',
     'memory' => 'true'
 ]);
