@@ -16,6 +16,10 @@ Via Composer
 $ composer require blast/orm
 ```
 
+## Example
+
+An example can be found in this [blog post](http://bit.ly/php-orm).
+
 ## Concept
 
 ### Entities
