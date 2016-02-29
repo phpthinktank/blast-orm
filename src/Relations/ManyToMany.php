@@ -54,12 +54,11 @@ class ManyToMany implements RelationInterface
         $foreignQuery = new Query($foreignEntity);
         $foreignQuery->select([$pivotForeignKey]);
 
-        foreach($result as $foreignKeyValue){
-            $foreignQuery->where($query->expr()->eq($foreignKey, $foreignKeyValue));
+        foreach($result as $value){
+            $foreignQuery->where($query->expr()->eq($foreignKey, $value[$foreignKey]));
         }
 
         $this->query =  $foreignQuery;
-
         $this->name = $foreignAdapter->getTableName();
     }
 }
