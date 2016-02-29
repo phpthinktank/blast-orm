@@ -13,6 +13,7 @@
 
 namespace Blast\Orm\Entity;
 
+use Blast\Orm\MapperInterface;
 use Blast\Orm\Query;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
@@ -76,5 +77,12 @@ interface EntityAdapterInterface extends EmitterAwareInterface
      * @return Query
      */
     public function getQuery();
+
+    /**
+     * Get entity mapper
+     *
+     * @return MapperInterface
+     */
+    public function getMapper();
 
 }

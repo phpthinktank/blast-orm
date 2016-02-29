@@ -17,6 +17,8 @@ namespace Blast\Orm\Entity;
 use Blast\Orm\Data\DataAdapter;
 use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
+use Blast\Orm\Mapper;
+use Blast\Orm\MapperInterface;
 use Blast\Orm\Query;
 use Doctrine\DBAL\Driver\Statement;
 use Doctrine\DBAL\Schema\Index;
@@ -47,6 +49,8 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
      */
     private $query;
 
+    private $mapper;
+
     /**
      * EntityAdapter constructor.
      * @param array|\stdClass|\ArrayObject|object|string $object
@@ -56,7 +60,8 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
         if(!is_object($object)){
             $object = new Query\Result();
         }
-        $this->setObject($object);
+
+        parent::__construct($object);
     }
 
     /**
@@ -169,6 +174,20 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
 
         return $isNew;
     }
+
+    /**
+     * Get entity mapper
+     *
+     * @return MapperInterface
+     */
+    public function getMapper()
+    {
+        if($this->mapper === null){
+            $this->mapper = new Mapper($this->getObject());
+        }
+        return $this->access('mapper', $this->mapper, \ReflectionMethod::IS_STATIC);
+    }
+
 
     /**
      * Pass data to result or model

@@ -1,19 +1,26 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Marco Bunge
- * Date: 26.11.2015
- * Time: 16:09
+ *
+ * (c) Marco Bunge <marco_bunge@web.de>
+ *
+ * For the full copyright and license information, please view the LICENSE.txt
+ * file that was distributed with this source code.
+ *
+ * Date: 29.02.2016
+ * Time: 11:19
+ *
  */
 
 namespace Blast\Tests\Orm;
 
+
 use Blast\Orm\ConnectionCollectionInterface;
 use Blast\Orm\Data\DataObject;
+use Blast\Orm\EntityAwareInterface;
 use Blast\Orm\Manager;
-use Blast\Orm\Repository;
+use Blast\Orm\RepositoryInterface;
 use Blast\Tests\Orm\Stubs\Entities\Post;
-use Blast\Tests\Orm\Stubs\Entities\User;
+use Blast\Tests\Orm\Stubs\PostRepository;
 use Interop\Container\ContainerInterface;
 
 class RepositoryTest extends \PHPUnit_Framework_TestCase
@@ -57,30 +64,19 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
         Manager::shutdown();
     }
 
-    /**
-     * select any field
-     */
-    public function testSelect()
-    {
-        $mapper = new Repository(new Post());
-
-        $query = $mapper->select();
-        $result = $query->where('user_id = 1')->execute();
-
-        $this->assertInstanceOf(DataObject::class, $result);
-        $this->assertEquals(2, $result->count());
+    public function testImplementsRepositoryInterface(){
+        $this->assertTrue(is_subclass_of(PostRepository::class, RepositoryInterface::class));
     }
 
-    /**
-     * find by pk
-     */
-    public function testFind()
-    {
-        $mapper = new Repository(new Post);
+    public function testImplementsEntityAwareInterface(){
+        $this->assertTrue(is_subclass_of(PostRepository::class, EntityAwareInterface::class));
+    }
 
-        $result = $mapper->find(1);
+    public function testFind(){
+        $post = (new PostRepository())->find(1);
 
-        $this->assertInstanceOf(Post::class, $result);
+        $this->assertInstanceOf(Post::class, $post);
+        $this->assertEquals($post->get('id'), 1);
     }
 
     /**
@@ -88,106 +84,41 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
      */
     public function testAll()
     {
-        $mapper = new Repository(new Post);
+        $posts = (new PostRepository())->all();
 
-        $result = $mapper->all();
-
-        $this->assertInstanceOf(DataObject::class, $result);
-        $this->assertNotInstanceOf(Post::class, $result);
+        $this->assertInstanceOf(DataObject::class, $posts);
+        $this->assertNotInstanceOf(Post::class, $posts);
     }
 
-    /**
-     * create new entry
-     */
-    public function testCreate()
-    {
-        $mapper = new Repository(new Post);
-
+    public function testSaveNewObject(){
         $post = new Post();
-        $post->id = 3;
-        $post->user_id = 1;
-        $post->title = 'first created post';
-        $post->content = 'A new post!';
+        $post->set('title', 'My very new Title');
+        $post->set('content', 'the content!');
 
-        $result = $mapper->create($post);
+        $repository = new PostRepository();
+        $result = $repository->save($post);
 
-        $this->assertEquals($result, 1);
+        $this->assertEquals(1, $result);
     }
 
-    /**
-     * create new entry
-     */
-    public function testCreateNothing()
-    {
-        $mapper = new Repository(new Post);
+    public function testSaveNewDataArray(){
+        $repository = new PostRepository();
+        $result = $repository->save([
+            'title' => 'My very new Title',
+            'content' => 'the content!'
+        ]);
 
-        $post = new Post();
-
-        $result = $mapper->create($post);
-
-        $this->assertEquals(0, $result);
+        $this->assertEquals(1, $result);
     }
 
-    /**
-     * update existing entry
-     */
-    public function testUpdate()
-    {
-        $mapper = new Repository(new Post);
-        $result = $mapper->find(1);
-        $this->assertInstanceOf(Post::class, $result);
-        $result->title .= ' Again!';
+    public function testSaveExistingObject(){
 
-        $this->assertEquals(1, $mapper->update($result));
+        $repository = new PostRepository();
+        $post = $repository->find(1);
+        $post->set('title', 'My very new Title');
+        $result = $repository->save($post);
+
+        $this->assertEquals(1, $result);
     }
 
-    /**
-     * update existing entry
-     */
-    public function testSaveANewEntry()
-    {
-        $mapper = new Repository(new Post);
-
-        $post = new Post();
-        $post->id = 3;
-        $post->user_id = 1;
-        $post->title = 'first created post';
-        $post->content = 'A new post!';
-
-        $result = $mapper->save($post);
-
-        $this->assertEquals($result, 1);
-    }
-
-    /**
-     * update existing entry
-     */
-    public function testSaveExisting()
-    {
-        $mapper = new Repository(new Post);
-        $result = $mapper->find(1);
-        $this->assertInstanceOf(Post::class, $result);
-        $result->title .= ' Again!';
-
-        $this->assertEquals(1, $mapper->save($result));
-    }
-
-    /**
-     * delete entry by pk
-     */
-    public function testDelete()
-    {
-        $mapper = new Repository(new Post);
-        $result = $mapper->delete(1);
-
-        $this->assertEquals($result, 1);
-    }
-
-    public function testPlainObjectImplementation()
-    {
-        $mapper = new Repository(User::class);
-        $user = $mapper->find(1);
-
-        $this->assertInstanceOf(User::class, $user);
-    }
 }

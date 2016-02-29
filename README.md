@@ -40,7 +40,7 @@ of entity classes.
 
 ### Repository
 
-The repository The repository mediates between query (dbal) and entities.
+The repository mediates between query (dbal) and entities.
   
 ## Usage
 

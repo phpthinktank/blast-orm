@@ -27,7 +27,7 @@ use stdClass;
  *
  * @package Blast\Db\Orm
  */
-class Repository implements RepositoryInterface, EntityAwareInterface
+class Mapper implements MapperInterface, EntityAwareInterface
 {
 
     use EntityAwareTrait;
@@ -66,31 +66,22 @@ class Repository implements RepositoryInterface, EntityAwareInterface
     }
 
     /**
-     * Find result by field or primary key
+     * Select query for finding entity by primary key
      *
-     * @param mixed $value
-     * @return ArrayObject|stdClass|Result
+     * @param mixed $primaryKey
+     * @return Query
      */
-    public function find($value)
+    public function find($primaryKey)
     {
         $query = $this->select();
         $field = $this->getAdapter()->getPrimaryKeyName();
-        $query->where($query->expr()->eq($field, $query->createPositionalParameter($value)));
-        return $query->execute(EntityAdapter::RESULT_ENTITY);
+        $query->where($query->expr()->eq($field, $query->createPositionalParameter($primaryKey)));
+        return $query;
     }
 
     /**
-     * Get a collection of all entities
+     * Select query for entity
      *
-     * @return \ArrayObject|\stdClass|DataObject|object
-     */
-    public function all()
-    {
-        return $this->select()->execute(EntityAdapter::RESULT_COLLECTION);
-    }
-
-    /**
-     * Get a statement and build a query. Table is already selected
      * @param array $selects
      * @return Query
      */
@@ -104,19 +95,19 @@ class Repository implements RepositoryInterface, EntityAwareInterface
     }
 
     /**
-     * Create a new Model or a collection of entities in storage.
+     * Create query for new entity.
      *
-     * @param DataObject|ArrayObject|stdClass|Result|object $entity
-     * @return int|int[]|bool[]|bool
+     * @param array|DataObject|\ArrayObject|\stdClass|Result|object $entity
+     * @return Query|bool
      */
     public function create($entity)
     {
         //load entity adaption
-        $adapter = $this->loadAdapter($entity);
+        $adapter = $this->prepareAdapter($entity);
 
         //disallow differing entities
         if($adapter->getClassName() !== $this->getAdapter()->getClassName()){
-            return 0;
+            throw new \InvalidArgumentException('Try to create differing entity!');
         }
 
         //prepare statement
@@ -126,35 +117,30 @@ class Repository implements RepositoryInterface, EntityAwareInterface
 
         //cancel if $data has no entries
         if(count($data) < 1){
-            return 0;
+            return false;
         }
 
         foreach ($data as $key => $value) {
             $query->setValue($key, $query->createPositionalParameter($value));
         }
 
-        return $query->execute();
+        return $query;
     }
 
     /**
-     * Update an existing Model or a collection of entities in storage
+     * Update query for existing Model or a collection of entities in storage
      *
-     * Returns false on error and 0 when nothing has been updated!
-     *
-     * Optional force update of entities without updates
-     *
-     * @param DataObject|ArrayObject|stdClass|Result|object $entity
-     * @return int|int[]|bool[]|bool
-     * @throws \Doctrine\DBAL\Schema\SchemaException
+     * @param array|DataObject|\ArrayObject|\stdClass|Result|object $entity
+     * @return Query
      */
     public function update($entity)
     {
         //load entity adaption
-        $adapter = $this->loadAdapter($entity);
+        $adapter = $this->prepareAdapter($entity);
 
         //disallow differing entities
         if($adapter->getClassName() !== $this->getAdapter()->getClassName()){
-            return 0;
+            throw new \InvalidArgumentException('Try to update differing entity!');
         }
 
         $pkName = $adapter->getPrimaryKeyName();
@@ -172,14 +158,14 @@ class Repository implements RepositoryInterface, EntityAwareInterface
 
         $query->where($query->expr()->eq($pkName, $data[$pkName]));
 
-        return $query->execute();
+        return $query;
     }
 
     /**
-     * Delete attached entity by identifiers
+     * Prepare delete query for attached entity by identifiers
      *
      * @param array|int|string $identifiers
-     * @return int
+     * @return query
      */
     public function delete($identifiers)
     {
@@ -199,19 +185,37 @@ class Repository implements RepositoryInterface, EntityAwareInterface
             $query->orWhere($query->expr()->eq($pkName, $query->createPositionalParameter($identifier)));
         }
 
-        return $query->execute();
+        return $query;
     }
 
     /**
      * Create or update an entity
      *
-     * Optional force update of entities without updates
-     *
      * @param DataObject|\ArrayObject|\stdClass|Result|object $entity
-     * @return int
+     * @return Query
      */
     public function save($entity)
     {
         return $this->loadAdapter($entity)->isNew() ? $this->create($entity) : $this->update($entity);
+    }
+
+    /**
+     * @param $entity
+     * @return EntityAdapter $adapter
+     */
+    private function prepareAdapter($entity)
+    {
+        if (is_array($entity)) {
+            $data = $entity;
+            $entity = $this->getEntity();
+            $adapter = $this->loadAdapter($entity);
+            $adapter->setData($data);
+        } elseif (is_object($entity)) {
+            $adapter = $this->loadAdapter($entity);
+        } else {
+            throw new \InvalidArgumentException('entity needs to be an array of data or object. ' . gettype($entity) . ' given');
+        }
+
+        return $adapter;
     }
 }
