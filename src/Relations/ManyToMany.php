@@ -7,17 +7,18 @@
  * file that was distributed with this source code.
  *
  * Date: 29.02.2016
- * Time: 12:14
+ * Time: 16:45
  *
  */
 
 namespace Blast\Orm\Relations;
 
 
+use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Query;
 
-class HasMany implements RelationInterface
+class ManyToMany implements RelationInterface
 {
     use EntityAdapterLoaderTrait;
     use RelationTrait;
@@ -29,26 +30,36 @@ class HasMany implements RelationInterface
      * @param $foreignEntity
      * @param null $foreignKey
      */
-    public function __construct($entity, $foreignEntity, $foreignKey = null)
+    public function __construct($entity, $foreignEntity, $foreignKey = null, $localKey = null, $pivot = null, $pivotLocalKey = null, $pivotForeignKey = null)
     {
         $adapter = $this->loadAdapter($entity);
         $foreignAdapter = $this->loadAdapter($foreignEntity);
 
         $data = $adapter->getData();
 
-        //find primary key
-        $foreignKeyValue = $data[$adapter->getPrimaryKeyName()];
+        $localKey = $adapter->getPrimaryKeyName();
+
         if($foreignKey === null){
-            $foreignKey = $adapter->getTableName() . '_' . $adapter->getPrimaryKeyName();
+            $foreignKey = $foreignAdapter->getTableName() . '_' . $foreignAdapter->getPrimaryKeyName();
         }
 
         $mapper = $foreignAdapter->getMapper();
 
+        $query = new Query();
+
         //if no primary key is available, return a select
 
-        $this->query = $mapper->select()->where((new Query())->expr()->eq($foreignKey, $foreignKeyValue));
+        $result = $query->select([$pivotForeignKey])->where($query->expr()->eq($pivotLocalKey, $data[$localKey]))->execute(EntityAdapter::RESULT_RAW);
+
+        $foreignQuery = new Query($foreignEntity);
+        $foreignQuery->select([$pivotForeignKey]);
+
+        foreach($result as $foreignKeyValue){
+            $foreignQuery->where($query->expr()->eq($foreignKey, $foreignKeyValue));
+        }
+
+        $this->query =  $foreignQuery;
 
         $this->name = $foreignAdapter->getTableName();
     }
-
 }
