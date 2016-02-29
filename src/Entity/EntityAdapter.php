@@ -17,11 +17,12 @@ namespace Blast\Orm\Entity;
 use Blast\Orm\Data\DataAdapter;
 use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
+use Blast\Orm\Manager;
 use Blast\Orm\Mapper;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Query;
+use Blast\Orm\Relations\RelationInterface;
 use Doctrine\DBAL\Driver\Statement;
-use Doctrine\DBAL\Schema\Index;
 use League\Event\EmitterAwareTrait;
 
 class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataHydratorInterface
@@ -57,7 +58,14 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
      */
     public function __construct($object = null)
     {
-        if(!is_object($object)){
+        if (is_string($object)) {
+            if (Manager::getInstance()->getContainer()->has($object)) {
+                $object = Manager::getInstance()->getContainer()->get($object);
+            } elseif (class_exists($object)) {
+                $object = new $object;
+            }
+        }
+        if (!is_object($object)) {
             $object = new Query\Result();
         }
 
@@ -110,11 +118,49 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
         return $this->access('index', [], null, \ReflectionMethod::IS_STATIC);
     }
 
+    /**
+     * Return an array of relations
+     * @return RelationInterface[]
+     */
     public function getRelations()
     {
-        return $this->access('relations', [], null, \ReflectionMethod::IS_STATIC);
+        $reflection = $this->getReflection();
+        $default = [];
+        if (!$reflection->hasMethod('relations')) {
+            return $default;
+        }
+
+        $method = $reflection->getMethod('relations');
+
+        if (!$method->isStatic()) {
+            return $default;
+        }
+
+        $relations = $method->invokeArgs($this->getObject(), [$this->getObject()]);
+
+        $result = [];
+        foreach ($relations as $name => $relation) {
+            if (!($relation instanceof RelationInterface)) {
+                continue;
+            }
+            if (is_numeric($name)) {
+                $name = $relation->getName();
+            }
+
+            //relations must not overwrite data fields by name
+            if (!isset($result[$name])) {
+                $result[$name] = $relation;
+            }
+        }
+        return $result;
     }
 
+    /**
+     * Hydrate data in entity or collection
+     * @param array $data
+     * @param string $option
+     * @return array|\ArrayObject|DataObject|null|object|\stdClass
+     */
     public function hydrate($data = [], $option = self::AUTO)
     {
         if ($this->isRaw($data, $option)) {
@@ -141,12 +187,22 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
         return $entity;
     }
 
+    /**
+     * set query object
+     * @param Query $query
+     * @return mixed|null
+     */
     public function setQuery(Query $query)
     {
         $this->query = $query;
         return $this->mutate('query', $query, \ReflectionMethod::IS_STATIC);
     }
 
+    /**
+     * get query object from entity
+     *
+     * @return mixed|null
+     */
     public function getQuery()
     {
         return $this->access('query', $this->query, \ReflectionMethod::IS_STATIC);
@@ -182,10 +238,27 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
      */
     public function getMapper()
     {
-        if($this->mapper === null){
+        if ($this->mapper === null) {
             $this->mapper = new Mapper($this->getObject());
         }
         return $this->access('mapper', $this->mapper, \ReflectionMethod::IS_STATIC);
+    }
+
+    /**
+     * Fetch all data without relations
+     */
+    public function getDataWithoutRelations()
+    {
+        $data = $this->getData();
+        $relations = $this->getRelations();
+
+        foreach ($data as $key => $value) {
+            if (isset($relations[$key])) {
+                unset($data[$key]);
+            }
+        }
+
+        return $data;
     }
 
 
@@ -196,13 +269,22 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
      */
     protected function map($data = [])
     {
+        //map data
         $this->setData($data);
+
+        //map relations
+        $relations = $this->getRelations();
+        if (count($relations) > 0) {
+            $this->setData($this->getData() + $relations);
+        }
+
         $object = $this->getObject();
         $this->reset();
         return $object;
     }
 
     /**
+     * @param $data
      * @param $option
      * @return bool
      */

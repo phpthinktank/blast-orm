@@ -113,7 +113,9 @@ class Mapper implements MapperInterface, EntityAwareInterface
         //prepare statement
         $query = $this->createQuery();
         $query->insert($adapter->getTableName());
-        $data = $adapter->getData();
+
+        //pass data without relations
+        $data = $adapter->getDataWithoutRelations();
 
         //cancel if $data has no entries
         if(count($data) < 1){
@@ -149,8 +151,8 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $query = $this->createQuery();
         $query->update($adapter->getTableName());
 
-        //pass data
-        $data = $adapter->getData();
+        //pass data without relations
+        $data = $adapter->getDataWithoutRelations();
 
         foreach ($data as $key => $value) {
             $query->set($key, $query->createPositionalParameter($value));

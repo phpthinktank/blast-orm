@@ -14,10 +14,8 @@
 namespace Blast\Tests\Orm\Stubs\Entities;
 
 
-use Blast\Orm\Data\AccessorTrait;
-use Blast\Orm\Data\DataObjectInterface;
-use Blast\Orm\Data\ImmutableDataObjectTrait;
-use Blast\Orm\Data\MutableDataObjectTrait;
+use Blast\Orm\Data\DataObject;
+use Blast\Orm\Relations\HasMany;
 
 /**
  * @codeCoverageIgnore
@@ -27,16 +25,17 @@ class User
     /**
      * @var int
      */
-    private $id;
+    private $pk;
 
     /**
      * @var string
      */
     private $name;
 
-    public static function getTable(){
-        return 'user';
-    }
+    /**
+     * @var DataObject|Post
+     */
+    private $post;
 
     public static function getPrimaryKeyName(){
         return 'pk';
@@ -45,18 +44,18 @@ class User
     /**
      * @return int
      */
-    public function getId()
+    public function getPk()
     {
-        return $this->id;
+        return $this->pk;
     }
 
     /**
-     * @param int $id
+     * @param int $pk
      * @return User
      */
-    public function setId($id)
+    public function setPk($pk)
     {
-        $this->id = $id;
+        $this->pk = $pk;
         return $this;
     }
 
@@ -78,5 +77,24 @@ class User
         return $this;
     }
 
+    /**
+     * @return DataObject|Post
+     */
+    public function getPost()
+    {
+        return $this->post;
+    }
+
+    /**
+     * Get relations
+     * @param $entity
+     * @return array
+     */
+    public static function relations($entity)
+    {
+        return [
+            new HasMany($entity, Post::class, 'user_id')
+        ];
+    }
 
 }

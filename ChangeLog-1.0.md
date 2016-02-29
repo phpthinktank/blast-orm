@@ -7,7 +7,8 @@ All notable changes of the Blast orm 1.0 release series are documented in this f
 ### Added
 
  - `Blast\Orm\Mapper` for accessing and persisting data
-
+ - `Blast\Orm\Relations` component to create relations between entities
+ 
 ### Altered
 
  - `Blast\Orm\Repository` is mediating between entity and mapper delivered by entity, repository queries are excluded to mappers

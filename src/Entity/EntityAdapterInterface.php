@@ -59,6 +59,11 @@ interface EntityAdapterInterface extends EmitterAwareInterface
     public function getRelations();
 
     /**
+     * Fetch all data without relations
+     */
+    public function getDataWithoutRelations();
+
+    /**
      * @param $data
      * @return mixed
      */

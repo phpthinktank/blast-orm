@@ -15,6 +15,7 @@ use Blast\Orm\Data\ImmutableDataObjectTrait;
 use Blast\Orm\Data\MutableDataObjectTrait;
 use Blast\Orm\Data\MutatorInterface;
 use Blast\Orm\Data\MutatorTrait;
+use Blast\Orm\Relations\BelongsTo;
 
 /**
  * @codeCoverageIgnore
@@ -34,5 +35,17 @@ class Post implements DataObjectInterface, AccessorInterface, MutatorInterface
     public static function getTable()
     {
         return 'post';
+    }
+
+    /**
+     * Get relations
+     * @param object $entity
+     * @return array
+     */
+    public static function relations($entity)
+    {
+        return [
+            new BelongsTo($entity, User::class, 'user_id')
+        ];
     }
 }
