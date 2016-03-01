@@ -14,11 +14,16 @@
 namespace Blast\Orm\Entity;
 
 
+use Blast\Orm\Mapper;
+use Blast\Orm\MapperAwareInterface;
+use Blast\Orm\MapperInterface;
 use Blast\Orm\Relations\RelationInterface;
+use Blast\Orm\Relations\RelationsAwareInterface;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
 
-class GenericEntity implements TableNameAwareInterface, PrimaryKeyAwareInterface, FieldAwareInterface, IndexAwareInterface
+class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperAwareInterface,
+    PrimaryKeyAwareInterface, RelationsAwareInterface, TableNameAwareInterface
 {
 
     /**
@@ -30,6 +35,11 @@ class GenericEntity implements TableNameAwareInterface, PrimaryKeyAwareInterface
      * @var Index[]
      */
     private $indexes = [];
+
+    /**
+     * @var MapperInterface
+     */
+    private $mapper = null;
 
     /**
      * @var string
@@ -59,6 +69,13 @@ class GenericEntity implements TableNameAwareInterface, PrimaryKeyAwareInterface
                 return $value instanceof Index;
             }elseif($propertyName === 'relations'){
                 return $value instanceof RelationInterface;
+            }elseif($propertyName === 'mapper'){
+                if(class_exists($value)){
+                    if(!is_object($value)){
+                        $value = new $value($this);
+                    }
+                }
+                return $value instanceof MapperInterface;
             }else{
                 return false;
             }
@@ -109,6 +126,17 @@ class GenericEntity implements TableNameAwareInterface, PrimaryKeyAwareInterface
     public function getIndexes()
     {
         return $this->indexes;
+    }
+
+    /**
+     * @return MapperInterface
+     */
+    public function getMapper()
+    {
+        if($this->mapper === null){
+            $this->mapper = new Mapper($this);
+        }
+        return $this->mapper;
     }
 
     /**

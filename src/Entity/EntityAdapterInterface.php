@@ -14,13 +14,15 @@
 namespace Blast\Orm\Entity;
 
 use Blast\Orm\Data\DataHydratorInterface;
-use Blast\Orm\MapperInterface;
+use Blast\Orm\MapperAwareInterface;
 use Blast\Orm\Query;
+use Blast\Orm\Query\QueryAwareInterface;
 use Blast\Orm\Relations\RelationsAwareInterface;
 use League\Event\EmitterAwareInterface;
 
-interface EntityAdapterInterface extends EmitterAwareInterface, DataHydratorInterface, FieldAwareInterface,
-    IndexAwareInterface, PrimaryKeyAwareInterface, TableNameAwareInterface, RelationsAwareInterface
+interface EntityAdapterInterface extends DataHydratorInterface, EmitterAwareInterface, FieldAwareInterface,
+    IndexAwareInterface, MapperAwareInterface, PrimaryKeyAwareInterface, QueryAwareInterface,
+    RelationsAwareInterface, TableNameAwareInterface
 {
     const DEFAULT_PRIMARY_KEY_NAME = 'id';
 
@@ -56,19 +58,5 @@ interface EntityAdapterInterface extends EmitterAwareInterface, DataHydratorInte
      * @return $this
      */
     public function setQuery(Query $query);
-
-    /**
-     * Get modified query
-     *
-     * @return Query
-     */
-    public function getQuery();
-
-    /**
-     * Get entity mapper
-     *
-     * @return MapperInterface
-     */
-    public function getMapper();
 
 }
