@@ -13,32 +13,17 @@
 
 namespace Blast\Orm\Entity;
 
-use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\MapperAwareInterface;
 use Blast\Orm\Query;
 use Blast\Orm\Query\QueryAwareInterface;
 use Blast\Orm\Relations\RelationsAwareInterface;
 use League\Event\EmitterAwareInterface;
 
-interface EntityAdapterInterface extends DataHydratorInterface, EmitterAwareInterface, FieldAwareInterface,
+interface EntityAdapterInterface extends EntityHydratorInterface, EmitterAwareInterface, FieldAwareInterface,
     IndexAwareInterface, MapperAwareInterface, PrimaryKeyAwareInterface, QueryAwareInterface,
     RelationsAwareInterface, TableNameAwareInterface
 {
     const DEFAULT_PRIMARY_KEY_NAME = 'id';
-
-    /**
-     *
-     */
-    const HYDRATE_COLLECTION = 'collection';
-    /**
-     *
-     */
-    const HYDRATE_ENTITY = 'entity';
-
-    /**
-     *
-     */
-    const HYDRATE_RAW = 'raw';
 
     /**
      * Entity class name

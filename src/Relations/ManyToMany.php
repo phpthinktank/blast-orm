@@ -13,9 +13,9 @@
 
 namespace Blast\Orm\Relations;
 
-
-use Blast\Orm\Entity\EntityAdapter;
+use Blast\Orm\Entity\EntityAdapterInterface;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
+use Blast\Orm\Entity\GenericEntity;
 use Blast\Orm\Query;
 
 class ManyToMany implements RelationInterface
@@ -24,13 +24,19 @@ class ManyToMany implements RelationInterface
     use RelationTrait;
 
     /**
-     * Local entity relates to many entries of foreign entity by foreign key
+     * Many occurrences in local entity relate to many occurrences in foreign entity and vice versa.
+     * The relations are linked by a junction table.
      *
-     * @param $entity
-     * @param $foreignEntity
-     * @param null $foreignKey
+     * @param string|object $entity
+     * @param string|object $foreignEntity
+     * @param null|string $foreignKey          Default field name is {foreign primary key name}
+     * @param null|string $localKey            Default field name is {local primary key name}
+     * @param null|string|object $junction     Default table name is {local entity table name}_{foreign entity table name}
+     * @param null|string $junctionLocalKey    Default field name is {local table name}_{$localKey}
+     * @param null|string $junctionForeignKey  Default field name is {foreign table name}_{$foreignKey}
      */
-    public function __construct($entity, $foreignEntity, $foreignKey = null, $localKey = null, $pivot = null, $pivotLocalKey = null, $pivotForeignKey = null)
+    public function __construct($entity, $foreignEntity, $foreignKey = null, $localKey = null,
+                                $junction = null, $junctionLocalKey = null, $junctionForeignKey = null)
     {
         $adapter = $this->loadAdapter($entity);
         $foreignAdapter = $this->loadAdapter($foreignEntity);
@@ -39,27 +45,43 @@ class ManyToMany implements RelationInterface
 
         $localKey = $adapter->getPrimaryKeyName();
 
-        if($foreignKey === null){
-            $foreignKey = $foreignAdapter->getTableName() . '_' . $foreignAdapter->getPrimaryKeyName();
+        //determine foreign key
+        if ($foreignKey === null) {
+            $foreignKey = $foreignAdapter->getPrimaryKeyName();
         }
 
-        $mapper = $foreignAdapter->getMapper();
+        //determine through
+        if (!is_string($junction) || $junction === null) {
+            $junction = $adapter->getTableName() . '_' . $foreignAdapter->getTableName();
+        }
+
+        $throughAdapter = $this->loadAdapter(is_string($junction) ? new GenericEntity($junction) : $junction);
+
+        //determine through local key
+        if($junctionLocalKey === null){
+            $junctionLocalKey = $adapter->getTableName() . '_' . $localKey;
+        }
+
+        //determine through foreign key
+        if($junctionForeignKey === null){
+            $junctionForeignKey = $foreignAdapter->getTableName() . '_' . $foreignKey;
+        }
 
         $query = new Query();
 
-        //if no primary key is available, return a select
+        //get relations by through db object
+        $results = $throughAdapter->getMapper()
+            ->select([$junctionForeignKey])
+            ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
+            ->execute(EntityAdapterInterface::HYDRATE_RAW);
 
-        $result = $query->select([$pivotForeignKey])->where($query->expr()->eq($pivotLocalKey, $data[$localKey]))->execute(EntityAdapter::RESULT_RAW);
+        $foreignQuery = $foreignAdapter->getMapper()->select([$junctionForeignKey]);
 
-        $foreignQuery = new Query($foreignEntity);
-        $foreignQuery->select([$pivotForeignKey]);
-
-        foreach($result as $foreignKeyValue){
-            $foreignQuery->where($query->expr()->eq($foreignKey, $foreignKeyValue));
+        foreach ($results as $result) {
+            $foreignQuery->where($query->expr()->eq($foreignKey, $result[$junctionForeignKey]));
         }
 
-        $this->query =  $foreignQuery;
-
+        $this->query = $foreignQuery;
         $this->name = $foreignAdapter->getTableName();
     }
 }

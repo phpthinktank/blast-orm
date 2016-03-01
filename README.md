@@ -4,7 +4,7 @@
 [![Software License][ico-license]](LICENSE.md)
 [![Build Status][ico-travis]][link-travis]
 [![Total Downloads][ico-downloads]][link-downloads]
-[![Coverage Status](https://img.shields.io/coveralls/phpthinktank/blast-orm/master.svg?style=flat-square)](https://coveralls.io/github/phpthinktank/blast-orm?branch=1.0.x-dev)
+[![Coverage Status](link-coveralls)
 
 Framework agnostic data access and persistence based on Doctrine 2 DBAL.
 
@@ -24,29 +24,39 @@ An example can be found in this [blog post](http://bit.ly/php-orm).
 
 ### Entities
 
-Entity classes are representations of a database objects like a table or view. There is __no need__ to extend any other 
-class. 
+Entity classes are a memory representations of a database entity. Entity classes are plain objects and don't need to 
+match contracts. You could use prepared traits and classes of `Blast\Orm\Data` component for convenient data handling. 
+It is recommended to use accessors (getters) and mutators (setters) for properties on plain objects.
 
-There is __no need__ to extend any other class. Entity classes are basically plain classes and could be designed as you 
-like. You could use prepared traits and classes of `Blast\Orm\Data` package to be more efficient.
+Entity classes could also be instances of ![`stdClass`](http://php.net/manual/en/reserved.classes.php), 
+![`ArrayObject`](http://php.net/manual/de/class.arrayobject.php) or ![`DataObject`](src/Data/DataObject.php)
 
-Entity classes could also be instances of [`stdClass`](http://php.net/manual/en/reserved.classes.php), [`ArrayObject`](http://php.net/manual/de/class.arrayobject.php) or [`DataObject`](src/Data/DataObject.php) 
+#### Adapters
+
+Blast ORM adapts an entity to access or determine data and definition.
+ 
+### Mappers
+
+Each entity does have it's own mapper. Mappers mediate between dbal and entity and provide convenient CRUD 
+(Create, Read, Update, Delete).
 
 ### Query
 
-The query acts as accessor to the persistence layer. Instead of to use a big data repository, Blast ORM uses a query class. 
-The query class is able to process the result as raw array or a map the result to a single entity class or a collection 
-of entity classes.
+The query acts as accessor to the persistence layer. The query class is hydrating data on execution and transforms the
+result in a single entity class, collection of entity classes or as a raw data array.
 
 ### Repository
 
-The repository mediates between query (dbal) and entities.
+The repository is mediating between persistence layer and abstract from persistence or data access through mapper or query.
   
 ## Usage
 
 ### Initialize
 
-Create a factory with [container-interopt](https://github.com/container-interop/container-interop) compatible Container e.g. [league/container](https://github.com/thephpleague/container) and connection data.
+Create a new manager instance with ![container-interopt](https://github.com/container-interop/container-interop) 
+compatible Container e.g. ![league/container](https://github.com/thephpleague/container) and the default connection 
+with `UTF-8` encoding: `?charset=UTF-8`. 
+More ![information for connection parameters](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/configuration.html#connecting-using-a-url).  
 
 ```php
 <?php
@@ -55,10 +65,42 @@ use Blast\Orm\Manager;
 use League\Container;
 
 
-Manager::create(new Container(), [
-    'url' => 'sqlite:///:memory:',
-    'memory' => 'true'
-]);
+Manager::create(new Container(), 'mysql://root:root@localhost/defaultdb?charset=UTF-8');
+```
+
+Get manager instance
+
+```php
+<?php
+
+$manager = Manager::getInstance();
+```
+
+Add another connection (with __UTF-8__)
+
+```php
+<?php
+$manager->addConnection('another', 'mysql://root:root@localhost/another');
+
+```
+
+Get connection, default connection name is always `default`
+
+```php
+<?php
+
+//get default connection
+$defaultConnection = $manager->getConnection();
+
+//get connection by name
+$anotherConnection = $manager->getConnection('another');
+```
+
+Swap default connection with another connection.
+
+```php
+<?php
+$manager->setDefaultConnection('another');
 
 ```
 
@@ -149,9 +191,35 @@ $affectedRows = $query->delete()
     ->execute();
 ```
 
+#### Advanced execution for select
+
+Execute query and get result as entity
+
+```php
+<?php
+
+$post = $query->execute(EntityHydratorInterface::RESULT_ENTITY);
+```
+
+Execute query and get result as collection
+
+```php
+<?php
+
+$posts = $query->execute(EntityHydratorInterface::RESULT_COLLECTION);
+```
+
+Execute query and get raw result as array
+
+```php
+<?php
+
+$result = $query->execute(EntityHydratorInterface::RESULT_RAW);
+```
+
 ### Working with Entities
 
-Entity classes are independent of Blast ORM. Blast ORM is using an entity adaption to access entity data and definition
+Entity classes are independent of Blast ORM.
 
 ```php
 <?php
@@ -163,17 +231,32 @@ class Post
 
 ```
 
-#### Table name
+#### Generic entities
 
-If entity class does not define a table name, the table name is determined automatically by class name without namespace. 
-  
-`App\Entities\Post` will have `post` as table name.
-
-Pass a custom `table` as a static method or static property as follows
+Use generic entities to access tables without creating a entity class. This is useful for accessing junction tables or 
+temporary tables.
  
- - `Entity::getTable()`
- - `Entity::table()`
- - `Entity::$table`
+```php
+<?php
+
+use Blast\Orm\Entities\GenericEntity;
+
+$tableName = 'user_roles';
+$userRolesJunction = new GenericEntity($tableName);
+```
+
+#### Definition
+
+A entity does not need any definition. If the entity class does not have a definition. the definition is determined 
+automatically. Declare a definition as static method or property. 
+
+#### Table name 
+
+Return table name as `string`
+
+ - Default: class name without namespace, camelcase converts to underscores e.g. `App\Entities\Post` will have `post` as table name.
+ - Static method: `YourEntity::getTable()` or `YourEntity::table()`
+ - Static property: `YourEntity::$table`
 
 ```php
 <?php
@@ -182,27 +265,22 @@ class Post
 {
 
     /**
-     * Get table for model
+     * Get table name
      *
-     * @return string
+     * @var string
      */
-    public static function getTable()
-    {
-        return 'post';
-    }
+    private static $tableName = 'post';
 }
 
 ```
 
 #### Primary key name
-
-If entity class does not define a primary key name, the primary key name is `id`.
-
-Similar to `table` you could a customize `primaryKeyName` as follows
  
- - `Entity::getPrimaryKeyName()`
- - `Entity::primaryKeyName()`
- - `Entity::$primaryKeyName`
+Return primary key name as `string`
+ 
+ - Default: `id`
+ - Static method: `YourEntity::getPrimaryKeyName()` or `Entity::primaryKeyName()`
+ - Static property: `YourEntity::$primaryKeyName`
 
 ```php
 <?php
@@ -211,28 +289,91 @@ class Post
 {
 
     /**
-     * Get table for model
+     * Get primary key name
      *
-     * @return string
+     * @var string
      */
-    public static function getPrimaryKeyName()
-    {
-        return 'id';
-    }
+    private static $primaryKeyName = 'id';
+    
 }
 
 ```
 
-### Repository
+#### Mapper
 
-#### Get repository
+Return mapper class name as `string` or a instance of `Blast\Orm\MapperInterface`
+
+ - Default: An instance of `Blast\Orm\Mapper`
+ - Static method: `YourEntity::getMapper()` or `Entity::mapper()`
+ - Static property: `YourEntity::$mapper`
 
 ```php
 <?php
 
-use Blast\Orm;
+use Blast\Orm\Mapper;
 
-$repository = new Repository($post);
+class Post
+{
+
+    /**
+     * Get mapper for entity
+     *
+     * @return string
+     */
+    private static $mapper = Mapper::class;
+}
+
+```
+
+#### Adapters
+
+Adapters grant access to data and definition, even if your entity class does not have definitions at all.
+
+```php
+<?php
+
+use Blast\Orm\Mapper;
+
+$post = new Post;
+
+$postAdapter = new EntityAdapter($post);
+
+```
+
+Get table name
+
+```php
+<?php
+$tableName = $postAdapter->getTableName();
+
+```
+
+Get primary key name
+
+```php
+<?php
+$primaryKeyName = $postAdapter->getPrimaryKeyName();
+
+```
+
+Get entities mapper
+
+```php
+<?php
+$mapper = $postAdapter->getMapper();
+
+```
+
+### Mapper
+
+#### Get mapper
+
+```php
+<?php
+
+use Blast\Orm\Mapper;
+
+$mapper = new Mapper($post);
 
 ```
 
@@ -243,7 +384,7 @@ Fetch one entry by primary key
 ```php
 <?php
 
-$post = $repository->find(1);
+$post = $mapper->find(1);
 
 ```
 
@@ -254,8 +395,30 @@ Custom select query
 ```php
 <?php
 
-$first = $repository->select()->where('title = "Hello world"')->setMaxResults(1)->execute(Query::RESULT_ENTITY);
+$first = $mapper->select()->where('title = "Hello world"')->setMaxResults(1)->execute(EntityHydratorInterface::RESULT_ENTITY);
 ```
+
+#### delete
+
+`delete` expects an primary key or an array of primary keys.
+
+Delete onw entry
+
+```php
+<?php
+
+$repository->delete(1);
+```
+
+Delete many entries
+
+```php
+<?php
+
+$repository->delete([1, 2]);
+```
+
+### Repository
 
 #### all
 
@@ -289,52 +452,6 @@ $post->date = new \DateTime();
 $repository->save($post);
 ```
 
-#### delete
-
-`delete` expects an primary key or an array of primary keys.
-
-Delete onw entry
-
-```php
-<?php
-
-$repository->delete(1);
-```
-
-Delete many entries
-
-```php
-<?php
-
-$repository->delete([1, 2]);
-```
-
-### Advanced execution for select
-
-Execute query and get result as entity
-
-```php
-<?php
-
-$post = $query->execute(Query::RESULT_ENTITY);
-```
-
-Execute query and get result as collection
-
-```php
-<?php
-
-$posts = $query->execute(Query::RESULT_COLLECTION);
-```
-
-Execute query and get raw result as array
-
-```php
-<?php
-
-$result = $query->execute(Query::RESULT_RAW);
-```
-
 ## Further development
 
 Please visit our [milestones](https://github.com/phpthinktank/blast-orm/milestones)
@@ -355,7 +472,7 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## Security
 
-If you discover any security related issues, please email :author_email instead of using the issue tracker.
+If you discover any security related issues, please email <mjls@web.de> instead of using the issue tracker.
 
 ## Credits
 
@@ -376,3 +493,4 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 [link-downloads]: https://packagist.org/packages/blast/orm
 [link-author]: https://github.com/mbunge
 [link-contributors]: ../../contributors
+[link-coveralls]: https://img.shields.io/coveralls/phpthinktank/blast-orm/master.svg?style=flat-square)](https://coveralls.io/github/phpthinktank/blast-orm?branch=1.0.x-dev
