@@ -13,14 +13,30 @@
 
 namespace Blast\Orm\Entity;
 
+use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Query;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Index;
+use Blast\Orm\Relations\RelationsAwareInterface;
 use League\Event\EmitterAwareInterface;
 
-interface EntityAdapterInterface extends EmitterAwareInterface
+interface EntityAdapterInterface extends EmitterAwareInterface, DataHydratorInterface, FieldAwareInterface,
+    IndexAwareInterface, PrimaryKeyAwareInterface, TableNameAwareInterface, RelationsAwareInterface
 {
+    const DEFAULT_PRIMARY_KEY_NAME = 'id';
+
+    /**
+     *
+     */
+    const HYDRATE_COLLECTION = 'collection';
+    /**
+     *
+     */
+    const HYDRATE_ENTITY = 'entity';
+
+    /**
+     *
+     */
+    const HYDRATE_RAW = 'raw';
 
     /**
      * Entity class name
@@ -30,44 +46,9 @@ interface EntityAdapterInterface extends EmitterAwareInterface
     public function getClassName();
 
     /**
-     * Table name
-     *
-     * @return string
-     */
-    public function getTableName();
-
-    /**
-     * Name of primary key
-     *
-     * @return string
-     */
-    public function getPrimaryKeyName();
-
-    /**
-     * @return Column[]
-     */
-    public function getFields();
-
-    /**
-     * @return Index[]
-     */
-    public function getIndexes();
-
-    /**
-     * @return Query[]
-     */
-    public function getRelations();
-
-    /**
      * Fetch all data without relations
      */
     public function getDataWithoutRelations();
-
-    /**
-     * @param $data
-     * @return mixed
-     */
-    public function hydrate($data);
 
     /**
      * @param Query $query

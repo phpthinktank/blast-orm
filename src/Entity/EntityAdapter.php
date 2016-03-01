@@ -22,26 +22,12 @@ use Blast\Orm\Mapper;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Query;
 use Blast\Orm\Relations\RelationInterface;
+use Blast\Orm\Relations\RelationsAwareInterface;
 use Doctrine\DBAL\Driver\Statement;
 use League\Event\EmitterAwareTrait;
 
-class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataHydratorInterface
+class EntityAdapter extends DataAdapter implements EntityAdapterInterface
 {
-    const DEFAULT_PRIMARY_KEY_NAME = 'id';
-
-    /**
-     *
-     */
-    const RESULT_COLLECTION = 'collection';
-    /**
-     *
-     */
-    const RESULT_ENTITY = 'entity';
-
-    /**
-     *
-     */
-    const RESULT_RAW = 'raw';
 
     use EmitterAwareTrait;
 
@@ -171,16 +157,16 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
         $entity = NULL;
 
         if ($option === self::AUTO) {
-            $option = $count > 1 || $count === 0 ? self::RESULT_COLLECTION : self::RESULT_ENTITY;
+            $option = $count > 1 || $count === 0 ? self::HYDRATE_COLLECTION : self::HYDRATE_ENTITY;
         }
 
-        if ($option === self::RESULT_COLLECTION) { //if entity set has many items, return a collection of entities
+        if ($option === self::HYDRATE_COLLECTION) { //if entity set has many items, return a collection of entities
             foreach ($data as $key => $value) {
                 $data[$key] = $this->map($value);
             }
             $entity = new DataObject();
             $entity->setData($data);
-        } elseif ($option === self::RESULT_ENTITY) { //if entity has one item, return the entity
+        } elseif ($option === self::HYDRATE_ENTITY) { //if entity has one item, return the entity
             $entity = $this->map(array_shift($data));
         }
 
@@ -290,7 +276,7 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
      */
     protected function isRaw($data, $option)
     {
-        return $option === self::RESULT_RAW ||
+        return $option === self::HYDRATE_RAW ||
         $data instanceof Statement ||
         is_numeric($data) ||
         is_bool($data);
