@@ -15,6 +15,7 @@ namespace Blast\Tests\Orm;
 
 
 use Blast\Orm\ConnectionCollectionInterface;
+use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Manager;
 use Blast\Orm\Mapper;
@@ -74,7 +75,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
         Manager::shutdown();
     }
 
-    public function testManyToOne()
+    public function testBelongsTo()
     {
         $postRepository = new PostRepository();
         $post = $postRepository->find(1);
@@ -86,16 +87,16 @@ class RelationTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    public function testOneToMany(){
+    public function testHasMany(){
         $adapter = new EntityAdapter(new User);
         $mapper = $adapter->getMapper();
         $user = $mapper->find(1)->execute();
 
         $this->assertInstanceOf(User::class, $user);
 
-        var_dump($user->getPost());
-
-//        $this->assertInstanceOf(Post::class, $user->getPost()->getQuery()->execute());
+        $posts = $user->getPost()->getQuery()->execute();
+        $this->assertInstanceOf(DataObject::class, $posts);
+        $this->assertInstanceOf(Post::class, $posts->current());
 
     }
 }

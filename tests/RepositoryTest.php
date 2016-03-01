@@ -28,7 +28,6 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->markTestSkipped();
         $container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class)->reveal();
         $manager = Manager::create($container, [
             'url' => 'sqlite:///:memory:',

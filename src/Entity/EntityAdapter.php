@@ -256,13 +256,10 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
     protected function map($data = [])
     {
         //map data
-        $this->setData($data);
+        $this->mapData($data);
 
         //map relations
-        $relations = $this->getRelations();
-        if (count($relations) > 0) {
-            $this->setData($this->getData() + $relations);
-        }
+        $this->mapRelations();
 
         $object = $this->getObject();
         $this->reset();
@@ -280,5 +277,41 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
         $data instanceof Statement ||
         is_numeric($data) ||
         is_bool($data);
+    }
+
+    /**
+     * Map data to source object
+     *
+     * @param $data
+     */
+    private function mapData($data)
+    {
+        $this->setData($data);
+    }
+
+    /**
+     * Map relations to data. If entry exists with relation name,
+     * only overwrite if entry is empty.
+     */
+    private function mapRelations()
+    {
+        $relations = $this->getRelations();
+        if (count($relations) > 0) {
+            $data = $this->getData();
+            foreach ($relations as $name => $relation) {
+
+                //avoid overwriting data
+                if (!isset($data[$name])) {
+                    $data[$name] = $relation;
+                }
+
+                //overwrite empty entry with relation
+                if ($data[$name] === null) {
+                    $data[$name] = $relation;
+                }
+            }
+
+            $this->setData($data);
+        }
     }
 }

@@ -45,9 +45,7 @@ class HasMany implements RelationInterface
         $mapper = $foreignAdapter->getMapper();
 
         //if no primary key is available, return a select
-
         $this->query = $mapper->select()->where((new Query())->expr()->eq($foreignKey, $foreignKeyValue));
-
         $this->name = $foreignAdapter->getTableName();
     }
 
