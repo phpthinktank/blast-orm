@@ -17,6 +17,7 @@ namespace Blast\Tests\Orm\Entity;
 use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
+use Blast\Orm\Entity\EntityAdapterInterface;
 use Blast\Orm\Query\Result;
 use stdClass;
 
@@ -42,22 +43,22 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
     public function testDecorateRaw(){
         $adapter = new EntityAdapter();
 
-        $this->assertInternalType('array', $adapter->hydrate([['name' => 'bob']], EntityAdapter::RESULT_RAW));
+        $this->assertInternalType('array', $adapter->hydrate([['name' => 'bob']], EntityAdapterInterface::HYDRATE_RAW));
     }
 
     public function testDecorateGenericEntity(){
         $adapter = new EntityAdapter();
 
-        $this->assertInstanceOf(Result::class, $adapter->hydrate([['name' => 'bob']], EntityAdapter::RESULT_ENTITY));
+        $this->assertInstanceOf(Result::class, $adapter->hydrate([['name' => 'bob']], EntityAdapterInterface::HYDRATE_ENTITY));
     }
 
     public function testDecorateGivenEntity(){
-        $this->assertInstanceOf(stdClass::class, (new EntityAdapter(new stdClass()))->hydrate([['name' => 'bob']], EntityAdapter::RESULT_ENTITY));
+        $this->assertInstanceOf(stdClass::class, (new EntityAdapter(new stdClass()))->hydrate([['name' => 'bob']], EntityAdapterInterface::HYDRATE_ENTITY));
     }
 
     public function testDecorateCollection(){
         $adapter = new EntityAdapter();
 
-        $this->assertInstanceOf(DataObject::class, $adapter->hydrate([['name' => 'bob']], EntityAdapter::RESULT_COLLECTION));
+        $this->assertInstanceOf(DataObject::class, $adapter->hydrate([['name' => 'bob']], EntityAdapter::HYDRATE_COLLECTION));
     }
 }

@@ -96,7 +96,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
     public function testForceSingleResult()
     {
         $query = new Query();
-        $result = $query->select()->from('post')->execute(EntityAdapter::RESULT_ENTITY);
+        $result = $query->select()->from('post')->execute(EntityAdapter::HYDRATE_ENTITY);
 
         $this->assertInstanceOf(Result::class, $result);
     }
@@ -107,7 +107,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
     public function testForceResultCollection()
     {
         $query = new Query();
-        $result = $query->select()->from('post')->where('id = 1')->execute(EntityAdapter::RESULT_COLLECTION);
+        $result = $query->select()->from('post')->where('id = 1')->execute(EntityAdapter::HYDRATE_COLLECTION);
 
         $this->assertInstanceOf(DataObject::class, $result);
         $this->assertInstanceOf(Result::class, $result->current());
