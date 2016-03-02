@@ -30,12 +30,21 @@ trait RelationTrait
     protected $name = null;
 
     /**
+     * Placeholder init function
+     */
+    protected function init()
+    {
+
+    }
+
+    /**
      * Query for accessing related data
      *
      * @return Query
      */
     public function getQuery()
     {
+        $this->init();
         return $this->query;
     }
 
@@ -44,7 +53,12 @@ trait RelationTrait
      */
     public function getName()
     {
+        $this->init();
         return $this->name;
+    }
+
+    public function execute(){
+        return $this->getQuery()->execute();
     }
 
 }

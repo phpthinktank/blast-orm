@@ -21,6 +21,18 @@ class BelongsTo implements RelationInterface
 {
     use EntityAdapterLoaderTrait;
     use RelationTrait;
+    /**
+     * @var
+     */
+    private $entity;
+    /**
+     * @var
+     */
+    private $foreignEntity;
+    /**
+     * @var null
+     */
+    private $localKey;
 
     /**
      * Local entity belongs to foreign entity by local key
@@ -31,8 +43,40 @@ class BelongsTo implements RelationInterface
      */
     public function __construct($entity, $foreignEntity, $localKey = null)
     {
-        $adapter = $this->loadAdapter($entity);
-        $foreignAdapter = $this->loadAdapter($foreignEntity);
+
+        $this->entity = $entity;
+        $this->foreignEntity = $foreignEntity;
+        $this->localKey = $localKey;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEntity()
+    {
+        return $this->entity;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getForeignEntity()
+    {
+        return $this->foreignEntity;
+    }
+
+    /**
+     * @return null
+     */
+    public function getLocalKey()
+    {
+        return $this->localKey;
+    }
+
+    protected function init(){
+        $adapter = $this->loadAdapter($this->getEntity());
+        $foreignAdapter = $this->loadAdapter($this->getForeignEntity());
+        $localKey = $this->getLocalKey();
 
         if($localKey === null){
             $localKey = $foreignAdapter->getTableName() . '_' . $foreignAdapter->getPrimaryKeyName();
@@ -54,7 +98,6 @@ class BelongsTo implements RelationInterface
         //if no primary key is available, return a select
         $this->query = $primaryKey === null ? $mapper->select() : $mapper->find($primaryKey);
         $this->name = $foreignAdapter->getTableName();
-
     }
 
 }

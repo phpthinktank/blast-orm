@@ -22,6 +22,34 @@ class ManyToMany implements RelationInterface
 {
     use EntityAdapterLoaderTrait;
     use RelationTrait;
+    /**
+     * @var object|string
+     */
+    private $entity;
+    /**
+     * @var object|string
+     */
+    private $foreignEntity;
+    /**
+     * @var null|string
+     */
+    private $foreignKey;
+    /**
+     * @var null|string
+     */
+    private $localKey;
+    /**
+     * @var null|object|string
+     */
+    private $junction;
+    /**
+     * @var null|string
+     */
+    private $junctionLocalKey;
+    /**
+     * @var null|string
+     */
+    private $junctionForeignKey;
 
     /**
      * Many occurrences in local entity relate to many occurrences in foreign entity and vice versa.
@@ -38,8 +66,79 @@ class ManyToMany implements RelationInterface
     public function __construct($entity, $foreignEntity, $foreignKey = null, $localKey = null,
                                 $junction = null, $junctionLocalKey = null, $junctionForeignKey = null)
     {
-        $adapter = $this->loadAdapter($entity);
-        $foreignAdapter = $this->loadAdapter($foreignEntity);
+
+        $this->entity = $entity;
+        $this->foreignEntity = $foreignEntity;
+        $this->foreignKey = $foreignKey;
+        $this->localKey = $localKey;
+        $this->junction = $junction;
+        $this->junctionLocalKey = $junctionLocalKey;
+        $this->junctionForeignKey = $junctionForeignKey;
+    }
+
+    /**
+     * @return object|string
+     */
+    public function getEntity()
+    {
+        return $this->entity;
+    }
+
+    /**
+     * @return object|string
+     */
+    public function getForeignEntity()
+    {
+        return $this->foreignEntity;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getForeignKey()
+    {
+        return $this->foreignKey;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getLocalKey()
+    {
+        return $this->localKey;
+    }
+
+    /**
+     * @return null|object|string
+     */
+    public function getJunction()
+    {
+        return $this->junction;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getJunctionLocalKey()
+    {
+        return $this->junctionLocalKey;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getJunctionForeignKey()
+    {
+        return $this->junctionForeignKey;
+    }
+
+    protected function init(){
+        $adapter = $this->loadAdapter($this->getEntity());
+        $foreignAdapter = $this->loadAdapter($this->getForeignEntity());
+        $foreignKey = $this->getForeignKey();
+        $junction = $this->getJunction();
+        $junctionLocalKey = $this->getJunctionLocalKey();
+        $junctionForeignKey = $this->getJunctionForeignKey();
 
         $data = $adapter->getData();
 
@@ -55,8 +154,6 @@ class ManyToMany implements RelationInterface
             $junction = $adapter->getTableName() . '_' . $foreignAdapter->getTableName();
         }
 
-        $throughAdapter = $this->loadAdapter(is_string($junction) ? new GenericEntity($junction) : $junction);
-
         //determine through local key
         if($junctionLocalKey === null){
             $junctionLocalKey = $adapter->getTableName() . '_' . $localKey;
@@ -70,7 +167,8 @@ class ManyToMany implements RelationInterface
         $query = new Query();
 
         //get relations by through db object
-        $results = $throughAdapter->getMapper()
+        $junctionAdapter = $this->loadAdapter(is_string($junction) ? new GenericEntity($junction) : $junction);
+        $results = $junctionAdapter->getMapper()
             ->select([$junctionForeignKey])
             ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
             ->execute(EntityAdapterInterface::HYDRATE_RAW);

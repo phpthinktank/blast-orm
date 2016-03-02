@@ -18,6 +18,7 @@ use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\GenericEntity;
 use Blast\Orm\Relations\HasMany;
 use Blast\Orm\Relations\HasOne;
+use Blast\Orm\Relations\ManyToMany;
 
 /**
  * @codeCoverageIgnore
@@ -118,6 +119,7 @@ class User
         return [
             new HasMany($entity, Post::class, 'user_id'),
             new HasOne($entity, new GenericEntity('address'), 'user_id'),
+//            new ManyToMany($entity, new GenericEntity('role')),
         ];
     }
 

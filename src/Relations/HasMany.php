@@ -22,6 +22,18 @@ class HasMany implements RelationInterface
 {
     use EntityAdapterLoaderTrait;
     use RelationTrait;
+    /**
+     * @var
+     */
+    private $entity;
+    /**
+     * @var
+     */
+    private $foreignEntity;
+    /**
+     * @var null
+     */
+    private $foreignKey;
 
     /**
      * Local entity relates to many entries of foreign entity by foreign key
@@ -32,8 +44,41 @@ class HasMany implements RelationInterface
      */
     public function __construct($entity, $foreignEntity, $foreignKey = null)
     {
-        $adapter = $this->loadAdapter($entity);
-        $foreignAdapter = $this->loadAdapter($foreignEntity);
+
+        $this->entity = $entity;
+        $this->foreignEntity = $foreignEntity;
+        $this->foreignKey = $foreignKey;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEntity()
+    {
+        return $this->entity;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getForeignEntity()
+    {
+        return $this->foreignEntity;
+    }
+
+    /**
+     * @return null
+     */
+    public function getForeignKey()
+    {
+        return $this->foreignKey;
+    }
+
+    protected function init()
+    {
+        $adapter = $this->loadAdapter($this->getEntity());
+        $foreignAdapter = $this->loadAdapter($this->getForeignEntity());
+        $foreignKey = $this->getForeignKey();
 
         $data = $adapter->getData();
 
@@ -49,5 +94,6 @@ class HasMany implements RelationInterface
         $this->query = $mapper->select()->where((new Query())->expr()->eq($foreignKey, $foreignKeyValue));
         $this->name = $foreignAdapter->getTableName();
     }
+
 
 }

@@ -24,6 +24,11 @@ interface RelationInterface
     public function getQuery();
 
     /**
+     * @return Query
+     */
+    public function execute();
+
+    /**
      * Name of relation
      *
      * @return string

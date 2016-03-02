@@ -16,10 +16,10 @@ namespace Blast\Orm\Relations;
 
 class HasOne extends HasMany
 {
-    public function __construct($entity, $foreignEntity, $foreignKey)
+    protected function init()
     {
-        parent::__construct($entity, $foreignEntity, $foreignKey);
-        $this->getQuery()->setMaxResults(1);
+        parent::init();
+        $this->query->setMaxResults(1);
     }
 
 }
