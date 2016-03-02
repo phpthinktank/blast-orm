@@ -458,7 +458,7 @@ Please visit our [milestones](https://github.com/phpthinktank/blast-orm/mileston
 
 ## Change log
 
-Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
+Please see [CHANGELOG](ChangeLog-0.1.md) for more information what has changed recently.
 
 ## Testing
 
