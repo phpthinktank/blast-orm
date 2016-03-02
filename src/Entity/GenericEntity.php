@@ -14,6 +14,11 @@
 namespace Blast\Orm\Entity;
 
 
+use Blast\Orm\Data\AccessorInterface;
+use Blast\Orm\Data\AccessorTrait;
+use Blast\Orm\Data\DataObject;
+use Blast\Orm\Data\MutatorInterface;
+use Blast\Orm\Data\MutatorTrait;
 use Blast\Orm\Mapper;
 use Blast\Orm\MapperAwareInterface;
 use Blast\Orm\MapperInterface;
@@ -22,9 +27,12 @@ use Blast\Orm\Relations\RelationsAwareInterface;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
 
-class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperAwareInterface,
-    PrimaryKeyAwareInterface, RelationsAwareInterface, TableNameAwareInterface
+class GenericEntity extends DataObject implements AccessorInterface, FieldAwareInterface, IndexAwareInterface,
+    MapperAwareInterface, MutatorInterface, PrimaryKeyAwareInterface, RelationsAwareInterface, TableNameAwareInterface
 {
+
+    use AccessorTrait;
+    use MutatorTrait;
 
     /**
      * @var Column[]
@@ -82,10 +90,10 @@ class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperA
         };
 
         foreach ($options as $key => $value) {
-            $this->set($key, $value, $onBefore, $onLoop);
+            $this->setOption($key, $value, $onBefore, $onLoop);
         }
 
-        $this->set('tableName', $tableName);
+        $this->setOption('tableName', $tableName);
     }
 
     /**
@@ -95,7 +103,7 @@ class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperA
      * @param callable|null $onBefore
      * @param callable|null $onLoop
      */
-    private function set($propertyName, $data, callable $onBefore = null, callable $onLoop = null)
+    private function setOption($propertyName, $data, callable $onBefore = null, callable $onLoop = null)
     {
         $before = true;
         if(is_callable($onBefore)){
