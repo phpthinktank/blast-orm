@@ -15,9 +15,10 @@ namespace Blast\Tests\Orm;
 
 
 use Blast\Orm\ConnectionCollectionInterface;
+use Blast\Orm\ConnectionFacade;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\EntityAwareInterface;
-use Blast\Orm\Manager;
+use Blast\Orm\ConnectionCollection;
 use Blast\Orm\RepositoryInterface;
 use Blast\Tests\Orm\Stubs\Entities\Post;
 use Blast\Tests\Orm\Stubs\PostRepository;
@@ -28,13 +29,11 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class)->reveal();
-        $manager = Manager::create($container, [
+        $connection = ConnectionFacade::addConnection( [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
-        ]);
+        ])->getConnection();
 
-        $connection = $manager->getConnection();
         $connection->exec('CREATE TABLE post (id int, user_id int, title VARCHAR(255), content TEXT)');
         $connection->exec('CREATE TABLE user (pk int, name VARCHAR(255))');
         $connection->insert('post', [
@@ -57,11 +56,11 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        $manager = Manager::getInstance();
-        $connection = $manager->getConnection(ConnectionCollectionInterface::DEFAULT_CONNECTION);
+        $connection = ConnectionFacade::getConnection(ConnectionCollectionInterface::DEFAULT_CONNECTION);
         $connection->exec('DROP TABLE post');
         $connection->exec('DROP TABLE user');
-        Manager::shutdown();
+
+        ConnectionFacade::__destruct();
     }
 
     public function testImplementsRepositoryInterface(){

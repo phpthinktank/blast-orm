@@ -14,12 +14,13 @@
 namespace Blast\Tests\Orm\Entity;
 
 
+use Blast\Orm\ConnectionFacade;
 use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Entity\EntityAdapterInterface;
 use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\Manager;
+use Blast\Orm\ConnectionCollection;
 use Blast\Orm\Query\Result;
 use Blast\Tests\Orm\Stubs\Entities\Post;
 use Interop\Container\ContainerInterface;
@@ -27,21 +28,6 @@ use stdClass;
 
 class EntityAdapterTest extends \PHPUnit_Framework_TestCase
 {
-
-    protected function setUp()
-    {
-        $container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class)->reveal();
-        Manager::create($container, [
-            'url' => 'sqlite:///:memory:',
-            'memory' => 'true'
-        ]);
-
-    }
-
-    protected function tearDown()
-    {
-        Manager::shutdown();
-    }
 
     public function testLoadEntityAdapter(){
         $adapter = EntityAdapter::load(Post::class);

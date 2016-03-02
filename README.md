@@ -51,36 +51,26 @@ The repository is mediating between persistence layer and abstract from persiste
   
 ## Usage
 
-### Initialize
+### Configure connections
 
-Create a new manager instance with ![container-interopt](https://github.com/container-interop/container-interop) 
-compatible Container e.g. ![league/container](https://github.com/thephpleague/container) and the default connection 
-with `UTF-8` encoding: `?charset=UTF-8`. 
-More ![information for connection parameters](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/configuration.html#connecting-using-a-url).  
+Blast ORM is using a connection facade, which is loading a connection 
+collection by contract interface `Blast\Orm\ConnectionCollectionInterface` 
 
+Add a connection. If second parameter name has been set, name is `default`.
 ```php
 <?php
 
-use Blast\Orm\Manager;
-use League\Container;
+use Blast\Orm\ConnectionFacade;
 
-
-Manager::create(new Container(), 'mysql://root:root@localhost/defaultdb?charset=UTF-8');
-```
-
-Get manager instance
-
-```php
-<?php
-
-$manager = Manager::getInstance();
+ConnectionFacade::addConnection('mysql://root:root@localhost/defaultdb?charset=UTF-8');
 ```
 
 Add another connection (with __UTF-8__)
 
 ```php
 <?php
-$manager->addConnection('another', 'mysql://root:root@localhost/another');
+
+ConnectionFacade::addConnection('another', 'mysql://root:root@localhost/another');
 
 ```
 
@@ -90,17 +80,25 @@ Get connection, default connection name is always `default`
 <?php
 
 //get default connection
-$defaultConnection = $manager->getConnection();
+$defaultConnection = ConnectionFacade::getConnection();
 
 //get connection by name
-$anotherConnection = $manager->getConnection('another');
+$anotherConnection = ConnectionFacade::getConnection('another');
 ```
 
 Swap default connection with another connection.
 
 ```php
 <?php
-$manager->setDefaultConnection('another');
+ConnectionFacade::setDefaultConnection('another');
+
+```
+
+Get a connection collection instance.
+
+```php
+<?php
+$connections = ConnectionFacade::__instance();
 
 ```
 

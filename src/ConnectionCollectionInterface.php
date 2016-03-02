@@ -19,11 +19,11 @@ interface ConnectionCollectionInterface
      *
      * @see http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/configuration.html#getting-a-connection
      *
-     * @param $name
      * @param array|\Doctrine\DBAL\Connection|string $connection
+     * @param $name
      * @return $this
      */
-    public function addConnection($name, $connection);
+    public function addConnection($connection, $name);
 
     /**
      * Activate a connection as default connection

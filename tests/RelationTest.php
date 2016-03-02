@@ -15,9 +15,10 @@ namespace Blast\Tests\Orm;
 
 
 use Blast\Orm\ConnectionCollectionInterface;
+use Blast\Orm\ConnectionFacade;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\Manager;
+use Blast\Orm\ConnectionCollection;
 use Blast\Orm\QueryInterface;
 use Blast\Orm\Relations\BelongsTo;
 use Blast\Orm\Relations\HasMany;
@@ -33,13 +34,11 @@ class RelationTest extends \PHPUnit_Framework_TestCase
 {
     protected function setUp()
     {
-        $container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class)->reveal();
-        $manager = Manager::create($container, [
+        $connection = ConnectionFacade::addConnection( [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
-        ]);
+        ])->getConnection();
 
-        $connection = $manager->getConnection();
         $connection->exec('CREATE TABLE post (id int, user_pk int, title VARCHAR(255), content TEXT)');
         $connection->exec('CREATE TABLE user (pk int, name VARCHAR(255))');
         $connection->exec('CREATE TABLE address (id int, user_pk int, address TEXT)');
@@ -78,14 +77,15 @@ class RelationTest extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        $manager = Manager::getInstance();
-        $connection = $manager->getConnection(ConnectionCollectionInterface::DEFAULT_CONNECTION);
+        $connection = ConnectionFacade::getConnection(ConnectionCollectionInterface::DEFAULT_CONNECTION);
+
         $connection->exec('DROP TABLE post');
         $connection->exec('DROP TABLE user');
         $connection->exec('DROP TABLE address');
         $connection->exec('DROP TABLE user_role');
         $connection->exec('DROP TABLE role');
-        Manager::shutdown();
+
+        ConnectionFacade::__destruct();
     }
 
     public function testBelongsTo()

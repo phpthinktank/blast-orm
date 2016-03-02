@@ -16,7 +16,8 @@ namespace Blast\Orm\Entity;
 
 use Blast\Orm\Data\DataAdapter;
 use Blast\Orm\Data\DataObject;
-use Blast\Orm\Manager;
+use Blast\Orm\ConnectionCollection;
+use Blast\Orm\Facades\FacadeFactory;
 use Blast\Orm\Mapper;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Object\ObjectAdapterCache;
@@ -58,8 +59,9 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
         // this is very specific to container
         // @coverageIgnoreStart
         if (is_string($object)) {
-            if (Manager::getInstance()->getContainer()->has($object)) {
-                $object = Manager::getInstance()->getContainer()->get($object);
+            $container = FacadeFactory::getContainer();
+            if ($container->has($object)) {
+                $object = $container->get($object);
             }
         }
         // @coverageIgnoreEnd
