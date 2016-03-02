@@ -55,11 +55,14 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
      */
     public static function createObject($object)
     {
+        // this is very specific to container
+        // @coverageIgnoreStart
         if (is_string($object)) {
             if (Manager::getInstance()->getContainer()->has($object)) {
                 $object = Manager::getInstance()->getContainer()->get($object);
             }
         }
+        // @coverageIgnoreEnd
 
         $object = ObjectAdapterCache::createObject($object);
 

@@ -21,6 +21,7 @@ use Blast\Orm\Entity\EntityAdapterInterface;
 use Blast\Orm\Entity\EntityHydratorInterface;
 use Blast\Orm\Manager;
 use Blast\Orm\Query\Result;
+use Blast\Tests\Orm\Stubs\Entities\Post;
 use Interop\Container\ContainerInterface;
 use stdClass;
 
@@ -43,7 +44,15 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testLoadEntityAdapter(){
+        $adapter = EntityAdapter::load(Post::class);
 
+        $this->assertInstanceOf(EntityAdapter::class, $adapter);
+        $this->assertInstanceOf(Post::class, $adapter->getObject());
+    }
+
+    public function testCreateEntity(){
+        $entity = EntityAdapter::createObject(Post::class);
+        $this->assertInstanceOf(Post::class, $entity);
     }
 
     public function testDecoratorImplementsDataDecorator(){
