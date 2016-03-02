@@ -15,14 +15,13 @@ namespace Blast\Orm\Entity;
 
 
 use Blast\Orm\Data\DataAdapter;
-use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Manager;
 use Blast\Orm\Mapper;
 use Blast\Orm\MapperInterface;
+use Blast\Orm\Object\ObjectAdapterCache;
 use Blast\Orm\Query;
 use Blast\Orm\Relations\RelationInterface;
-use Blast\Orm\Relations\RelationsAwareInterface;
 use Doctrine\DBAL\Driver\Statement;
 use League\Event\EmitterAwareTrait;
 
@@ -39,23 +38,44 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
     private $mapper;
 
     /**
+     * @param null $object
+     * @return EntityAdapter|static
+     * @throws \Exception
+     */
+    public static function load($object = null)
+    {
+        $object = static::createObject($object);
+        return ObjectAdapterCache::load($object, static::class);
+
+    }
+
+    /**
+     * @param $object
+     * @return Query\Result|mixed
+     */
+    public static function createObject($object)
+    {
+        if (is_string($object)) {
+            if (Manager::getInstance()->getContainer()->has($object)) {
+                $object = Manager::getInstance()->getContainer()->get($object);
+            }
+        }
+
+        $object = ObjectAdapterCache::createObject($object);
+
+        if (!is_object($object)) {
+            $object = new Query\Result();
+        }
+        return $object;
+    }
+
+    /**
      * EntityAdapter constructor.
      * @param array|\stdClass|\ArrayObject|object|string $object
      */
     public function __construct($object = null)
     {
-        if (is_string($object)) {
-            if (Manager::getInstance()->getContainer()->has($object)) {
-                $object = Manager::getInstance()->getContainer()->get($object);
-            } elseif (class_exists($object)) {
-                $object = new $object;
-            }else{
-                throw new \InvalidArgumentException('Unable to create object from string: ' . $object);
-            }
-        }
-        if (!is_object($object)) {
-            $object = new Query\Result();
-        }
+        $object = static::createObject($object);
 
         parent::__construct($object);
     }

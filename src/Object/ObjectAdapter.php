@@ -140,6 +140,7 @@ class ObjectAdapter implements ObjectAdapterInterface
 
     /**
      * return value of a method or property or a property getter
+     *
      * @param $name
      * @param mixed $value
      * @param null $instance
@@ -198,6 +199,7 @@ class ObjectAdapter implements ObjectAdapterInterface
 
     /**
      * Check if method or property is allowed to access
+     *
      * @param ReflectionClass $reflection
      * @param $name
      * @param $options
@@ -237,18 +239,26 @@ class ObjectAdapter implements ObjectAdapterInterface
         return $cond;
     }
 
+    /**
+     * Reset object and reflection
+     */
     protected function reset()
     {
         $this->resetObject();
         $this->resetReflection();
     }
 
+    /**
+     * reset reflection
+     */
     protected function resetReflection()
     {
         $this->reflection = NULL;
-        $this->getReflection();
     }
 
+    /**
+     * reset object
+     */
     protected function resetObject()
     {
         $this->setObject($this->getReflection()->newInstance());
