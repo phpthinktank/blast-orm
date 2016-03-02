@@ -279,6 +279,17 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
         is_bool($data);
     }
 
+    protected function resetObject()
+    {
+        $reflection = $this->getReflection();
+
+        $this->setObject(
+            $this->getObject() instanceof GenericEntity ?
+                $reflection->newInstanceArgs([$this->getTableName()]) :
+                $reflection->newInstance()
+        );
+    }
+
     /**
      * Map data to source object
      *

@@ -38,6 +38,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
         $connection = $manager->getConnection();
         $connection->exec('CREATE TABLE post (id int, user_id int, title VARCHAR(255), content TEXT)');
         $connection->exec('CREATE TABLE user (pk int, name VARCHAR(255))');
+        $connection->exec('CREATE TABLE address (id int, user_id int, data TEXT)');
         $connection->exec('CREATE TABLE user_role (user_pk int, role_id int)');
         $connection->exec('CREATE TABLE role (id int, name VARCHAR(255))');
         $connection->insert('post', [
@@ -59,6 +60,11 @@ class RelationTest extends \PHPUnit_Framework_TestCase
         $connection->insert('user_role', [
             'user_pk' => 1,
             'role_id' => 1
+        ]);
+        $connection->insert('address', [
+            'id' => 1,
+            'user_id' => 1,
+            'data' => 'street 42, 11111 city'
         ]);
         $connection->insert('role', [
             'id' => 1,
@@ -88,6 +94,36 @@ class RelationTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testHasMany(){
+        $adapter = new EntityAdapter(new User);
+        $mapper = $adapter->getMapper();
+        $user = $mapper->find(1)->execute();
+
+        $this->assertInstanceOf(User::class, $user);
+
+        $posts = $user->getPost()->getQuery()->execute();
+        $this->assertInstanceOf(DataObject::class, $posts);
+        $this->assertInstanceOf(Post::class, $posts->current());
+
+    }
+
+    public function testHasOne(){
+        $adapter = new EntityAdapter(new User);
+        $mapper = $adapter->getMapper();
+        $user = $mapper->find(1)->execute();
+
+        $this->assertInstanceOf(User::class, $user);
+
+        var_dump($user->getAddress()->getQuery()->execute());
+
+
+
+//        $posts = $user->getPost()->getQuery()->execute();
+//        $this->assertInstanceOf(DataObject::class, $posts);
+//        $this->assertInstanceOf(Post::class, $posts->current());
+
+    }
+
+    public function testManyToMany(){
         $adapter = new EntityAdapter(new User);
         $mapper = $adapter->getMapper();
         $user = $mapper->find(1)->execute();

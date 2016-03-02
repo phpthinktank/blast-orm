@@ -239,7 +239,18 @@ class ObjectAdapter implements ObjectAdapterInterface
 
     protected function reset()
     {
-        $this->setObject($this->getReflection()->newInstance());
+        $this->resetObject();
+        $this->resetReflection();
+    }
+
+    protected function resetReflection()
+    {
         $this->reflection = NULL;
+        $this->getReflection();
+    }
+
+    protected function resetObject()
+    {
+        $this->setObject($this->getReflection()->newInstance());
     }
 }

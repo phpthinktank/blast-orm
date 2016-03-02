@@ -15,7 +15,9 @@ namespace Blast\Tests\Orm\Stubs\Entities;
 
 
 use Blast\Orm\Data\DataObject;
+use Blast\Orm\Entity\GenericEntity;
 use Blast\Orm\Relations\HasMany;
+use Blast\Orm\Relations\HasOne;
 
 /**
  * @codeCoverageIgnore
@@ -36,6 +38,11 @@ class User
      * @var DataObject|Post
      */
     private $post;
+
+    /**
+     * @var DataObject
+     */
+    private $address;
 
     public static function getPrimaryKeyName(){
         return 'pk';
@@ -86,6 +93,22 @@ class User
     }
 
     /**
+     * @return DataObject
+     */
+    public function getAddress()
+    {
+        return $this->address;
+    }
+
+    /**
+     * @param DataObject $address
+     */
+    public function setAddress($address)
+    {
+        $this->address = $address;
+    }
+
+    /**
      * Get relations
      * @param $entity
      * @return array
@@ -93,7 +116,8 @@ class User
     public static function relations($entity)
     {
         return [
-            new HasMany($entity, Post::class, 'user_id')
+            new HasMany($entity, Post::class, 'user_id'),
+            new HasOne($entity, new GenericEntity('address'), 'user_id'),
         ];
     }
 
