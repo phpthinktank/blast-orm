@@ -36,16 +36,4 @@ class Post implements DataObjectInterface, AccessorInterface, MutatorInterface
     {
         return 'post';
     }
-
-    /**
-     * Get relations
-     * @param object $entity
-     * @return array
-     */
-    public static function relations($entity)
-    {
-        return [
-            new BelongsTo($entity, User::class, 'user_id')
-        ];
-    }
 }

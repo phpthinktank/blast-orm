@@ -15,10 +15,6 @@ namespace Blast\Tests\Orm\Stubs\Entities;
 
 
 use Blast\Orm\Data\DataObject;
-use Blast\Orm\Entity\GenericEntity;
-use Blast\Orm\Relations\HasMany;
-use Blast\Orm\Relations\HasOne;
-use Blast\Orm\Relations\ManyToMany;
 
 /**
  * @codeCoverageIgnore
@@ -107,20 +103,6 @@ class User
     public function setAddress($address)
     {
         $this->address = $address;
-    }
-
-    /**
-     * Get relations
-     * @param $entity
-     * @return array
-     */
-    public static function relations($entity)
-    {
-        return [
-            new HasMany($entity, Post::class, 'user_id'),
-            new HasOne($entity, new GenericEntity('address'), 'user_id'),
-//            new ManyToMany($entity, new GenericEntity('role')),
-        ];
     }
 
 }
