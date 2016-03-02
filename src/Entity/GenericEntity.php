@@ -29,34 +29,34 @@ class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperA
     /**
      * @var Column[]
      */
-    private $fields = [];
+    private static $fields = [];
 
     /**
      * @var Index[]
      */
-    private $indexes = [];
+    private static $indexes = [];
 
     /**
      * @var MapperInterface
      */
-    private $mapper = null;
+    private static $mapper = null;
 
     /**
      * @var string
      */
-    private $primaryKeyName = null;
+    private static $primaryKeyName = null;
 
     /**
      * @var RelationInterface[]
      */
-    private $relations = [];
+    private static $relations = [];
 
     /**
      * @var string
      */
-    private $tableName = null;
+    private static $tableName = null;
 
-    public function __construct($tableName, $options = null)
+    public function __construct($tableName, array $options = [])
     {
         $onBefore = function($propertyName, $data){
             return $propertyName === 'primaryKeyName' ? is_string($data) : is_array($data);
@@ -84,6 +84,8 @@ class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperA
         foreach ($options as $key => $value) {
             $this->set($key, $value, $onBefore, $onLoop);
         }
+
+        $this->set('tableName', $tableName);
     }
 
     /**
@@ -95,20 +97,28 @@ class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperA
      */
     private function set($propertyName, $data, callable $onBefore = null, callable $onLoop = null)
     {
-        if (call_user_func_array($onBefore, [$propertyName, &$data])) {
+        $before = true;
+        if(is_callable($onBefore)){
+            $before = call_user_func_array($onBefore, [$propertyName, &$data]);
+        }
+        if (!$before) {
             return;
         }
 
         if (is_array($data)) {
             foreach ($data as $key => $value) {
-                if (call_user_func_array($onLoop, [$propertyName, &$value, &$key])) {
+                $loop = true;
+                if(is_callable($onLoop)){
+                    $loop = call_user_func_array($onLoop, [$propertyName, &$value, &$key]);
+                }
+                if (!$loop) {
                     continue;
                 }
 
-                $this->$propertyName[$key] = $value;
+                static::$$propertyName[$key] = $value;
             }
         }else{
-            $this->$propertyName = $data;
+            static::$$propertyName = $data;
         }
     }
 
@@ -117,7 +127,7 @@ class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperA
      */
     public function getFields()
     {
-        return $this->fields;
+        return static::$fields;
     }
 
     /**
@@ -125,7 +135,7 @@ class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperA
      */
     public function getIndexes()
     {
-        return $this->indexes;
+        return static::$indexes;
     }
 
     /**
@@ -133,10 +143,10 @@ class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperA
      */
     public function getMapper()
     {
-        if($this->mapper === null){
-            $this->mapper = new Mapper($this);
+        if(static::$mapper === null){
+            static::$mapper = new Mapper($this);
         }
-        return $this->mapper;
+        return static::$mapper;
     }
 
     /**
@@ -144,7 +154,7 @@ class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperA
      */
     public function getPrimaryKeyName()
     {
-        return $this->primaryKeyName;
+        return static::$primaryKeyName;
     }
 
     /**
@@ -152,7 +162,7 @@ class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperA
      */
     public function getRelations()
     {
-        return $this->relations;
+        return static::$relations;
     }
 
     /**
@@ -160,7 +170,7 @@ class GenericEntity implements FieldAwareInterface, IndexAwareInterface, MapperA
      */
     public function getTableName()
     {
-        return $this->tableName;
+        return static::$tableName;
     }
 
 }
