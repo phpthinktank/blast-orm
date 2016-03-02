@@ -19,11 +19,33 @@ use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Entity\EntityAdapterInterface;
 use Blast\Orm\Entity\EntityHydratorInterface;
+use Blast\Orm\Manager;
 use Blast\Orm\Query\Result;
+use Interop\Container\ContainerInterface;
 use stdClass;
 
 class EntityAdapterTest extends \PHPUnit_Framework_TestCase
 {
+
+    protected function setUp()
+    {
+        $container = $this->prophesize(ContainerInterface::class)->willImplement(ContainerInterface::class)->reveal();
+        Manager::create($container, [
+            'url' => 'sqlite:///:memory:',
+            'memory' => 'true'
+        ]);
+
+    }
+
+    protected function tearDown()
+    {
+        Manager::shutdown();
+    }
+
+    public function testLoadEntityAdapter(){
+
+    }
+
     public function testDecoratorImplementsDataDecorator(){
         $this->assertTrue(is_subclass_of(EntityAdapter::class, EntityHydratorInterface::class));
     }
@@ -36,9 +58,7 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testGetEntity(){
-        $adapter = new EntityAdapter(new stdClass());
-
-        $this->assertInstanceOf(stdClass::class, $adapter->getObject());
+        $this->assertInstanceOf(stdClass::class, EntityAdapter::load(stdClass::class)->getObject());
     }
 
     public function testDecorateRaw(){
@@ -54,7 +74,7 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testDecorateGivenEntity(){
-        $this->assertInstanceOf(stdClass::class, (new EntityAdapter(new stdClass()))->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY));
+        $this->assertInstanceOf(stdClass::class, EntityAdapter::load(stdClass::class)->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY));
     }
 
     public function testDecorateCollection(){

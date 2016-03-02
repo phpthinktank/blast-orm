@@ -90,7 +90,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
 
     public function testBelongsTo()
     {
-        $post = (new EntityAdapter(Post::class))->getMapper()->find(1)->execute();
+        $post = EntityAdapter::load(Post::class)->getMapper()->find(1)->execute();
         $relation = new BelongsTo($post, User::class);
 
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
@@ -99,7 +99,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testHasMany(){
-        $user = (new EntityAdapter(User::class))->getMapper()->find(1)->execute();
+        $user = EntityAdapter::load(User::class)->getMapper()->find(1)->execute();
         $relation = new HasMany($user, Post::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
         $posts = $relation->execute();
@@ -109,7 +109,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testHasOne(){
-        $user = (new EntityAdapter(User::class))->getMapper()->find(1)->execute();
+        $user = EntityAdapter::load(User::class)->getMapper()->find(1)->execute();
 
         $relation = new HasOne($user, Address::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
@@ -120,7 +120,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testManyToMany(){
-        $user = (new EntityAdapter(User::class))->getMapper()->find(1)->execute();
+        $user = EntityAdapter::load(User::class)->getMapper()->find(1)->execute();
         $relation = new ManyToMany($user, Role::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
 
