@@ -18,6 +18,7 @@ use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Entity\EntityAdapterInterface;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
+use Blast\Orm\Entity\EntityHydratorInterface;
 use Blast\Orm\Query\Result;
 
 abstract class AbstractRepository implements EntityAwareInterface, RepositoryInterface
@@ -49,7 +50,7 @@ abstract class AbstractRepository implements EntityAwareInterface, RepositoryInt
      */
     public function all()
     {
-        return $this->getAdapter()->getMapper()->select()->execute(EntityAdapterInterface::HYDRATE_COLLECTION);
+        return $this->getAdapter()->getMapper()->select()->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
     }
 
     /**
@@ -59,7 +60,7 @@ abstract class AbstractRepository implements EntityAwareInterface, RepositoryInt
      * @return \ArrayObject|\stdClass|Result|DataObject|object
      */
     public function find($primaryKey){
-        return $this->getAdapter()->getMapper()->find($primaryKey)->execute(EntityAdapterInterface::HYDRATE_ENTITY);
+        return $this->getAdapter()->getMapper()->find($primaryKey)->execute(EntityHydratorInterface::HYDRATE_ENTITY);
     }
 
     /**

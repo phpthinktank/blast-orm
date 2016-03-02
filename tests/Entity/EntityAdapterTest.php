@@ -18,13 +18,14 @@ use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Entity\EntityAdapterInterface;
+use Blast\Orm\Entity\EntityHydratorInterface;
 use Blast\Orm\Query\Result;
 use stdClass;
 
 class EntityAdapterTest extends \PHPUnit_Framework_TestCase
 {
     public function testDecoratorImplementsDataDecorator(){
-        $this->assertTrue(is_subclass_of(EntityAdapter::class, DataHydratorInterface::class));
+        $this->assertTrue(is_subclass_of(EntityAdapter::class, EntityHydratorInterface::class));
     }
 
     public function testGetData(){
@@ -43,22 +44,22 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
     public function testDecorateRaw(){
         $adapter = new EntityAdapter();
 
-        $this->assertInternalType('array', $adapter->hydrate([['name' => 'bob']], EntityAdapterInterface::HYDRATE_RAW));
+        $this->assertInternalType('array', $adapter->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_RAW));
     }
 
     public function testDecorateGenericEntity(){
         $adapter = new EntityAdapter();
 
-        $this->assertInstanceOf(Result::class, $adapter->hydrate([['name' => 'bob']], EntityAdapterInterface::HYDRATE_ENTITY));
+        $this->assertInstanceOf(Result::class, $adapter->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY));
     }
 
     public function testDecorateGivenEntity(){
-        $this->assertInstanceOf(stdClass::class, (new EntityAdapter(new stdClass()))->hydrate([['name' => 'bob']], EntityAdapterInterface::HYDRATE_ENTITY));
+        $this->assertInstanceOf(stdClass::class, (new EntityAdapter(new stdClass()))->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY));
     }
 
     public function testDecorateCollection(){
         $adapter = new EntityAdapter();
 
-        $this->assertInstanceOf(DataObject::class, $adapter->hydrate([['name' => 'bob']], EntityAdapter::HYDRATE_COLLECTION));
+        $this->assertInstanceOf(DataObject::class, $adapter->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_COLLECTION));
     }
 }

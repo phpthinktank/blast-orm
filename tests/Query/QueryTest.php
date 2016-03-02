@@ -17,6 +17,7 @@ namespace Blast\Tests\Orm\Query;
 use Blast\Orm\ConnectionCollectionInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
+use Blast\Orm\Entity\EntityHydratorInterface;
 use Blast\Orm\Manager;
 use Blast\Orm\Query;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
@@ -96,7 +97,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
     public function testForceSingleResult()
     {
         $query = new Query();
-        $result = $query->select()->from('post')->execute(EntityAdapter::HYDRATE_ENTITY);
+        $result = $query->select()->from('post')->execute(EntityHydratorInterface::HYDRATE_ENTITY);
 
         $this->assertInstanceOf(Result::class, $result);
     }
@@ -107,7 +108,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
     public function testForceResultCollection()
     {
         $query = new Query();
-        $result = $query->select()->from('post')->where('id = 1')->execute(EntityAdapter::HYDRATE_COLLECTION);
+        $result = $query->select()->from('post')->where('id = 1')->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
 
         $this->assertInstanceOf(DataObject::class, $result);
         $this->assertInstanceOf(Result::class, $result->current());
