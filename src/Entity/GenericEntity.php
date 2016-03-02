@@ -52,7 +52,7 @@ class GenericEntity extends DataObject implements AccessorInterface, FieldAwareI
     /**
      * @var string
      */
-    private static $primaryKeyName = null;
+    private static $primaryKeyName = EntityAdapterInterface::DEFAULT_PRIMARY_KEY_NAME;
 
     /**
      * @var RelationInterface[]
