@@ -14,9 +14,9 @@
 namespace Blast\Orm\Container;
 
 
-use Interop\Container\Exception\ContainerException;
+use Interop\Container\Exception\ContainerException as InteropContainerException;
 
-class DefinitionException extends \RuntimeException implements ContainerException
+class DefinitionException extends \RuntimeException implements InteropContainerException
 {
 
 }

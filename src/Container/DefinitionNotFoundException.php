@@ -18,7 +18,7 @@ use Interop\Container\Exception\NotFoundException;
 
 class DefinitionNotFoundException extends \Exception implements NotFoundException
 {
-    public function __construct($id, $code = 0, Exception $previous = null)
+    public function __construct($id = null, $code = 0, Exception $previous = null)
     {
         parent::__construct(sprintf('Service %s not found!', $id), $code, $previous);
     }

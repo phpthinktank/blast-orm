@@ -33,12 +33,12 @@ class Container implements ContainerInterface
      *
      * @return DefinitionInterface
      */
-    public function add($id, $service = null, $singleton = false){
-        if($service === null){
-            $service = $id;
-        }
+    public function add($id, $service = NULL, $singleton = FALSE)
+    {
 
-        $this->definitions[$id] = (new Definition($id, $service))->setIsSingleton($singleton);
+        $definition = (new Definition($id, $service))->setIsSingleton($singleton);
+        $id = $definition->getId();
+        $this->definitions[ $id ] = $definition;
 
         return $this->getDefinition($id);
     }
@@ -54,15 +54,20 @@ class Container implements ContainerInterface
      */
     public function get($id, array $args = [])
     {
-        if(!is_string($id)){
+        $service = NULL;
+        if (is_object($id)) {
+            $service = $id;
+            $id = get_class($id);
+        }
+        if (!is_string($id)) {
             throw new ContainerException(sprintf('id needs to be a string, %s given.', gettype($id)));
         }
-        //try to add if $id is class
-        if(class_exists($id) && !$this->has($id)){
-            $this->add($id);
-        }
 
-        return $this->getDefinition($id)->invoke($args);
+        $definition = class_exists($id) && !$this->has($id) ?
+            $this->add($id, $service) :
+            $this->getDefinition($id);
+
+        return $definition->invoke($args);
     }
 
     /**
@@ -75,7 +80,7 @@ class Container implements ContainerInterface
      */
     public function has($id)
     {
-        return isset($this->definitions[$id]);
+        return isset($this->definitions[ $id ]);
     }
 
     /**
@@ -86,7 +91,7 @@ class Container implements ContainerInterface
     public function getDefinition($id)
     {
         if ($this->has($id)) {
-            return $this->definitions[$id];
+            return $this->definitions[ $id ];
         }
 
         throw new DefinitionNotFoundException($id);

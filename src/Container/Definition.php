@@ -43,6 +43,17 @@ class Definition implements DefinitionInterface
 
     public function __construct($id, $service)
     {
+        if($service === null){
+            $service = $id;
+        }
+
+        if(is_object($id)){
+            $id = get_class($id);
+        }
+
+        if(!is_string($id)){
+            throw new ContainerException(sprintf('Id needs to be a string %s given.', gettype($id)));
+        }
 
         $this->id = $id;
         $this->service = $service;
@@ -70,7 +81,10 @@ class Definition implements DefinitionInterface
     public function getReflection()
     {
         if($this->reflection === null){
-            $this->reflection = new \ReflectionObject($this->getService());
+            $service = $this->getService();
+            $this->reflection = is_string($service) ?
+                new \ReflectionClass($service) :
+                new \ReflectionObject($service);
         }
         return $this->reflection;
     }
@@ -92,7 +106,7 @@ class Definition implements DefinitionInterface
             }
         }
 
-        if(class_exists($id)){
+        if(class_exists($id) && $reflection->getName() != $id){
             if(!$reflection->isSubclassOf($id)){
                 throw new DefinitionException(sprintf('%s needs to match contract by class %s', $reflection->getName(), $id));
             }
