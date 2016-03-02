@@ -49,6 +49,8 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
                 $object = Manager::getInstance()->getContainer()->get($object);
             } elseif (class_exists($object)) {
                 $object = new $object;
+            }else{
+                throw new \InvalidArgumentException('Unable to create object from string: ' . $object);
             }
         }
         if (!is_object($object)) {
