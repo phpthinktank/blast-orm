@@ -15,6 +15,7 @@ namespace Blast\Orm\Relations;
 
 use Blast\Orm\Entity\EntityAdapterInterface;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
+use Blast\Orm\Entity\EntityHydratorInterface;
 use Blast\Orm\Entity\GenericEntity;
 use Blast\Orm\Query;
 
@@ -173,7 +174,7 @@ class ManyToMany implements RelationInterface
             ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
             ->execute(EntityAdapterInterface::HYDRATE_RAW);
 
-        $foreignQuery = $foreignAdapter->getMapper()->select([$junctionForeignKey]);
+        $foreignQuery = $foreignAdapter->getMapper()->select();
 
         foreach ($results as $result) {
             $foreignQuery->where($query->expr()->eq($foreignKey, $result[$junctionForeignKey]));
@@ -181,5 +182,12 @@ class ManyToMany implements RelationInterface
 
         $this->query = $foreignQuery;
         $this->name = $foreignAdapter->getTableName();
+    }
+
+    /**
+     * @return \Blast\Orm\Data\DataObject
+     */
+    public function execute(){
+        return $this->getQuery()->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
     }
 }

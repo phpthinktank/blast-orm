@@ -15,6 +15,7 @@ namespace Blast\Orm\Relations;
 
 
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
+use Blast\Orm\Entity\EntityHydratorInterface;
 use Blast\Orm\Query;
 
 class BelongsTo implements RelationInterface
@@ -98,6 +99,13 @@ class BelongsTo implements RelationInterface
         //if no primary key is available, return a select
         $this->query = $primaryKey === null ? $mapper->select() : $mapper->find($primaryKey);
         $this->name = $foreignAdapter->getTableName();
+    }
+
+    /**
+     * @return array|\Blast\Orm\Data\DataObject|Query\Result|bool
+     */
+    public function execute(){
+        return $this->getQuery()->execute(EntityHydratorInterface::AUTO);
     }
 
 }

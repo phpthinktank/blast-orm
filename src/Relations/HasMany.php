@@ -15,6 +15,7 @@ namespace Blast\Orm\Relations;
 
 
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
+use Blast\Orm\Entity\EntityHydratorInterface;
 use Blast\Orm\Entity\GenericEntity;
 use Blast\Orm\Query;
 
@@ -93,6 +94,13 @@ class HasMany implements RelationInterface
         //if no primary key is available, return a select
         $this->query = $mapper->select()->where((new Query())->expr()->eq($foreignKey, $foreignKeyValue));
         $this->name = $foreignAdapter->getTableName();
+    }
+
+    /**
+     * @return \Blast\Orm\Data\DataObject
+     */
+    public function execute(){
+        return $this->getQuery()->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
     }
 
 

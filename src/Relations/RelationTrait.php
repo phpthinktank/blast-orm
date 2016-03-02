@@ -57,8 +57,4 @@ trait RelationTrait
         return $this->name;
     }
 
-    public function execute(){
-        return $this->getQuery()->execute();
-    }
-
 }
