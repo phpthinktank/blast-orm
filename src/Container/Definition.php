@@ -41,6 +41,16 @@ class Definition implements DefinitionInterface
      */
     private $singleton = false;
 
+    private $interfaceContractFlag = null;
+
+    private $classContractFlag = null;
+
+    /**
+     * @var object
+     */
+    private $instances = [];
+
+
     public function __construct($id, $service)
     {
         if($service === null){
@@ -99,21 +109,18 @@ class Definition implements DefinitionInterface
         $reflection = $this->getReflection();
         $id = $this->getId();
 
-        //validate contract
-        if(interface_exists($id)){
-            if(!$reflection->implementsInterface($id)){
-                throw new DefinitionException(sprintf('%s needs to match contract by interface %s', $reflection->getName(), $id));
-            }
+        //validate contract by interface
+        if(!$this->validateInterfaceContract($id, $reflection)){
+            throw new DefinitionException(sprintf('%s needs to match contract by interface %s', $reflection->getName(), $id));
         }
 
-        if(class_exists($id) && $reflection->getName() != $id){
-            if(!$reflection->isSubclassOf($id)){
-                throw new DefinitionException(sprintf('%s needs to match contract by class %s', $reflection->getName(), $id));
-            }
+        //validate contract by class
+        if(!$this->validateClassContract($id, $reflection)){
+            throw new DefinitionException(sprintf('%s needs to match contract by class %s', $reflection->getName(), $id));
         }
 
         //create instance
-        $instance = ($this->isSingleton()) ? $this->getService() : $reflection->newInstanceArgs($args);
+        $instance = $this->createInstance($reflection, $args);
 
         //invoke methods
         foreach($this->methods as $method => $argsCollection){
@@ -176,5 +183,57 @@ class Definition implements DefinitionInterface
         $this->singleton = $singleton;
 
         return $this;
+    }
+
+    /**
+     * @param $id
+     * @param \ReflectionClass $reflection
+     * @return bool
+     */
+    private function validateInterfaceContract($id, \ReflectionClass $reflection)
+    {
+        if(!is_bool($this->interfaceContractFlag) || $this->interfaceContractFlag  === null){
+            $this->interfaceContractFlag = true;
+            if (interface_exists($id)) {
+                if (!$reflection->implementsInterface($id)) {
+                    $this->interfaceContractFlag = false;
+                }
+            }
+        }
+
+        return $this->interfaceContractFlag;
+    }
+
+    /**
+     * @param $id
+     * @param \ReflectionClass $reflection
+     * @return bool
+     */
+    private function validateClassContract($id, \ReflectionClass $reflection)
+    {
+        if(!is_bool($this->classContractFlag) || $this->classContractFlag === null){
+            $this->classContractFlag = true;
+            if (class_exists($id) && $reflection->getName() != $id) {
+                if (!$reflection->isSubclassOf($id)) {
+                    $this->classContractFlag = false;
+                }
+            }
+        }
+
+        return $this->classContractFlag;
+    }
+
+    /**
+     * @param $reflection
+     * @param array $args
+     * @return object
+     */
+    public function createInstance(\ReflectionClass $reflection, array $args = [])
+    {
+        if($this->isSingleton()){
+            return $this->getService();
+        }
+
+        return $reflection->newInstanceArgs($args);
     }
 }
