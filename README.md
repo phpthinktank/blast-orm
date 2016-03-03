@@ -364,7 +364,12 @@ $mapper = $postAdapter->getMapper();
 
 ### Mapper
 
-#### Get mapper
+The mapper prepares queries for data persistence and access of a provided entity class. All methods always return a query 
+instance and need to execute manually.
+
+#### Create a new mapper for entity
+
+Create mapper by instance
 
 ```php
 <?php
@@ -375,6 +380,16 @@ $mapper = new Mapper($post);
 
 ```
 
+Create mapper from adapter
+
+```php
+<?php
+
+$adapter = EntityAdapterCollectionFacade::get($post);
+$mapper = $adapter->getMapper();
+
+```
+
 #### find
 
 Fetch one entry by primary key
@@ -382,7 +397,7 @@ Fetch one entry by primary key
 ```php
 <?php
 
-$post = $mapper->find(1);
+$post = $mapper->find(1)->execute();
 
 ```
 
@@ -393,7 +408,10 @@ Custom select query
 ```php
 <?php
 
-$first = $mapper->select()->where('title = "Hello world"')->setMaxResults(1)->execute(EntityHydratorInterface::RESULT_ENTITY);
+$post = $mapper->select()
+            ->where('title = "Hello world"')
+            ->setMaxResults(1)
+            ->execute(EntityHydratorInterface::RESULT_ENTITY);
 ```
 
 #### delete
@@ -416,16 +434,291 @@ Delete many entries
 $repository->delete([1, 2]);
 ```
 
-### Repository
+### Relations
 
-#### all
+Relations provide access to related, parent and child entity from another entity.
 
-Fetch all entries
+#### Passing relations
+
+Pass relations as `array` by computed static relation method in entity class 
 
 ```php
 <?php
-//find all posts as collection
-$posts = $repository->all();
+
+class Post {
+
+    /**
+     * @var Query
+     */
+    $comments = [];
+    
+    /**
+     * @return \Blast\Orm\Relations\RelationInterface
+     */
+    public function getComments(){
+        return $this->comments;
+    }
+
+    public static function relation(Post $entity){
+        return [
+            HasMany($entity, Comments::class)
+        ]
+    }
+}
+
+$post = $mapper->find(1);
+
+$relation = $post->getComments();
+$comments = $relation->execute();
+
+```
+
+Execute directly in custom method
+
+```php
+<?php
+
+class Post {
+    
+    /**
+     * @return Comments[]
+     */
+    public function getComments(){
+        $relation = HasMany($this, Comments::class);
+        
+        return $relation->execute();
+    }
+}
+
+```
+
+Access relation query and modify the result.
+
+__For example__: We assume we have _accepted_ and _denied_ comments. We only want to receive _accepted_ comments.
+
+```php
+<?php
+
+$publishedComments = $relation->getQuery()->where('published = 1')->execute();
+
+```
+
+#### HasOne (one-to-one)
+
+One entity is associated with one related entity by a field which associates with primary key in current entity.
+
+- `$entity` - Current entity instance
+- `$foreignEntity` - Entity class name, instance or table name
+- `$foreignKey` - Field name on related entity. `null` by default. Empty foreign key is determined by current entity table name and primary key name as follows: `{tableName}_{primaryKeyName}`, e.g `user_id`
+
+##### Example
+
+One user has one address.
+
+```php
+<?php
+
+$relation = HasOne($user, Address::class, 'user_id');
+
+```
+
+#### HasMany (one-to-many)
+
+One entity is associated with many related entities by a field which associates with primary key in current entity.
+
+- `$entity` - Current entity instance
+- `$foreignEntity` - Entity class name, instance or table name
+- `$foreignKey` - Field name on a related entity. `null` by default. Empty foreign key is determined by current entity table name and primary key name as follows: `{tableName}_{primaryKeyName}`, e.g `post_id`
+
+##### Example
+
+One post has many comments
+
+```php
+<?php
+
+$relation = HasOne($post, Comments::class, 'post_id');
+
+```
+
+#### BelongsTo (one-to-one or one-to-many)
+
+BelongsTo is the inverse of a HasOne or a HasMany relation.
+
+One entity is associated with one related entity by a field which associates with primary key in related entity.
+
+- `$entity` - Current entity instance
+- `$foreignEntity` - Entity class name, instance or table name
+- `$localKey` - Field name on current entity. `null` by default. Empty local key is determined by related entity table name and primary key name as follows: `{tableName}_{primaryKeyName}`, e.g `post_id`
+
+##### Example
+
+One post has one or many comments
+
+```php
+<?php
+
+$relation = BelongsTo($comment, Post::class, 'post_id');
+
+```
+
+#### ManyToMany (many-to-many)
+
+Many entities of type _A_ are associated with many related entities of type _B_ by a junction table. The junction table 
+stores associations from entities of type _A_ to entities of type _B_.
+
+- `$entity`: Current entity instance
+- `$foreignEntity`: Entity class name, instance or table name
+- `$foreignKey` - Field name on a related entity. `null` by default. Empty foreign key is determined by current primary key name.
+- `$localKey`: Field name on current entity. `null` by default. Empty foreign key is determined by related entity primary key name.
+- `$junction`: Junction table name. `null` by default. Empty table name is determined by entity table name and foreign entity table name as follows: `{tableName}_{foreignTableName}`, e.g `post_comment`.
+- `$junctionLocalKey`: Field name on a related entity. `null` by default. Empty junction local key is determined by current entity table name and primary key name as follows: `{tableName}_{primaryKeyName}`, e.g `post_id`.
+- `$junctionForeignKey`: Field name on current entity. `null` by default. Empty junction foreign key is determined by related entity table name and primary key name as follows: `{tableName}_{primaryKeyName}`, e.g `comment_id`.
+
+##### Example
+
+One user has many roles, and one role has many users. Users primary key name is `id`, Roles primary key name is `pk` 
+(Primary key short name). The junction table `user_role` contains `user_id` and `role_id` columns.
+
+```php
+<?php
+
+$relation = ManyToMany($user, Role::class, 'pk', 'id', 'user_role', 'user_id', 'role_id');
+
+```
+
+### Repository
+
+The repository abstracts methods for data persistence and access. All methods execute their queries directly. 
+
+Blast ORM integration for repositories are __optional__!
+
+#### Create repository
+
+A repository knows it's entity. Therefore we need to pass the entity as class name or instance 
+
+Create from interface
+
+```php
+<?php
+
+use Blast\Orm\RepositoryInterface;
+use Blast\Orm\Entity\EntityAdapter;
+use Blast\Orm\Entity\EntityAdapterLoaderTrait;
+use Blast\Orm\Entity\EntityAwareInterface;
+use Blast\Orm\Entity\EntityAwareTrait;
+
+class PostRepository implements EntityAwareInterface, RepositoryInterface
+{
+    use EntityAwareTrait;
+    use EntityAdapterLoaderTrait;
+    
+    /**
+     * Init repository and bind related entity
+     */
+    public function __construct(){
+        $this->setEntity(Post::class);
+    }
+
+    /**
+     * @var EntityAdapter
+     */
+    protected $adapter = null;
+
+    /**
+     * Get adapter for entity
+     *
+     * @return \Blast\Orm\Entity\EntityAdapter
+     */
+    private function getAdapter(){
+        if($this->adapter === null){
+            $this->adapter = $this->loadAdapter($this->getEntity());
+        }
+        return $this->adapter;
+    }
+
+    /**
+     * Get a collection of all entities
+     *
+     * @return \ArrayObject|\stdClass|\Blast\Orm\Data\DataObject|object
+     */
+    public function all()
+    {
+        return $this->getAdapter()->getMapper()->select()->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
+    }
+
+    /**
+     * Find entity by primary key
+     *
+     * @param mixed $primaryKey
+     * @return \ArrayObject|\stdClass|\Blast\Orm\Query\Result|\Blast\Orm\Data\DataObject|object
+     */
+    public function find($primaryKey){
+        return $this->getAdapter()->getMapper()->find($primaryKey)->execute(EntityHydratorInterface::HYDRATE_ENTITY);
+    }
+
+    /**
+     * Save new or existing entity data
+     *
+     * @param object|array $data
+     * @return int|bool
+     */
+    public function save($data){
+        $mapper = $this->getAdapter()->getMapper();
+        $query = $adapter->isNew() ? $mapper->create($data) : $mapper->update($data);
+        return $query->execute();
+    }
+
+}
+
+```
+
+Create repository by abstract
+
+```php
+<?php
+
+use Blast\Orm\AbstractRepository;
+
+class PostRepository extends AbstractRepository {
+    
+    /**
+     * Init repository and bind related entity
+     */
+    public function __construct(){
+        $this->setEntity(Post::class);
+    }
+}
+```
+
+Create repository instance
+
+```php
+<?php
+
+$postRepository = new PostRepository();
+
+```
+
+#### find
+
+Fetch one entry by primary key
+
+```php
+<?php
+
+$post = $postRepository->find(1);
+
+```
+
+#### all
+
+Fetch all entries and return as collection `Blast\Orm\Data\DataObject`
+
+```php
+<?php
+
+$posts = $postRepository->all();
 
 foreach($posts as $post){
 
@@ -437,10 +730,12 @@ foreach($posts as $post){
 
 #### save
 
-Save is determining whether to create or update an entity, but you could also use `update` or `create` instead of save.
+Save is determining if the entity is new and executes `Blast\Orm\Mapper::update` or if it is new `Blast\Orm\Mapper::create`.
 
 ```php
 <?php
+
+$post = new Post();
 
 $post->title = 'Hello World';
 $post->content = 'Some content about hello world.';
