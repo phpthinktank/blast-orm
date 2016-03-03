@@ -4,7 +4,7 @@
 [![Software License][ico-license]](LICENSE.md)
 [![Build Status][ico-travis]][link-travis]
 [![Total Downloads][ico-downloads]][link-downloads]
-[![Coverage Status](link-coveralls)
+[![Coverage Status][link-coveralls]
 
 Framework agnostic data access and persistence based on Doctrine 2 DBAL.
 
