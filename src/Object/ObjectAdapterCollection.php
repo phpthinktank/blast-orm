@@ -76,7 +76,7 @@ class ObjectAdapterCollection
             if (class_exists($object)) {
                 $object = new $object;
             } else {
-                throw new \InvalidArgumentException('Unable to create object from string: ' . $object);
+                throw new InvalidObjectFromStringException('Unable to create object from string: ' . $object);
             }
         }
         return $object;

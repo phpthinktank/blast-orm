@@ -79,13 +79,26 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
     }
 
     /**
-     * @return mixed|null
+     * Get entity fields
+     *
+     * @return \Doctrine\DBAL\Schema\Column[]
+     *
+     * Currently not supported
+     * @codeCoverageIgnore
      */
     public function getFields()
     {
         return $this->access('fields', [], null, \ReflectionMethod::IS_STATIC);
     }
 
+    /**
+     * Get entity indexes
+     *
+     * @return \Doctrine\DBAL\Schema\Index[]
+     *
+     * Currently not supported
+     * @codeCoverageIgnore
+     */
     public function getIndexes()
     {
         return $this->access('index', [], null, \ReflectionMethod::IS_STATIC);
@@ -164,6 +177,9 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
      * set query object
      * @param Query $query
      * @return mixed|null
+     *
+     * Currently not supported
+     * @codeCoverageIgnore
      */
     public function setQuery(Query $query)
     {
@@ -175,6 +191,9 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
      * get query object from entity
      *
      * @return mixed|null
+     *
+     * Currently not supported
+     * @codeCoverageIgnore
      */
     public function getQuery()
     {

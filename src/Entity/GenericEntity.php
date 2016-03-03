@@ -22,13 +22,11 @@ use Blast\Orm\Data\MutatorTrait;
 use Blast\Orm\Mapper;
 use Blast\Orm\MapperAwareInterface;
 use Blast\Orm\MapperInterface;
-use Blast\Orm\Relations\RelationInterface;
-use Blast\Orm\Relations\RelationsAwareInterface;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
 
 class GenericEntity extends DataObject implements AccessorInterface, FieldAwareInterface, IndexAwareInterface,
-    MapperAwareInterface, MutatorInterface, PrimaryKeyAwareInterface, RelationsAwareInterface, TableNameAwareInterface
+    MapperAwareInterface, MutatorInterface, PrimaryKeyAwareInterface, TableNameAwareInterface
 {
 
     use AccessorTrait;
@@ -55,17 +53,18 @@ class GenericEntity extends DataObject implements AccessorInterface, FieldAwareI
     private static $primaryKeyName = EntityAdapterInterface::DEFAULT_PRIMARY_KEY_NAME;
 
     /**
-     * @var RelationInterface[]
-     */
-    private static $relations = [];
-
-    /**
      * @var string
      */
     private static $tableName = null;
 
     public function __construct($tableName, array $options = [])
     {
+        // @codeCoverageIgnoreStart
+        /**
+         * @param $propertyName
+         * @param $data
+         * @return bool
+         */
         $onBefore = function($propertyName, $data){
             return $propertyName === 'primaryKeyName' ? is_string($data) : is_array($data);
         };
@@ -75,8 +74,6 @@ class GenericEntity extends DataObject implements AccessorInterface, FieldAwareI
                 return $value instanceof Column;
             }elseif($propertyName === 'indexes'){
                 return $value instanceof Index;
-            }elseif($propertyName === 'relations'){
-                return $value instanceof RelationInterface;
             }elseif($propertyName === 'mapper'){
                 if(class_exists($value)){
                     if(!is_object($value)){
@@ -92,6 +89,7 @@ class GenericEntity extends DataObject implements AccessorInterface, FieldAwareI
         foreach ($options as $key => $value) {
             $this->setOption($key, $value, $onBefore, $onLoop);
         }
+        // @codeCoverageIgnoreEnd
 
         $this->setOption('tableName', $tableName);
     }
@@ -113,6 +111,13 @@ class GenericEntity extends DataObject implements AccessorInterface, FieldAwareI
             return;
         }
 
+        $property = new \ReflectionProperty($this, $propertyName);
+        if(!$property->isPublic()){
+            $property->setAccessible(true);
+        }
+        $propertyValue = $property->getValue($this);
+
+        // @codeCoverageIgnoreStart
         if (is_array($data)) {
             foreach ($data as $key => $value) {
                 $loop = true;
@@ -123,15 +128,24 @@ class GenericEntity extends DataObject implements AccessorInterface, FieldAwareI
                     continue;
                 }
 
-                static::$$propertyName[$key] = $value;
+
+
+                $propertyValue[$key] = $value;
             }
         }else{
-            static::$$propertyName = $data;
+            $propertyValue = $data;
         }
+        // @codeCoverageIgnoreEnd
+
+        $property->setValue($this, $propertyValue);
     }
 
     /**
      * @return \Doctrine\DBAL\Schema\Column[]
+     *
+     *
+     * Currently not supported
+     * @codeCoverageIgnore
      */
     public function getFields()
     {
@@ -140,6 +154,9 @@ class GenericEntity extends DataObject implements AccessorInterface, FieldAwareI
 
     /**
      * @return \Doctrine\DBAL\Schema\Index[]
+     *
+     * Currently not supported
+     * @codeCoverageIgnore
      */
     public function getIndexes()
     {
@@ -163,14 +180,6 @@ class GenericEntity extends DataObject implements AccessorInterface, FieldAwareI
     public function getPrimaryKeyName()
     {
         return static::$primaryKeyName;
-    }
-
-    /**
-     * @return \Blast\Orm\Relations\RelationInterface[]
-     */
-    public function getRelations()
-    {
-        return static::$relations;
     }
 
     /**

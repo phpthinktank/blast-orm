@@ -168,16 +168,21 @@ class ManyToMany implements RelationInterface
         $query = new Query();
 
         //get relations by through db object
-        $junctionAdapter = $this->loadAdapter(is_string($junction) ? new GenericEntity($junction) : $junction);
-        $results = $junctionAdapter->getMapper()
-            ->select([$junctionForeignKey])
-            ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
-            ->execute(EntityAdapterInterface::HYDRATE_RAW);
+        if(isset($data[$localKey])){
+            $junctionAdapter = $this->loadAdapter(is_string($junction) ? new GenericEntity($junction) : $junction);
+            $results = $junctionAdapter->getMapper()
+                ->select([$junctionForeignKey])
+                ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
+                ->execute(EntityAdapterInterface::HYDRATE_RAW);
 
-        $foreignQuery = $foreignAdapter->getMapper()->select();
+            $foreignQuery = $foreignAdapter->getMapper()->select();
 
-        foreach ($results as $result) {
-            $foreignQuery->where($query->expr()->eq($foreignKey, $result[$junctionForeignKey]));
+            foreach ($results as $result) {
+                $foreignQuery->where($query->expr()->eq($foreignKey, $result[$junctionForeignKey]));
+            }
+
+        }else{
+            $foreignQuery = $foreignAdapter->getMapper()->select();
         }
 
         $this->query = $foreignQuery;

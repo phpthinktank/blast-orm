@@ -84,22 +84,29 @@ class HasMany implements RelationInterface
         $data = $adapter->getData();
 
         //find primary key
-        $foreignKeyValue = $data[$adapter->getPrimaryKeyName()];
-        if($foreignKey === null){
+        if ($foreignKey === null) {
             $foreignKey = $adapter->getTableName() . '_' . $adapter->getPrimaryKeyName();
         }
 
         $mapper = $foreignAdapter->getMapper();
 
+        $foreignKeyValue = isset($data[$adapter->getPrimaryKeyName()]) ? $data[$adapter->getPrimaryKeyName()] : false;
+
         //if no primary key is available, return a select
-        $this->query = $mapper->select()->where((new Query())->expr()->eq($foreignKey, $foreignKeyValue));
+        $query = $mapper->select();
+        if ($foreignKeyValue !== false) {
+            $query->where((new Query())->expr()->eq($foreignKey, $foreignKeyValue));
+
+        }
+        $this->query = $query;
         $this->name = $foreignAdapter->getTableName();
     }
 
     /**
      * @return \Blast\Orm\Data\DataObject
      */
-    public function execute(){
+    public function execute()
+    {
         return $this->getQuery()->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
     }
 

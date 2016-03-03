@@ -15,6 +15,7 @@ namespace Blast\Orm\Entity;
 
 
 use Blast\Orm\Facades\FacadeFactory;
+use Blast\Orm\Object\InvalidObjectFromStringException;
 use Blast\Orm\Object\ObjectAdapterCollection;
 use Blast\Orm\Query\Result;
 
@@ -51,9 +52,15 @@ class EntityAdapterCollection extends ObjectAdapterCollection
         }
         // @coverageIgnoreEnd
 
-        $object = parent::createObject($object);
+        try{
+            $object = parent::createObject($object);
+        }catch(InvalidObjectFromStringException $e){
 
-        if (!is_object($object)) {
+        }
+
+        $object = is_string($object) ? new GenericEntity($object) : $object;
+
+        if(!is_object($object)){
             $object = new Result();
         }
 
