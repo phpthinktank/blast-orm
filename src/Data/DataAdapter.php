@@ -14,9 +14,9 @@
 namespace Blast\Orm\Data;
 
 
-use Blast\Orm\Object\ObjectAdapter;
+use Blast\Orm\Object\AbstractObjectAdapter;
 
-class DataAdapter extends ObjectAdapter implements DataObjectInterface
+class DataAdapter extends AbstractObjectAdapter implements DataObjectInterface
 {
     const DATA_DEFAULT_VALUE = '_____DATA_DEFAULT_VALUE_____';
 

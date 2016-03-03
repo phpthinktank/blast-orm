@@ -15,15 +15,26 @@ namespace Blast\Orm\Facades;
 
 use Blast\Facades\FacadeFactory as BlastFacadeFactory;
 use Blast\Orm\Container\Container;
+use Blast\Orm\Container\ContainerAdd;
+use Interop\Container\ContainerInterface;
 
 class FacadeFactory extends BlastFacadeFactory
 {
     public static function getContainer()
     {
         if(parent::$container === null){
-            parent::$container = new Container();
+            parent::setContainer(new Container());
+        }
+
+        $container = parent::$container;
+
+        if(!$container->has(ContainerInterface::class)){
+            ContainerAdd::add($container, ContainerInterface::class, $container);
+            parent::$container = $container;
         }
 
         return parent::getContainer();
     }
+
+
 }

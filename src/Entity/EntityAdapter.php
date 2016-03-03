@@ -16,11 +16,8 @@ namespace Blast\Orm\Entity;
 
 use Blast\Orm\Data\DataAdapter;
 use Blast\Orm\Data\DataObject;
-use Blast\Orm\ConnectionCollection;
-use Blast\Orm\Facades\FacadeFactory;
 use Blast\Orm\Mapper;
 use Blast\Orm\MapperInterface;
-use Blast\Orm\Object\ObjectAdapterCache;
 use Blast\Orm\Query;
 use Blast\Orm\Relations\RelationInterface;
 use Doctrine\DBAL\Driver\Statement;
@@ -39,49 +36,12 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
     private $mapper;
 
     /**
-     * @param null $object
-     * @return EntityAdapter|static
-     * @throws \Exception
-     */
-    public static function load($object = null)
-    {
-        $object = static::createObject($object);
-        return ObjectAdapterCache::load($object, static::class);
-
-    }
-
-    /**
-     * @param $object
-     * @return Query\Result|mixed
-     */
-    public static function createObject($object)
-    {
-        // this is very specific to container
-        // @coverageIgnoreStart
-        if (is_string($object)) {
-            $container = FacadeFactory::getContainer();
-            if ($container->has($object)) {
-                $object = $container->get($object);
-            }
-        }
-        // @coverageIgnoreEnd
-
-        $object = ObjectAdapterCache::createObject($object);
-
-        if (!is_object($object)) {
-            $object = new Query\Result();
-        }
-        return $object;
-    }
-
-    /**
      * EntityAdapter constructor.
      * @param array|\stdClass|\ArrayObject|object|string $object
      */
     public function __construct($object = null)
     {
-        $object = static::createObject($object);
-
+        $object = EntityAdapterCollectionFacade::createObject($object);
         parent::__construct($object);
     }
 

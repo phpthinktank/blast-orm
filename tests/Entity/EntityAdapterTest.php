@@ -18,6 +18,7 @@ use Blast\Orm\ConnectionFacade;
 use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
+use Blast\Orm\Entity\EntityAdapterCollectionFacade;
 use Blast\Orm\Entity\EntityAdapterInterface;
 use Blast\Orm\Entity\EntityHydratorInterface;
 use Blast\Orm\ConnectionCollection;
@@ -30,14 +31,14 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
 {
 
     public function testLoadEntityAdapter(){
-        $adapter = EntityAdapter::load(Post::class);
+        $adapter = EntityAdapterCollectionFacade::get(Post::class);
 
         $this->assertInstanceOf(EntityAdapter::class, $adapter);
         $this->assertInstanceOf(Post::class, $adapter->getObject());
     }
 
     public function testCreateEntity(){
-        $entity = EntityAdapter::createObject(Post::class);
+        $entity = EntityAdapterCollectionFacade::createObject(Post::class);
         $this->assertInstanceOf(Post::class, $entity);
     }
 
@@ -53,7 +54,7 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testGetEntity(){
-        $this->assertInstanceOf(stdClass::class, EntityAdapter::load(stdClass::class)->getObject());
+        $this->assertInstanceOf(stdClass::class, EntityAdapterCollectionFacade::get(stdClass::class)->getObject());
     }
 
     public function testDecorateRaw(){
@@ -69,7 +70,7 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testDecorateGivenEntity(){
-        $this->assertInstanceOf(stdClass::class, EntityAdapter::load(stdClass::class)->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY));
+        $this->assertInstanceOf(stdClass::class, EntityAdapterCollectionFacade::get(stdClass::class)->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY));
     }
 
     public function testDecorateCollection(){
