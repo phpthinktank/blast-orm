@@ -28,8 +28,8 @@ Entity classes are a memory representations of a database entity. Entity classes
 match contracts. You could use prepared traits and classes of `Blast\Orm\Data` component for convenient data handling. 
 It is recommended to use accessors (getters) and mutators (setters) for properties on plain objects.
 
-Entity classes could also be instances of ![`stdClass`](http://php.net/manual/en/reserved.classes.php), 
-![`ArrayObject`](http://php.net/manual/de/class.arrayobject.php) or ![`DataObject`](src/Data/DataObject.php)
+Entity classes could also be instances of [`stdClass`](http://php.net/manual/en/reserved.classes.php), 
+[`ArrayObject`](http://php.net/manual/de/class.arrayobject.php) or [`DataObject`](src/Data/DataObject.php)
 
 #### Adapters
 
