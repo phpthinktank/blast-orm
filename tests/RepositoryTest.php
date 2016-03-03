@@ -17,12 +17,10 @@ namespace Blast\Tests\Orm;
 use Blast\Orm\ConnectionCollectionInterface;
 use Blast\Orm\ConnectionFacade;
 use Blast\Orm\Data\DataObject;
-use Blast\Orm\EntityAwareInterface;
-use Blast\Orm\ConnectionCollection;
+use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\RepositoryInterface;
 use Blast\Tests\Orm\Stubs\Entities\Post;
 use Blast\Tests\Orm\Stubs\PostRepository;
-use Interop\Container\ContainerInterface;
 
 class RepositoryTest extends \PHPUnit_Framework_TestCase
 {

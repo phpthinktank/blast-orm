@@ -11,7 +11,7 @@
  *
  */
 
-namespace Blast\Orm;
+namespace Blast\Orm\Entity;
 
 
 use Blast\Orm\Facades\FacadeFactory;

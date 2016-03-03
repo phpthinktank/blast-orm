@@ -15,6 +15,7 @@ namespace Blast\Orm;
 use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
+use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
 use Blast\Orm\Query\Result;

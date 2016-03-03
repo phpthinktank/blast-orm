@@ -16,8 +16,9 @@ namespace Blast\Orm;
 
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\Entity\EntityAdapterInterface;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
+use Blast\Orm\Entity\EntityAwareInterface;
+use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Entity\EntityHydratorInterface;
 use Blast\Orm\Query\Result;
 
