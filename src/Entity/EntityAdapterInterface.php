@@ -13,13 +13,17 @@
 
 namespace Blast\Orm\Entity;
 
+use Blast\Orm\MapperAwareInterface;
 use Blast\Orm\Query;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Index;
+use Blast\Orm\Query\QueryAwareInterface;
+use Blast\Orm\Relations\RelationsAwareInterface;
 use League\Event\EmitterAwareInterface;
 
-interface EntityAdapterInterface extends EmitterAwareInterface
+interface EntityAdapterInterface extends EntityHydratorInterface, EmitterAwareInterface, FieldAwareInterface,
+    IndexAwareInterface, MapperAwareInterface, PrimaryKeyAwareInterface, QueryAwareInterface,
+    RelationsAwareInterface, TableNameAwareInterface
 {
+    const DEFAULT_PRIMARY_KEY_NAME = 'id';
 
     /**
      * Entity class name
@@ -29,39 +33,9 @@ interface EntityAdapterInterface extends EmitterAwareInterface
     public function getClassName();
 
     /**
-     * Table name
-     *
-     * @return string
+     * Fetch all data without relations
      */
-    public function getTableName();
-
-    /**
-     * Name of primary key
-     *
-     * @return string
-     */
-    public function getPrimaryKeyName();
-
-    /**
-     * @return Column[]
-     */
-    public function getFields();
-
-    /**
-     * @return Index[]
-     */
-    public function getIndexes();
-
-    /**
-     * @return Query[]
-     */
-    public function getRelations();
-
-    /**
-     * @param $data
-     * @return mixed
-     */
-    public function hydrate($data);
+    public function getDataWithoutRelations();
 
     /**
      * @param Query $query
@@ -69,12 +43,5 @@ interface EntityAdapterInterface extends EmitterAwareInterface
      * @return $this
      */
     public function setQuery(Query $query);
-
-    /**
-     * Get modified query
-     *
-     * @return Query
-     */
-    public function getQuery();
 
 }

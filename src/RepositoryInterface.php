@@ -1,25 +1,31 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Marco Bunge
- * Date: 26.11.2015
- * Time: 15:40
+ *
+ * (c) Marco Bunge <marco_bunge@web.de>
+ *
+ * For the full copyright and license information, please view the LICENSE.txt
+ * file that was distributed with this source code.
+ *
+ * Date: 29.02.2016
+ * Time: 10:20
+ *
  */
 
 namespace Blast\Orm;
+
 
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Query\Result;
 
 interface RepositoryInterface
 {
-
     /**
+     * Find entity by primary key
      *
-     * @param mixed $value
+     * @param mixed $primaryKey
      * @return \ArrayObject|\stdClass|Result|DataObject|object
      */
-    public function find($value);
+    public function find($primaryKey);
 
     /**
      * Get a collection of all entities
@@ -29,21 +35,10 @@ interface RepositoryInterface
     public function all();
 
     /**
-     * Delete attached entity by identifiers
+     * Save new or existing entity
      *
-     * @param array|int|string $identifiers
+     * @param object|array $data
      * @return int
      */
-    public function delete($identifiers);
-
-    /**
-     * Create or update an entity
-     *
-     * Optional force update of entities without updates
-     *
-     * @param DataObject|\ArrayObject|\stdClass|Result|object $entity
-     * @return int
-     */
-    public function save($entity);
-
+    public function save($data);
 }

@@ -15,30 +15,16 @@ namespace Blast\Orm\Entity;
 
 
 use Blast\Orm\Data\DataAdapter;
-use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
+use Blast\Orm\Mapper;
+use Blast\Orm\MapperInterface;
 use Blast\Orm\Query;
+use Blast\Orm\Relations\RelationInterface;
 use Doctrine\DBAL\Driver\Statement;
-use Doctrine\DBAL\Schema\Index;
 use League\Event\EmitterAwareTrait;
 
-class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataHydratorInterface
+class EntityAdapter extends DataAdapter implements EntityAdapterInterface
 {
-    const DEFAULT_PRIMARY_KEY_NAME = 'id';
-
-    /**
-     *
-     */
-    const RESULT_COLLECTION = 'collection';
-    /**
-     *
-     */
-    const RESULT_ENTITY = 'entity';
-
-    /**
-     *
-     */
-    const RESULT_RAW = 'raw';
 
     use EmitterAwareTrait;
 
@@ -47,16 +33,16 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
      */
     private $query;
 
+    private $mapper;
+
     /**
      * EntityAdapter constructor.
      * @param array|\stdClass|\ArrayObject|object|string $object
      */
     public function __construct($object = null)
     {
-        if(!is_object($object)){
-            $object = new Query\Result();
-        }
-        $this->setObject($object);
+        $object = EntityAdapterCollectionFacade::createObject($object);
+        parent::__construct($object);
     }
 
     /**
@@ -93,23 +79,74 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
     }
 
     /**
-     * @return mixed|null
+     * Get entity fields
+     *
+     * @return \Doctrine\DBAL\Schema\Column[]
+     *
+     * Currently not supported
+     * @codeCoverageIgnore
      */
     public function getFields()
     {
         return $this->access('fields', [], null, \ReflectionMethod::IS_STATIC);
     }
 
+    /**
+     * Get entity indexes
+     *
+     * @return \Doctrine\DBAL\Schema\Index[]
+     *
+     * Currently not supported
+     * @codeCoverageIgnore
+     */
     public function getIndexes()
     {
         return $this->access('index', [], null, \ReflectionMethod::IS_STATIC);
     }
 
+    /**
+     * Return an array of relations
+     * @return RelationInterface[]
+     */
     public function getRelations()
     {
-        return $this->access('relations', [], null, \ReflectionMethod::IS_STATIC);
+        $reflection = $this->getReflection();
+        $default = [];
+        if (!$reflection->hasMethod('relations')) {
+            return $default;
+        }
+
+        $method = $reflection->getMethod('relations');
+
+        if (!$method->isStatic()) {
+            return $default;
+        }
+
+        $relations = $method->invokeArgs($this->getObject(), [$this->getObject()]);
+
+        $result = [];
+        foreach ($relations as $name => $relation) {
+            if (!($relation instanceof RelationInterface)) {
+                continue;
+            }
+            if (is_numeric($name)) {
+                $name = $relation->getName();
+            }
+
+            //relations must not overwrite data fields by name
+            if (!isset($result[$name])) {
+                $result[$name] = $relation;
+            }
+        }
+        return $result;
     }
 
+    /**
+     * Hydrate data in entity or collection
+     * @param array $data
+     * @param string $option
+     * @return array|\ArrayObject|DataObject|null|object|\stdClass
+     */
     public function hydrate($data = [], $option = self::AUTO)
     {
         if ($this->isRaw($data, $option)) {
@@ -120,28 +157,44 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
         $entity = NULL;
 
         if ($option === self::AUTO) {
-            $option = $count > 1 || $count === 0 ? self::RESULT_COLLECTION : self::RESULT_ENTITY;
+            $option = $count > 1 || $count === 0 ? self::HYDRATE_COLLECTION : self::HYDRATE_ENTITY;
         }
 
-        if ($option === self::RESULT_COLLECTION) { //if entity set has many items, return a collection of entities
+        if ($option === self::HYDRATE_COLLECTION) { //if entity set has many items, return a collection of entities
             foreach ($data as $key => $value) {
                 $data[$key] = $this->map($value);
             }
             $entity = new DataObject();
             $entity->setData($data);
-        } elseif ($option === self::RESULT_ENTITY) { //if entity has one item, return the entity
+        } elseif ($option === self::HYDRATE_ENTITY) { //if entity has one item, return the entity
             $entity = $this->map(array_shift($data));
         }
 
         return $entity;
     }
 
+    /**
+     * set query object
+     * @param Query $query
+     * @return mixed|null
+     *
+     * Currently not supported
+     * @codeCoverageIgnore
+     */
     public function setQuery(Query $query)
     {
         $this->query = $query;
         return $this->mutate('query', $query, \ReflectionMethod::IS_STATIC);
     }
 
+    /**
+     * get query object from entity
+     *
+     * @return mixed|null
+     *
+     * Currently not supported
+     * @codeCoverageIgnore
+     */
     public function getQuery()
     {
         return $this->access('query', $this->query, \ReflectionMethod::IS_STATIC);
@@ -171,27 +224,111 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface, DataH
     }
 
     /**
+     * Get entity mapper
+     *
+     * @return MapperInterface
+     */
+    public function getMapper()
+    {
+        if ($this->mapper === null) {
+            $this->mapper = new Mapper($this->getObject());
+        }
+        return $this->access('mapper', $this->mapper, \ReflectionMethod::IS_STATIC);
+    }
+
+    /**
+     * Fetch all data without relations
+     */
+    public function getDataWithoutRelations()
+    {
+        $data = $this->getData();
+        $relations = $this->getRelations();
+
+        foreach ($data as $key => $value) {
+            if (isset($relations[$key])) {
+                unset($data[$key]);
+            }
+        }
+
+        return $data;
+    }
+
+
+    /**
      * Pass data to result or model
      * @param array $data
      * @return array|\stdClass|\ArrayObject|object
      */
     protected function map($data = [])
     {
-        $this->setData($data);
+        //map data
+        $this->mapData($data);
+
+        //map relations
+        $this->mapRelations();
+
         $object = $this->getObject();
         $this->reset();
         return $object;
     }
 
     /**
+     * @param $data
      * @param $option
      * @return bool
      */
     protected function isRaw($data, $option)
     {
-        return $option === self::RESULT_RAW ||
+        return $option === self::HYDRATE_RAW ||
         $data instanceof Statement ||
         is_numeric($data) ||
         is_bool($data);
+    }
+
+    protected function resetObject()
+    {
+        $reflection = $this->getReflection();
+
+        $this->setObject(
+            $this->getObject() instanceof GenericEntity ?
+                $reflection->newInstanceArgs([$this->getTableName()]) :
+                $reflection->newInstance()
+        );
+    }
+
+    /**
+     * Map data to source object
+     *
+     * @param $data
+     */
+    private function mapData($data)
+    {
+        $this->setData($data);
+    }
+
+    /**
+     * Map relations to data. If entry exists with relation name,
+     * only overwrite if entry is empty.
+     */
+    private function mapRelations()
+    {
+        $relations = $this->getRelations();
+        if (count($relations) > 0) {
+            $data = $this->getData();
+            foreach ($relations as $name => $relation) {
+
+                //avoid overwriting data
+                if (!isset($data[$name])) {
+                    $data[$name] = $relation;
+                }
+
+                //overwrite empty entry with relation
+                if ($data[$name] === null) {
+                    $data[$name] = $relation;
+                }
+            }
+
+            $this->setData($data);
+        }
     }
 }

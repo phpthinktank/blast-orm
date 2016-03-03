@@ -2,6 +2,26 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 0.3
+
+### Added
+
+ - `Blast\Orm\Mapper` for accessing and persisting data
+ - `Blast\Orm\Relations` component to create relations between entities
+ - `Blast\Orm\Object\ObjectAdapterCache` for reusing entity definition
+ - `Blast\Orm\Facades` for more customizable classes against contracts
+ 
+### Altered
+
+ - `Blast\Orm\Repository` is mediating between entity and mapper delivered by entity, repository queries are excluded to mappers
+ 
+### Removed
+
+- `Blast\Orm\Repository::create`
+- `Blast\Orm\Repository::delete`
+- `Blast\Orm\Repository::update`
+- `Blast\Orm\Manager` has been replaced by ConnectionFacade
+
 ## 0.2
 
 ### Added

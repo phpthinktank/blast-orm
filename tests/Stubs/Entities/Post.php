@@ -15,6 +15,7 @@ use Blast\Orm\Data\ImmutableDataObjectTrait;
 use Blast\Orm\Data\MutableDataObjectTrait;
 use Blast\Orm\Data\MutatorInterface;
 use Blast\Orm\Data\MutatorTrait;
+use Blast\Orm\Relations\BelongsTo;
 
 /**
  * @codeCoverageIgnore

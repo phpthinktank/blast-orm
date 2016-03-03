@@ -17,6 +17,10 @@ namespace Blast\Orm\Object;
 interface ObjectAdapterInterface
 {
 
+    const IS_PROPERTY = 256;
+    const IS_METHOD = 512;
+    const IS_CONSTANT = 1024;
+
     /**
      * @return mixed
      */

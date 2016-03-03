@@ -19,8 +19,9 @@
   ],
   "require": {
     "php": ">=5.5.0",
-    "doctrine/dbal": "~2.5.1",
+    "blast/facades": "~1.0",
     "container-interop/container-interop": "~1.1",
+    "doctrine/dbal": "~2.5.1",
     "league/event": "~2.0"
   },
   "require-dev": {

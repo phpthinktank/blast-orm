@@ -14,50 +14,111 @@
 namespace Blast\Tests\Orm\Entity;
 
 
+use Blast\Orm\ConnectionFacade;
 use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
+use Blast\Orm\Entity\EntityAdapterCollectionFacade;
+use Blast\Orm\Entity\EntityAdapterInterface;
+use Blast\Orm\Entity\EntityHydratorInterface;
+use Blast\Orm\ConnectionCollection;
+use Blast\Orm\Entity\GenericEntity;
+use Blast\Orm\MapperInterface;
 use Blast\Orm\Query\Result;
+use Blast\Orm\Relations\HasOne;
+use Blast\Orm\Relations\RelationInterface;
+use Blast\Tests\Orm\Stubs\Entities\EntityWithRelation;
+use Blast\Tests\Orm\Stubs\Entities\Post;
+use Interop\Container\ContainerInterface;
 use stdClass;
 
 class EntityAdapterTest extends \PHPUnit_Framework_TestCase
 {
-    public function testDecoratorImplementsDataDecorator(){
-        $this->assertTrue(is_subclass_of(EntityAdapter::class, DataHydratorInterface::class));
+
+    public function testLoadEntityAdapter()
+    {
+        $adapter = EntityAdapterCollectionFacade::get(Post::class);
+
+        $this->assertInstanceOf(EntityAdapter::class, $adapter);
+        $this->assertInstanceOf(Post::class, $adapter->getObject());
     }
 
-    public function testGetData(){
+    public function testCreateEntity()
+    {
+        $entity = EntityAdapterCollectionFacade::createObject(Post::class);
+        $this->assertInstanceOf(Post::class, $entity);
+    }
+
+    public function testDecoratorImplementsDataDecorator()
+    {
+        $this->assertTrue(is_subclass_of(EntityAdapter::class, EntityHydratorInterface::class));
+    }
+
+    public function testGetData()
+    {
         $adapter = new EntityAdapter();
 
         $data = $adapter->setData([['name' => 'bob']])->getData();
         $this->assertArrayHasKey('name', array_shift($data));
     }
 
-    public function testGetEntity(){
-        $adapter = new EntityAdapter(new stdClass());
-
-        $this->assertInstanceOf(stdClass::class, $adapter->getObject());
+    public function testGetEntity()
+    {
+        $this->assertInstanceOf(stdClass::class, EntityAdapterCollectionFacade::get(stdClass::class)->getObject());
     }
 
-    public function testDecorateRaw(){
+    public function testHydrateRaw()
+    {
         $adapter = new EntityAdapter();
 
-        $this->assertInternalType('array', $adapter->hydrate([['name' => 'bob']], EntityAdapter::RESULT_RAW));
+        $this->assertInternalType('array', $adapter->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_RAW));
     }
 
-    public function testDecorateGenericEntity(){
+    public function testHydrateResult()
+    {
         $adapter = new EntityAdapter();
 
-        $this->assertInstanceOf(Result::class, $adapter->hydrate([['name' => 'bob']], EntityAdapter::RESULT_ENTITY));
+        $this->assertInstanceOf(Result::class, $adapter->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY));
     }
 
-    public function testDecorateGivenEntity(){
-        $this->assertInstanceOf(stdClass::class, (new EntityAdapter(new stdClass()))->hydrate([['name' => 'bob']], EntityAdapter::RESULT_ENTITY));
+    public function testHydrateResultWithRelations()
+    {
+
+        $adapter = new EntityAdapter(EntityWithRelation::class);
+
+        $relations = $adapter->getRelations();
+
+        $entity = $adapter->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY);
+        $this->assertInstanceOf(EntityWithRelation::class, $entity);
+
+        $data = $entity->getData();
+        foreach($relations as $relation){
+            $this->assertArrayHasKey($relation->getName(), $data);
+            $this->assertInstanceOf(RelationInterface::class, $data[$relation->getName()]);
+        }
     }
 
-    public function testDecorateCollection(){
+    public function testHydrateGivenEntity()
+    {
+        $this->assertInstanceOf(stdClass::class, EntityAdapterCollectionFacade::get(stdClass::class)->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY));
+    }
+
+    public function testHydrateCollection()
+    {
         $adapter = new EntityAdapter();
+        $this->assertInstanceOf(DataObject::class, $adapter->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_COLLECTION));
+    }
 
-        $this->assertInstanceOf(DataObject::class, $adapter->hydrate([['name' => 'bob']], EntityAdapter::RESULT_COLLECTION));
+    public function testReceiveComputedData()
+    {
+        $adapter = new EntityAdapter(new GenericEntity('testTable'));
+
+        $this->assertEquals('testTable', $adapter->getTableName());
+        $this->assertEquals('id', $adapter->getPrimaryKeyName());
+        $this->assertInstanceOf(MapperInterface::class, $adapter->getMapper());
+        $this->assertInternalType('array', $adapter->getRelations());
+        $this->assertInternalType('array', $adapter->getFields());
+        $this->assertInternalType('array', $adapter->getIndexes());
+
     }
 }

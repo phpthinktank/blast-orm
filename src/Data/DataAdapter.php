@@ -14,9 +14,9 @@
 namespace Blast\Orm\Data;
 
 
-use Blast\Orm\Object\ObjectAdapter;
+use Blast\Orm\Object\AbstractObjectAdapter;
 
-class DataAdapter extends ObjectAdapter implements DataObjectInterface
+class DataAdapter extends AbstractObjectAdapter implements DataObjectInterface
 {
     const DATA_DEFAULT_VALUE = '_____DATA_DEFAULT_VALUE_____';
 
@@ -43,9 +43,11 @@ class DataAdapter extends ObjectAdapter implements DataObjectInterface
                     $property->getName(),
                     static::DATA_DEFAULT_VALUE,
                     $source,
-                    \ReflectionMethod::IS_PRIVATE | \ReflectionMethod::IS_PUBLIC | \ReflectionMethod::IS_PROTECTED | \ReflectionMethod::IS_FINAL, static::IS_PROPERTY);
+                    \ReflectionMethod::IS_PRIVATE | \ReflectionMethod::IS_PUBLIC | \ReflectionMethod::IS_PROTECTED | \ReflectionMethod::IS_FINAL,
+                    static::IS_PROPERTY
+                );
 
-                if ($value === static::DATA_DEFAULT_VALUE) {
+                if ($value !== static::DATA_DEFAULT_VALUE) {
                     $data[$property->getName()] = $value;
                 }
             }
@@ -80,7 +82,8 @@ class DataAdapter extends ObjectAdapter implements DataObjectInterface
                     $property->getName(),
                     $data[$property->getName()],
                     $source,
-                    \ReflectionMethod::IS_PRIVATE | \ReflectionMethod::IS_PUBLIC | \ReflectionMethod::IS_PROTECTED | \ReflectionMethod::IS_FINAL, static::IS_PROPERTY);
+                    \ReflectionMethod::IS_PRIVATE | \ReflectionMethod::IS_PUBLIC | \ReflectionMethod::IS_PROTECTED | \ReflectionMethod::IS_FINAL, static::IS_PROPERTY
+                );
             }
 
         }
