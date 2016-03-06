@@ -35,109 +35,32 @@ class GenericEntity extends DataObject implements AccessorInterface, FieldAwareI
     /**
      * @var Column[]
      */
-    private static $fields = [];
+    public static $fields = [];
 
     /**
      * @var Index[]
      */
-    private static $indexes = [];
+    public static $indexes = [];
 
     /**
      * @var MapperInterface
      */
-    private static $mapper = null;
+    public static $mapper = null;
 
     /**
      * @var string
      */
-    private static $primaryKeyName = EntityAdapterInterface::DEFAULT_PRIMARY_KEY_NAME;
+    public static $primaryKeyName = EntityAdapterInterface::DEFAULT_PRIMARY_KEY_NAME;
 
     /**
      * @var string
      */
-    private static $tableName = null;
+    public static $tableName = null;
 
     public function __construct($tableName, array $options = [])
     {
-        // @codeCoverageIgnoreStart
-        /**
-         * @param $propertyName
-         * @param $data
-         * @return bool
-         */
-        $onBefore = function($propertyName, $data){
-            return $propertyName === 'primaryKeyName' ? is_string($data) : is_array($data);
-        };
+        self::$tableName = $tableName;
 
-        $onLoop = function($propertyName, $value){
-            if($propertyName === 'fields'){
-                return $value instanceof Column;
-            }elseif($propertyName === 'indexes'){
-                return $value instanceof Index;
-            }elseif($propertyName === 'mapper'){
-                if(class_exists($value)){
-                    if(!is_object($value)){
-                        $value = new $value($this);
-                    }
-                }
-                return $value instanceof MapperInterface;
-            }else{
-                return false;
-            }
-        };
-
-        foreach ($options as $key => $value) {
-            $this->setOption($key, $value, $onBefore, $onLoop);
-        }
-        // @codeCoverageIgnoreEnd
-
-        $this->setOption('tableName', $tableName);
-    }
-
-    /**
-     * Set data to property
-     * @param $propertyName
-     * @param $data
-     * @param callable|null $onBefore
-     * @param callable|null $onLoop
-     */
-    private function setOption($propertyName, $data, callable $onBefore = null, callable $onLoop = null)
-    {
-        $before = true;
-        if(is_callable($onBefore)){
-            $before = call_user_func_array($onBefore, [$propertyName, &$data]);
-        }
-        if (!$before) {
-            return;
-        }
-
-        $property = new \ReflectionProperty($this, $propertyName);
-        if(!$property->isPublic()){
-            $property->setAccessible(true);
-        }
-        $propertyValue = $property->getValue($this);
-
-        // @codeCoverageIgnoreStart
-        if (is_array($data)) {
-            foreach ($data as $key => $value) {
-                $loop = true;
-                if(is_callable($onLoop)){
-                    $loop = call_user_func_array($onLoop, [$propertyName, &$value, &$key]);
-                }
-                if (!$loop) {
-                    continue;
-                }
-
-
-
-                $propertyValue[$key] = $value;
-            }
-        }else{
-            $propertyValue = $data;
-        }
-        // @codeCoverageIgnoreEnd
-
-        $property->setValue($this, $propertyValue);
     }
 
     /**

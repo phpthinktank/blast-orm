@@ -14,6 +14,7 @@
 namespace Blast\Orm\Object;
 
 
+use Blast\Orm\Data\DataAdapter;
 use Blast\Orm\Facades\FacadeFactory;
 use Interop\Container\ContainerInterface;
 
@@ -37,7 +38,7 @@ class ObjectAdapterCollection
     /**
      * @param null $object
      * @param null $adapterClassName
-     * @return ObjectAdapterInterface
+     * @return DataAdapter
      * @throws \Exception
      */
     public function get($object, $adapterClassName = null)
@@ -47,8 +48,8 @@ class ObjectAdapterCollection
         $container = $this->container;
 
         if (!isset($adapters[$hash])) {
-            if(!is_subclass_of($adapterClassName, ObjectAdapterInterface::class)){
-                throw new \InvalidArgumentException($adapterClassName . ' needs to be an instance of ' . ObjectAdapterInterface::class);
+            if(!is_subclass_of($adapterClassName, DataAdapter::class)){
+                throw new \InvalidArgumentException($adapterClassName . ' needs to be an instance of ' . DataAdapter::class);
             }
             $container->add($hash, new $adapterClassName($object), true);
         }
