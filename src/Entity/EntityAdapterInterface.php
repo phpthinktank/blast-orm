@@ -23,6 +23,10 @@ interface EntityAdapterInterface extends EntityHydratorInterface, EmitterAwareIn
     IndexAwareInterface, MapperAwareInterface, PrimaryKeyAwareInterface, QueryAwareInterface,
     RelationsAwareInterface, TableNameAwareInterface
 {
+
+    const IS_PROPERTY = 256;
+    const IS_METHOD = 512;
+    const IS_CONSTANT = 1024;
     const DEFAULT_PRIMARY_KEY_NAME = 'id';
 
     /**
@@ -38,10 +42,14 @@ interface EntityAdapterInterface extends EntityHydratorInterface, EmitterAwareIn
     public function getDataWithoutRelations();
 
     /**
-     * @param Query $query
-     *
+     * @return mixed
+     */
+    public function getObject();
+
+    /**
+     * @param string|object $class
      * @return $this
      */
-    public function setQuery(Query $query);
+    public function setObject($class);
 
 }
