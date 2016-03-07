@@ -69,4 +69,11 @@ class LocatorTest extends \PHPUnit_Framework_TestCase
 
         $this->assertInstanceOf(MapperInterface::class, $mapper);
     }
+
+    public function testGetLocatorInstanceFromFacade()
+    {
+        $this->assertInstanceOf(LocatorInterface::class, LocatorFacade::__instance());
+    }
+
+
 }

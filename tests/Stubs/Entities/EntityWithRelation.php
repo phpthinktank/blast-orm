@@ -17,6 +17,9 @@ namespace Blast\Tests\Orm\Stubs\Entities;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Relations\HasOne;
 
+/**
+ * @codeCoverageIgnore
+ */
 class EntityWithRelation extends DataObject
 {
     /**

@@ -13,7 +13,9 @@
 
 namespace Blast\Tests\Orm\Stubs\Entities;
 
-
+/**
+ * @codeCoverageIgnore
+ */
 class Address
 {
 
