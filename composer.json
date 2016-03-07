@@ -22,6 +22,7 @@
     "blast/facades": "~1.0",
     "container-interop/container-interop": "~1.1",
     "doctrine/dbal": "~2.5.1",
+    "league/container": "~2.0",
     "league/event": "~2.0"
   },
   "require-dev": {
