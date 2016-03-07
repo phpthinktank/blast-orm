@@ -102,7 +102,7 @@ class BelongsTo implements RelationInterface
     }
 
     /**
-     * @return array|\Blast\Orm\Data\DataObject|Query\Result|bool
+     * @return array|\Blast\Orm\Data\DataObject|Query\Entity|bool
      */
     public function execute(){
         return $this->getQuery()->execute(EntityHydratorInterface::AUTO);

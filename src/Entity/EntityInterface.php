@@ -11,7 +11,7 @@
  *
  */
 
-namespace Blast\Orm\Query;
+namespace Blast\Orm\Entity;
 
 
 use Blast\Orm\Data\AccessorInterface;
@@ -19,7 +19,7 @@ use Blast\Orm\Data\DataObjectInterface;
 use Blast\Orm\Data\FilterableInterface;
 use Blast\Orm\Data\MutatorInterface;
 
-interface ResultInterface extends AccessorInterface, \Countable, DataObjectInterface, FilterableInterface, \Iterator, MutatorInterface
+interface EntityInterface extends AccessorInterface, \Countable, DataObjectInterface, FilterableInterface, \Iterator, MutatorInterface
 {
 
 }

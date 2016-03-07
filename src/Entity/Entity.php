@@ -11,12 +11,10 @@
  *
  */
 
-namespace Blast\Orm\Query;
+namespace Blast\Orm\Entity;
 
 
-use Blast\Orm\Data\AccessorInterface;
 use Blast\Orm\Data\DataObject;
-use Blast\Orm\Data\MutatorInterface;
 use Blast\Orm\Data\MutatorTrait;
 use Blast\Orm\Data\AccessorTrait;
 
@@ -24,10 +22,8 @@ use Blast\Orm\Data\AccessorTrait;
  * Class Result
  * @package Blast\Db
  */
-class Result extends DataObject implements ResultInterface
+class Entity extends DataObject implements EntityInterface
 {
-
     use AccessorTrait;
     use MutatorTrait;
-
 }

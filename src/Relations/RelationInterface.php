@@ -32,7 +32,7 @@ interface RelationInterface
     public function getName();
 
     /**
-     * @return array|\Blast\Orm\Data\DataObject|\Blast\Orm\Query\Result|bool
+     * @return array|\Blast\Orm\Data\DataObject|\Blast\Orm\Entity\Entity|bool
      */
     public function execute();
 }

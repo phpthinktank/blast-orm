@@ -13,14 +13,10 @@
 
 namespace Blast\Orm\Entity;
 
-
-use Blast\Orm\Data\DataAdapter;
 use Blast\Orm\Facades\FacadeFactory;
-use Blast\Orm\Object\ObjectAdapterCollection;
-use Blast\Orm\Query\Result;
 use Interop\Container\ContainerInterface;
 
-class EntityAdapterManager extends ObjectAdapterCollection
+class EntityAdapterManager
 {
 
     /**
@@ -39,8 +35,32 @@ class EntityAdapterManager extends ObjectAdapterCollection
     }
 
     /**
+     * @param object|string $object
+     * @return EntityAdapter
+     * @throws \Exception
+     */
+    public function get($object)
+    {
+        $object = $this->createObject($object);
+        $hash = $this->getObjectHash($object);
+        $container = $this->container;
+
+        if (!$container->has($hash)) {
+            $container->add($hash, new EntityAdapter($object), true);
+        }
+
+        $adapter = $container->get($hash);
+        $adapter->setObject($object instanceof Definition ? $object->getEntity() : $object);
+
+        return $adapter;
+
+    }
+
+    /**
+     * Create a new entity object for adapter
+     *
      * @param $object
-     * @return Result|mixed|object
+     * @return Entity|mixed|object
      */
     public function createObject($object)
     {
@@ -50,56 +70,19 @@ class EntityAdapterManager extends ObjectAdapterCollection
             $container = FacadeFactory::getContainer();
             if ($container->has($object)) {
                 $object = $container->get($object);
+            }elseif (class_exists($object)) {
+                $object = new $object;
+            } else {
+                $object = new Definition($object);
             }
         }
         // @coverageIgnoreEnd
 
-        if (is_string($object)) {
-            if (class_exists($object)) {
-                $object = new $object;
-            } else {
-                new GenericEntity($object);
-            }
-        }
-
         if(!is_object($object)){
-            $object = new Result();
+            $object = new Entity();
         }
 
         return $object;
-    }
-
-    /**
-     * @param null $object
-     * @return EntityAdapter
-     * @throws \Exception
-     */
-    public function get($object)
-    {
-        //@todo should be get by container
-            $adapterClassName = EntityAdapter::class;
-        $object = $this->createObject($object);
-        $hash = $this->getObjectHash($object);
-        $container = $this->container;
-
-        if (!isset($adapters[$hash])) {
-            if(!is_subclass_of($adapterClassName, DataAdapter::class)){
-                throw new \InvalidArgumentException($adapterClassName . ' needs to be an instance of ' . DataAdapter::class);
-            }
-            $container->add($hash, new $adapterClassName($object), true);
-        }
-
-        if(!$container->has($hash)){
-            throw new \Exception('Unable to load object from adapter');
-        }
-
-        $adapter = $container->get($hash);
-        $adapter->setObject($object);
-
-        gc_collect_cycles();
-
-        return $adapter;
-
     }
 
     /**
@@ -118,14 +101,14 @@ class EntityAdapterManager extends ObjectAdapterCollection
     {
         if ($object instanceof \ArrayObject) {
             $hash = md5(json_encode(array_keys($object->getArrayCopy())));
-            return $hash;
         } elseif ($object instanceof \stdClass) {
             $array = (array)$object;
             $hash = md5(json_encode(array_keys($array)));
-            return $hash;
+        }elseif ($object instanceof Definition) {
+            $hash = md5($object->getTableName());
         } else {
             $hash = md5(get_class($object));
-            return $hash;
         }
+        return $hash;
     }
 }

@@ -9,7 +9,7 @@
 namespace Blast\Orm;
 
 use Blast\Orm\Data\DataObject;
-use Blast\Orm\Query\Result;
+use Blast\Orm\Entity\Entity;
 
 interface MapperInterface
 {
@@ -33,7 +33,7 @@ interface MapperInterface
     /**
      * Create query for new entity.
      *
-     * @param array|DataObject|\ArrayObject|\stdClass|Result|object $entity
+     * @param array|DataObject|\ArrayObject|\stdClass|Entity|object $entity
      * @return Query
      */
     public function create($entity);
@@ -41,7 +41,7 @@ interface MapperInterface
     /**
      * Update query for existing Model or a collection of entities in storage
      *
-     * @param array|DataObject|\ArrayObject|\stdClass|Result|object $entity
+     * @param array|DataObject|\ArrayObject|\stdClass|Entity|object $entity
      * @return Query
      */
     public function update($entity);

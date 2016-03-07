@@ -25,7 +25,7 @@ class HasOne extends HasMany
     }
 
     /**
-     * @return \Blast\Orm\Query\Result|object
+     * @return \Blast\Orm\Entity\Entity|object
      */
     public function execute(){
         return $this->getQuery()->execute(EntityHydratorInterface::HYDRATE_ENTITY);

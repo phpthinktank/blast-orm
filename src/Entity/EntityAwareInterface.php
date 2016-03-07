@@ -23,7 +23,7 @@ interface EntityAwareInterface
 
     /**
      * @param array|\ArrayObject|\stdClass|object $entity
-     * @return Query
+     * @return $this
      */
     public function setEntity($entity);
 }

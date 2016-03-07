@@ -20,7 +20,7 @@ use Blast\Orm\Relations\RelationsAwareInterface;
 use League\Event\EmitterAwareInterface;
 
 interface EntityAdapterInterface extends EntityHydratorInterface, EmitterAwareInterface, FieldAwareInterface,
-    IndexAwareInterface, MapperAwareInterface, PrimaryKeyAwareInterface, QueryAwareInterface,
+    IndexAwareInterface, MapperAwareInterface, PrimaryKeyAwareInterface,
     RelationsAwareInterface, TableNameAwareInterface
 {
 
@@ -40,16 +40,5 @@ interface EntityAdapterInterface extends EntityHydratorInterface, EmitterAwareIn
      * Fetch all data without relations
      */
     public function getDataWithoutRelations();
-
-    /**
-     * @return mixed
-     */
-    public function getObject();
-
-    /**
-     * @param string|object $class
-     * @return $this
-     */
-    public function setObject($class);
 
 }

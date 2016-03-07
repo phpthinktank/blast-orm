@@ -16,7 +16,7 @@ use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Query;
-use Blast\Orm\Query\Result;
+use Blast\Orm\Entity\Entity;
 use stdClass;
 
 /**
@@ -43,8 +43,13 @@ class Mapper implements MapperInterface, EntityAwareInterface
      */
     public function __construct($entity)
     {
-        $this->setEntity($entity);
-        $this->adapter = $this->loadAdapter($this->getEntity());
+        if($entity instanceof EntityAdapterInterface){
+            $this->setEntity($entity->getObject());
+            $this->adapter = $entity;
+        }else{
+            $this->setEntity($entity);
+            $this->adapter = $this->loadAdapter($this->getEntity());
+        }
     }
 
     /**
@@ -96,7 +101,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     /**
      * Create query for new entity.
      *
-     * @param array|DataObject|\ArrayObject|\stdClass|Result|object $entity
+     * @param array|DataObject|\ArrayObject|\stdClass|Entity|object $entity
      * @return Query|bool
      */
     public function create($entity)
@@ -131,7 +136,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     /**
      * Update query for existing Model or a collection of entities in storage
      *
-     * @param array|DataObject|\ArrayObject|\stdClass|Result|object $entity
+     * @param array|DataObject|\ArrayObject|\stdClass|Entity|object $entity
      * @return Query
      */
     public function update($entity)
@@ -192,7 +197,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     /**
      * Create or update an entity
      *
-     * @param DataObject|\ArrayObject|\stdClass|Result|object $entity
+     * @param DataObject|\ArrayObject|\stdClass|Entity|object $entity
      * @return Query
      */
     public function save($entity)

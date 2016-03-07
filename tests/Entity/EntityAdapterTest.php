@@ -16,10 +16,10 @@ namespace Blast\Tests\Orm\Entity;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\Entity\GenericEntity;
+use Blast\Orm\Entity\Definition;
 use Blast\Orm\LocatorFacade;
 use Blast\Orm\MapperInterface;
-use Blast\Orm\Query\Result;
+use Blast\Orm\Entity\Entity;
 use Blast\Orm\Relations\RelationInterface;
 use Blast\Tests\Orm\Stubs\Entities\EntityWithRelation;
 use Blast\Tests\Orm\Stubs\Entities\Post;
@@ -71,7 +71,7 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
     {
         $adapter = new EntityAdapter();
 
-        $this->assertInstanceOf(Result::class, $adapter->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY));
+        $this->assertInstanceOf(Entity::class, $adapter->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY));
     }
 
     public function testHydrateResultWithRelations()
@@ -104,7 +104,7 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
 
     public function testReceiveComputedData()
     {
-        $adapter = new EntityAdapter(new GenericEntity('testTable'));
+        $adapter = new EntityAdapter(new Definition('testTable'));
 
         $this->assertEquals('testTable', $adapter->getTableName());
         $this->assertEquals('id', $adapter->getPrimaryKeyName());

@@ -18,7 +18,7 @@ use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
-use Blast\Orm\Query\Result;
+use Blast\Orm\Entity\Entity;
 use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\EmitterAwareInterface;
 use League\Event\EmitterAwareTrait;
@@ -110,7 +110,7 @@ class Query implements EmitterAwareInterface, QueryInterface
      * Fetch data for entity
      *
      * @param string $option
-     * @return array|Result|DataObject|bool
+     * @return array|Entity|DataObject|bool
      * @throws \Doctrine\DBAL\DBALException
      */
     public function execute($option = DataHydratorInterface::AUTO)

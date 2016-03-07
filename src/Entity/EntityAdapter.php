@@ -23,6 +23,8 @@ use Blast\Orm\MapperInterface;
 use Blast\Orm\Query;
 use Blast\Orm\Relations\RelationInterface;
 use Doctrine\DBAL\Driver\Statement;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Index;
 use League\Event\EmitterAwareTrait;
 
 class EntityAdapter extends DataAdapter implements EntityAdapterInterface
@@ -31,14 +33,34 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
     use EmitterAwareTrait;
 
     /**
-     * @var Query
-     */
-    private $query;
-
-    /**
      * @var MapperInterface
      */
     private $mapper;
+
+    /**
+     * @var string
+     */
+    private $tableName;
+
+    /**
+     * @var $primaryKeyName
+     */
+    private $primaryKeyName;
+
+    /**
+     * @var Column[]
+     */
+    private $fields;
+
+    /**
+     * @var Index[]
+     */
+    private $indexes;
+
+    /**
+     * @var RelationInterface[]
+     */
+    private $relations;
 
     /**
      * EntityAdapter constructor.
@@ -46,7 +68,17 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
      */
     public function __construct($object = null)
     {
-        $this->setObject(LocatorFacade::getAdapterManager()->createObject($object));
+        if($object instanceof Definition){
+            $this->fields = $object->getFields();
+            $this->indexes = $object->getIndexes();
+            $this->mapper = $object->getMapper();
+            $this->primaryKeyName = $object->getPrimaryKeyName();
+            $this->tableName = $object->getTableName();
+            $this->relations = $object->getRelations();
+            $object = $object->getEntity();
+        }
+        $object = LocatorFacade::getAdapterManager()->createObject($object);
+        parent::__construct($object);
     }
 
     /**
@@ -60,29 +92,6 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
     }
 
     /**
-     * Get table name from entity. If no table name is declared determine from class name and convert camelcase to
-     * underscore
-     *
-     * @return string
-     */
-    public function getTableName()
-    {
-        $default = $this->camelCaseToUnderScore($this->getReflection()->getShortName());
-
-        return $this->getDefinition('tableName', $default);
-    }
-
-    /**
-     * Get entity primary key name
-     *
-     * @return string
-     */
-    public function getPrimaryKeyName()
-    {
-        return $this->getDefinition('primaryKeyName', static::DEFAULT_PRIMARY_KEY_NAME);
-    }
-
-    /**
      * Get entity fields
      *
      * @return \Doctrine\DBAL\Schema\Column[]
@@ -92,7 +101,10 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
      */
     public function getFields()
     {
-        return $this->getDefinition('fields', []);
+        if(empty($this->fields)){
+            $this->fields = $this->getDefinition('fields', []);
+        }
+        return $this->fields;
     }
 
     /**
@@ -105,46 +117,123 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
      */
     public function getIndexes()
     {
-        return $this->getDefinition('index', []);
+        if(empty($this->indexes)){
+            $this->indexes = $this->getDefinition('index', []);
+        }
+        return $this->indexes;
+    }
+
+    /**
+     * Get entity mapper
+     *
+     * @return MapperInterface
+     */
+    public function getMapper()
+    {
+        if (empty($this->mapper)) {
+            $this->mapper = $this->getDefinition('mapper', new Mapper($this));
+        }
+
+        return $this->mapper;
+    }
+
+    /**
+     * Get entity primary key name
+     *
+     * @return string
+     */
+    public function getPrimaryKeyName()
+    {
+        if(empty($this->primaryKeyName)){
+            $this->primaryKeyName = $this->getDefinition('primaryKeyName', static::DEFAULT_PRIMARY_KEY_NAME);
+        }
+        return $this->primaryKeyName;
     }
 
     /**
      * Return an array of relations
+     *
      * @return RelationInterface[]
      */
     public function getRelations()
     {
-//        $reflection = $this->getReflection();
-//        $default = [];
-//        if (!$reflection->hasMethod('relations')) {
-//            return $default;
-//        }
-//
-//        $method = $reflection->getMethod('relations');
-//
-//        if (!$method->isStatic()) {
-//            return $default;
-//        }
-//
-//        $relations = $method->invokeArgs($this->getObject(), [$this->getObject()]);
-        $relations = $this->callDefinition('relations', [], [$this->getObject()], 'get');
+        if(empty($this->relations)){
+            $relations = $this->callDefinition('relations', [], [$this->getObject()], 'get');
 
-        $result = [];
-        foreach ($relations as $name => $relation) {
-            if (!($relation instanceof RelationInterface)) {
-                continue;
-            }
-            if (is_numeric($name)) {
-                $name = $relation->getName();
+            $processedRelations = [];
+            foreach ($relations as $name => $relation) {
+                if (!($relation instanceof RelationInterface)) {
+                    continue;
+                }
+                if (is_numeric($name)) {
+                    $name = $relation->getName();
+                }
+
+                //relations must not overwrite data fields by name
+                if (!isset($processedRelations[$name])) {
+                    $processedRelations[$name] = $relation;
+                }
             }
 
-            //relations must not overwrite data fields by name
-            if (!isset($result[$name])) {
-                $result[$name] = $relation;
+            $this->relations = is_array($processedRelations) ? $processedRelations : [];
+        }
+
+        return $this->relations;
+    }
+
+    /**
+     * Get table name from entity. If no table name is declared determine from class name and convert camelcase to
+     * underscore
+     *
+     * @return string
+     */
+    public function getTableName()
+    {
+        if(empty($this->tableName)){
+            $this->tableName = $this->getDefinition('tableName', $this->camelCaseToUnderScore($this->getReflection()->getShortName()));
+        }
+        return $this->tableName;
+    }
+
+    /**
+     * Fetch all data without relations
+     */
+    public function getDataWithoutRelations()
+    {
+        $data = $this->getData();
+        $relations = $this->getRelations();
+
+        foreach ($data as $key => $value) {
+            if (isset($relations[$key])) {
+                unset($data[$key]);
             }
         }
 
-        return $result;
+        return $data;
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isNew()
+    {
+        $entity = $this->getObject();
+        if (method_exists($entity, 'isNew')) {
+            return $entity->isNew();
+        } elseif (property_exists($entity, 'new')) {
+            return $entity->new;
+        }
+
+        $data = $this->getData();
+        $pk = $this->getPrimaryKeyName();
+        $isNew = true;
+
+        if (!isset($data[$pk])) {
+            $isNew = empty($data[$pk]);
+        }
+
+        return $isNew;
     }
 
     /**
@@ -177,91 +266,6 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
         }
 
         return $entity;
-    }
-
-    /**
-     * set query object
-     * @param Query $query
-     * @return mixed|null
-     *
-     * Currently not supported
-     * @codeCoverageIgnore
-     */
-    public function setQuery(Query $query)
-    {
-        $this->query = $query;
-
-        return $this->getDefinition('query', $query);
-    }
-
-    /**
-     * get query object from entity
-     *
-     * @return mixed|null
-     *
-     * Currently not supported
-     * @codeCoverageIgnore
-     */
-    public function getQuery()
-    {
-        return $this->setDefinition('query', $this->query);
-    }
-
-    /**
-     * @return bool
-     */
-    public function isNew()
-    {
-        $entity = $this->getObject();
-        if (method_exists($entity, 'isNew')) {
-            return $entity->isNew();
-        } elseif (property_exists($entity, 'new')) {
-            return $entity->new;
-        }
-
-        $data = $this->getData();
-        $pk = $this->getPrimaryKeyName();
-        $isNew = true;
-
-        if (!isset($data[$pk])) {
-            $isNew = empty($data[$pk]);
-        }
-
-        return $isNew;
-    }
-
-    /**
-     * Get entity mapper
-     *
-     * @return MapperInterface
-     */
-    public function getMapper()
-    {
-        if ($this->mapper === null) {
-            $this->mapper = new Mapper($this->getObject());
-        }
-
-        $mapper = $this->getDefinition('mapper', $this->mapper);
-
-        //in this case the mapper should not be null
-        return null === $mapper ? $this->mapper : $mapper;
-    }
-
-    /**
-     * Fetch all data without relations
-     */
-    public function getDataWithoutRelations()
-    {
-        $data = $this->getData();
-        $relations = $this->getRelations();
-
-        foreach ($data as $key => $value) {
-            if (isset($relations[$key])) {
-                unset($data[$key]);
-            }
-        }
-
-        return $data;
     }
 
 
@@ -358,7 +362,7 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
         $reflection = $this->getReflection();
 
         $this->setObject(
-            $this->getObject() instanceof GenericEntity ?
+            $this->getObject() instanceof Definition ?
                 $reflection->newInstanceArgs([$this->getTableName()]) :
                 $reflection->newInstance()
         );
@@ -394,7 +398,8 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
      */
     public function getDefinition($methodOrProperty, $default = null)
     {
-        return $this->callDefinition($methodOrProperty, $default, [], 'get');
+        $definition = $this->callDefinition($methodOrProperty, $default, [], 'get');
+        return null === $definition ? $default : $definition;
     }
 
     /**

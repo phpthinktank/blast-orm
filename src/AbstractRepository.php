@@ -20,7 +20,7 @@ use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\Query\Result;
+use Blast\Orm\Entity\Entity;
 
 abstract class AbstractRepository implements EntityAwareInterface, RepositoryInterface
 {
@@ -58,7 +58,7 @@ abstract class AbstractRepository implements EntityAwareInterface, RepositoryInt
      * Find entity by primary key
      *
      * @param mixed $primaryKey
-     * @return \ArrayObject|\stdClass|Result|DataObject|object
+     * @return \ArrayObject|\stdClass|Entity|DataObject|object
      */
     public function find($primaryKey){
         return $this->getAdapter()->getMapper()->find($primaryKey)->execute(EntityHydratorInterface::HYDRATE_ENTITY);

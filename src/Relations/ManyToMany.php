@@ -16,7 +16,7 @@ namespace Blast\Orm\Relations;
 use Blast\Orm\Entity\EntityAdapterInterface;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\Entity\GenericEntity;
+use Blast\Orm\Entity\Definition;
 use Blast\Orm\Query;
 
 class ManyToMany implements RelationInterface
@@ -169,7 +169,7 @@ class ManyToMany implements RelationInterface
 
         //get relations by through db object
         if(isset($data[$localKey])){
-            $junctionAdapter = $this->loadAdapter(is_string($junction) ? new GenericEntity($junction) : $junction);
+            $junctionAdapter = $this->loadAdapter(is_string($junction) ? new Definition($junction) : $junction);
             $results = $junctionAdapter->getMapper()
                 ->select([$junctionForeignKey])
                 ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))

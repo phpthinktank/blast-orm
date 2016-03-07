@@ -17,24 +17,24 @@ use Blast\Orm\Data\AccessorInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Data\MutatorInterface;
 use Blast\Orm\Query\Query;
-use Blast\Orm\Query\Result;
+use Blast\Orm\Entity\Entity;
 
 class ResultTest extends \PHPUnit_Framework_TestCase
 {
 
     public function testResultExtendsDataObject()
     {
-        $this->assertTrue(is_subclass_of(Result::class, DataObject::class));
+        $this->assertTrue(is_subclass_of(Entity::class, DataObject::class));
     }
 
     public function testResultImplementsMutator()
     {
-        $this->assertTrue(is_subclass_of(Result::class, MutatorInterface::class));
+        $this->assertTrue(is_subclass_of(Entity::class, MutatorInterface::class));
     }
 
     public function testResultImplementsAccessor()
     {
-        $this->assertTrue(is_subclass_of(Result::class, AccessorInterface::class));
+        $this->assertTrue(is_subclass_of(Entity::class, AccessorInterface::class));
     }
 
 
