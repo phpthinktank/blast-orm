@@ -27,6 +27,6 @@ class FacadeTest extends \PHPUnit_Framework_TestCase
     public function testDelegateContainer()
     {
         FacadeFactory::setContainer(new ContainerIntegration());
-        $this->assertTrue(FacadeFactory::getContainer()->hasInDelegate('myService'));
+        $this->assertTrue(FacadeFactory::getContainer()->hasInDelegate('INTEGRATION_TEST'));
     }
 }

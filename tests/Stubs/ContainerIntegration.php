@@ -33,7 +33,7 @@ class ContainerIntegration implements ContainerInterface
      */
     public function get($id)
     {
-        return $id;
+        return new \stdClass();
     }
 
     /**
@@ -46,6 +46,6 @@ class ContainerIntegration implements ContainerInterface
      */
     public function has($id)
     {
-        return true;
+        return $id === 'INTEGRATION_TEST';
     }
 }

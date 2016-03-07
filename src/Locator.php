@@ -43,7 +43,7 @@ class Locator implements LocatorInterface
         if (!$container->has(EntityAdapterManager::class)) {
             $container->share(EntityAdapterManager::class);
         }
-        return FacadeFactory::getContainer()->get(EntityAdapterManager::class);
+        return $container->get(EntityAdapterManager::class);
     }
 
     /**
