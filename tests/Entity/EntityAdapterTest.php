@@ -13,23 +13,16 @@
 
 namespace Blast\Tests\Orm\Entity;
 
-
-use Blast\Orm\ConnectionFacade;
-use Blast\Orm\Data\DataHydratorInterface;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\Entity\EntityAdapterCollectionFacade;
-use Blast\Orm\Entity\EntityAdapterInterface;
 use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\ConnectionCollection;
 use Blast\Orm\Entity\GenericEntity;
+use Blast\Orm\LocatorFacade;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Query\Result;
-use Blast\Orm\Relations\HasOne;
 use Blast\Orm\Relations\RelationInterface;
 use Blast\Tests\Orm\Stubs\Entities\EntityWithRelation;
 use Blast\Tests\Orm\Stubs\Entities\Post;
-use Interop\Container\ContainerInterface;
 use stdClass;
 
 class EntityAdapterTest extends \PHPUnit_Framework_TestCase
@@ -37,7 +30,7 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
 
     public function testLoadEntityAdapter()
     {
-        $adapter = EntityAdapterCollectionFacade::get(Post::class);
+        $adapter = LocatorFacade::getAdapterManager()->get(Post::class);
 
         $this->assertInstanceOf(EntityAdapter::class, $adapter);
         $this->assertInstanceOf(Post::class, $adapter->getObject());
@@ -45,7 +38,7 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
 
     public function testCreateEntity()
     {
-        $entity = EntityAdapterCollectionFacade::createObject(Post::class);
+        $entity = LocatorFacade::getAdapterManager()->createObject(Post::class);
         $this->assertInstanceOf(Post::class, $entity);
     }
 
@@ -64,7 +57,7 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
 
     public function testGetEntity()
     {
-        $this->assertInstanceOf(stdClass::class, EntityAdapterCollectionFacade::get(stdClass::class)->getObject());
+        $this->assertInstanceOf(stdClass::class, LocatorFacade::getAdapterManager()->get(stdClass::class)->getObject());
     }
 
     public function testHydrateRaw()
@@ -100,7 +93,7 @@ class EntityAdapterTest extends \PHPUnit_Framework_TestCase
 
     public function testHydrateGivenEntity()
     {
-        $this->assertInstanceOf(stdClass::class, EntityAdapterCollectionFacade::get(stdClass::class)->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY));
+        $this->assertInstanceOf(stdClass::class, LocatorFacade::getAdapterManager()->get(stdClass::class)->hydrate([['name' => 'bob']], EntityHydratorInterface::HYDRATE_ENTITY));
     }
 
     public function testHydrateCollection()

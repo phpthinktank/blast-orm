@@ -20,7 +20,7 @@ use League\Container\Container;
 class FacadeFactory extends BlastFacadeFactory
 {
     /**
-     * @return ContainerInterface
+     * @return Container
      * @throws \Exception
      */
     public static function getContainer()
@@ -47,5 +47,14 @@ class FacadeFactory extends BlastFacadeFactory
 
         return parent::getContainer();
     }
+
+    /**
+     * @param ContainerInterface|Container $container
+     */
+    public static function setContainer(ContainerInterface $container)
+    {
+        parent::setContainer($container);
+    }
+
 
 }

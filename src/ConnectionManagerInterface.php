@@ -9,7 +9,7 @@
 namespace Blast\Orm;
 
 
-interface ConnectionCollectionInterface
+interface ConnectionManagerInterface
 {
     const DEFAULT_CONNECTION = 'default';
 

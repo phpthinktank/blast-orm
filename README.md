@@ -22,9 +22,14 @@ An example can be found in this [blog post](http://bit.ly/php-orm).
 
 ## Concept
 
+### Locator
+
+The locator deliver methods to access adapters, mappers and connections. For solving IoC concerns use LocatorFacade, to 
+have a swappable locator from container. 
+
 ### Entities
 
-Entity classes are a memory representations of a database entity. Entity classes are plain objects and don't need to 
+Entity classes are a memory representation of a database entity. Entity classes are plain objects and don't need to 
 match contracts. You could use prepared traits and classes of `Blast\Orm\Data` component for convenient data handling. 
 It is recommended to use accessors (getters) and mutators (setters) for properties on plain objects.
 
@@ -53,16 +58,23 @@ The repository is mediating between persistence layer and abstract from persiste
 
 ### Configure connections
 
-Blast ORM is using a connection facade, which is loading a connection 
-collection by contract interface `Blast\Orm\ConnectionCollectionInterface` 
+Access connections via locator, which delivers a connection manager accessor. 
+
+Access connection manager
+
+```php
+<?php
+
+use Blast\Orm\LocatorFacade;
+
+$connections = LocatorFacade::getConnectionManager();
+```
 
 Add a connection. If second parameter name has been set, name is `default`.
 ```php
 <?php
 
-use Blast\Orm\ConnectionFacade;
-
-ConnectionFacade::addConnection('mysql://root:root@localhost/defaultdb?charset=UTF-8');
+$connections->addConnection('mysql://root:root@localhost/defaultdb?charset=UTF-8');
 ```
 
 Add another connection (with __UTF-8__)
@@ -70,7 +82,7 @@ Add another connection (with __UTF-8__)
 ```php
 <?php
 
-ConnectionFacade::addConnection('another', 'mysql://root:root@localhost/another');
+$connections->addConnection('another', 'mysql://root:root@localhost/another');
 
 ```
 
@@ -80,17 +92,17 @@ Get connection, default connection name is always `default`
 <?php
 
 //get default connection
-$defaultConnection = ConnectionFacade::getConnection();
+$defaultConnection = $connections->getConnection();
 
 //get connection by name
-$anotherConnection = ConnectionFacade::getConnection('another');
+$anotherConnection = $connections->getConnection('another');
 ```
 
 Swap default connection with another connection.
 
 ```php
 <?php
-ConnectionFacade::setDefaultConnection('another');
+$connections->setDefaultConnection('another');
 
 ```
 
@@ -98,7 +110,7 @@ Get a connection collection instance.
 
 ```php
 <?php
-$connections = ConnectionFacade::__instance();
+$connections = $connections->__instance();
 
 ```
 
@@ -385,7 +397,8 @@ Create mapper from adapter
 ```php
 <?php
 
-$adapter = EntityAdapterCollectionFacade::get($post);
+//access via locator
+$adapter = LocatorFacade::getAdapterManager()->get($post);
 $mapper = $adapter->getMapper();
 
 ```

@@ -2,6 +2,26 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 0.4
+
+### Added
+
+ - `Blast\Orm\Locator` deliver methods to access adapters, mappers and connections and replaces `Blast\Orm\Entity\EntityAdapterCollectionFacade` and `Blast\Orm\ConnectionCollectionFacade`
+ - `Blast\Orm\LocatorFacade` solves IoC concerns by providing swappable locator from container. 
+
+### Altered
+
+ - `Blast\Orm\Data\DataAdapter` is now delivering logic to call data
+ - `Blast\Orm\Entity\EntityAdapter` is now delivering logic to call definitions
+ - Rename `Blast\Orm\Entity\EntityAdapterCollection` to `Blast\Orm\Entity\EntityAdapterManager`
+
+### Removed
+
+ - Replace `Blast\Orm\Container` with `League\Container`
+ - `Blast\Orm\Object\ObjectAdapter`
+ - `Blast\Orm\Entity\EntityAdapterCollectionFacade`
+ - `Blast\Orm\ConnectionCollectionFacade`
+
 ## 0.3
 
 ### Added

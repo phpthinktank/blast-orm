@@ -14,10 +14,11 @@
 namespace Blast\Tests\Orm;
 
 
-use Blast\Orm\ConnectionCollectionInterface;
+use Blast\Orm\ConnectionManagerInterface;
 use Blast\Orm\ConnectionFacade;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAwareInterface;
+use Blast\Orm\LocatorFacade;
 use Blast\Orm\RepositoryInterface;
 use Blast\Tests\Orm\Stubs\Entities\Post;
 use Blast\Tests\Orm\Stubs\PostRepository;
@@ -27,7 +28,7 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $connection = ConnectionFacade::addConnection( [
+        $connection = LocatorFacade::getConnectionManager()->addConnection( [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
         ])->getConnection();
@@ -54,11 +55,11 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        $connection = ConnectionFacade::getConnection(ConnectionCollectionInterface::DEFAULT_CONNECTION);
+        $connection = LocatorFacade::getConnectionManager()->getConnection(ConnectionManagerInterface::DEFAULT_CONNECTION);
         $connection->exec('DROP TABLE post');
         $connection->exec('DROP TABLE user');
 
-        ConnectionFacade::__destruct();
+        LocatorFacade::getConnectionManager()->__destruct();
     }
 
     public function testImplementsRepositoryInterface(){

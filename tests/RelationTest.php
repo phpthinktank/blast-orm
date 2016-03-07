@@ -14,12 +14,10 @@
 namespace Blast\Tests\Orm;
 
 
-use Blast\Orm\ConnectionCollectionInterface;
+use Blast\Orm\ConnectionManagerInterface;
 use Blast\Orm\ConnectionFacade;
 use Blast\Orm\Data\DataObject;
-use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\ConnectionCollection;
-use Blast\Orm\Entity\EntityAdapterCollectionFacade;
+use Blast\Orm\LocatorFacade;
 use Blast\Orm\QueryInterface;
 use Blast\Orm\Relations\BelongsTo;
 use Blast\Orm\Relations\HasMany;
@@ -35,7 +33,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
 {
     protected function setUp()
     {
-        $connection = ConnectionFacade::addConnection( [
+        $connection = LocatorFacade::getConnectionManager()->addConnection( [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
         ])->getConnection();
@@ -78,7 +76,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        $connection = ConnectionFacade::getConnection(ConnectionCollectionInterface::DEFAULT_CONNECTION);
+        $connection = LocatorFacade::getConnectionManager()->getConnection(ConnectionManagerInterface::DEFAULT_CONNECTION);
 
         $connection->exec('DROP TABLE post');
         $connection->exec('DROP TABLE user');
@@ -86,12 +84,12 @@ class RelationTest extends \PHPUnit_Framework_TestCase
         $connection->exec('DROP TABLE user_role');
         $connection->exec('DROP TABLE role');
 
-        ConnectionFacade::__destruct();
+        LocatorFacade::getConnectionManager()->__destruct();
     }
 
     public function testBelongsTo()
     {
-        $post = EntityAdapterCollectionFacade::get(Post::class)->getMapper()->find(1)->execute();
+        $post = LocatorFacade::getAdapterManager()->get(Post::class)->getMapper()->find(1)->execute();
         $relation = new BelongsTo($post, User::class);
 
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
@@ -100,7 +98,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testHasMany(){
-        $user = EntityAdapterCollectionFacade::get(User::class)->getMapper()->find(1)->execute();
+        $user = LocatorFacade::getAdapterManager()->get(User::class)->getMapper()->find(1)->execute();
         $relation = new HasMany($user, Post::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
         $posts = $relation->execute();
@@ -110,7 +108,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testHasOne(){
-        $user = EntityAdapterCollectionFacade::get(User::class)->getMapper()->find(1)->execute();
+        $user = LocatorFacade::getAdapterManager()->get(User::class)->getMapper()->find(1)->execute();
 
         $relation = new HasOne($user, Address::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
@@ -121,7 +119,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testManyToMany(){
-        $user = EntityAdapterCollectionFacade::get(User::class)->getMapper()->find(1)->execute();
+        $user = LocatorFacade::getAdapterManager()->get(User::class)->getMapper()->find(1)->execute();
         $relation = new ManyToMany($user, Role::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
 

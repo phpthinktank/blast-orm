@@ -8,10 +8,11 @@
 
 namespace Blast\Tests\Orm;
 
-use Blast\Orm\ConnectionCollectionInterface;
+use Blast\Orm\ConnectionManagerInterface;
 use Blast\Orm\ConnectionFacade;
 use Blast\Orm\Data\DataObject;
-use Blast\Orm\ConnectionCollection;
+use Blast\Orm\ConnectionManager;
+use Blast\Orm\LocatorFacade;
 use Blast\Orm\Mapper;
 use Blast\Tests\Orm\Stubs\Entities\Post;
 use Blast\Tests\Orm\Stubs\Entities\User;
@@ -22,7 +23,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $connection = ConnectionFacade::addConnection( [
+        $connection = LocatorFacade::getConnectionManager()->addConnection( [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
         ])->getConnection();
@@ -49,11 +50,11 @@ class MapperTest extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        $connection = ConnectionFacade::getConnection(ConnectionCollectionInterface::DEFAULT_CONNECTION);
+        $connection = LocatorFacade::getConnectionManager()->getConnection(ConnectionManagerInterface::DEFAULT_CONNECTION);
         $connection->exec('DROP TABLE post');
         $connection->exec('DROP TABLE user');
 
-        ConnectionFacade::__destruct();
+        LocatorFacade::getConnectionManager()->__destruct();
     }
 
     /**

@@ -17,6 +17,7 @@ namespace Blast\Orm\Entity;
 use Blast\Orm\Data\DataAdapter;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Data\DataObjectInterface;
+use Blast\Orm\LocatorFacade;
 use Blast\Orm\Mapper;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Query;
@@ -45,7 +46,7 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
      */
     public function __construct($object = null)
     {
-        $this->setObject(EntityAdapterCollectionFacade::createObject($object));
+        $this->setObject(LocatorFacade::getAdapterManager()->createObject($object));
     }
 
     /**

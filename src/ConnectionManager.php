@@ -13,7 +13,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Interop\Container\ContainerInterface;
 
-class ConnectionCollection implements ConnectionCollectionInterface
+class ConnectionManager implements ConnectionManagerInterface
 {
 
     /**

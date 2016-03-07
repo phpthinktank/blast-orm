@@ -53,7 +53,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
      */
     public function createQuery()
     {
-        return new Query($this->getEntity(), ConnectionFacade::getConnection()->createQueryBuilder());
+        return new Query($this->getEntity(), LocatorFacade::getConnectionManager()->getConnection()->createQueryBuilder());
     }
 
     /**

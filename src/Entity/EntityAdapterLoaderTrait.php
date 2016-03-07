@@ -12,6 +12,8 @@
 
 namespace Blast\Orm\Entity;
 
+use Blast\Orm\LocatorFacade;
+
 trait EntityAdapterLoaderTrait
 {
     /**
@@ -21,6 +23,6 @@ trait EntityAdapterLoaderTrait
     public function loadAdapter($entity)
     {
         // @todo instead of creating a new instance use a cached entity instance
-        return EntityAdapterCollectionFacade::get($entity);
+        return LocatorFacade::getAdapterManager()->get($entity);
     }
 }

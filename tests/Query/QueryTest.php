@@ -14,12 +14,13 @@
 namespace Blast\Tests\Orm\Query;
 
 
-use Blast\Orm\ConnectionCollectionInterface;
+use Blast\Orm\ConnectionManagerInterface;
 use Blast\Orm\ConnectionFacade;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\ConnectionCollection;
+use Blast\Orm\ConnectionManager;
+use Blast\Orm\LocatorFacade;
 use Blast\Orm\Query;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
@@ -33,7 +34,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $connection = ConnectionFacade::addConnection( [
+        $connection = LocatorFacade::getConnectionManager()->addConnection( [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
         ])->getConnection();
@@ -60,11 +61,11 @@ class QueryTest extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        $connection = ConnectionFacade::getConnection(ConnectionCollectionInterface::DEFAULT_CONNECTION);
+        $connection = LocatorFacade::getConnectionManager()->getConnection(ConnectionManagerInterface::DEFAULT_CONNECTION);
         $connection->exec('DROP TABLE post');
         $connection->exec('DROP TABLE user');
 
-        ConnectionFacade::__destruct();
+        LocatorFacade::getConnectionManager()->__destruct();
     }
 
     /**
@@ -238,7 +239,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
      */
     public function testCustomBuilderInstance()
     {
-        $builder = ConnectionFacade::getConnection()->createQueryBuilder();
+        $builder = LocatorFacade::getConnectionManager()->getConnection()->createQueryBuilder();
         $query = new Query(null, $builder);
         $this->assertEquals($builder, $query->getBuilder());
     }
