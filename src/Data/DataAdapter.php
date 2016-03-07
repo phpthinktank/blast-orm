@@ -149,16 +149,19 @@ class DataAdapter implements DataObjectInterface
         $reflection = $this->getReflection();
         $value = $default;
         $prefixed = null === $prefix ? null : $prefix . ucfirst($methodOrProperty);
+        $object = $this->getObject();
         if ($reflection->hasMethod($methodOrProperty) || $reflection->hasMethod($prefixed)) {
             $method = $reflection->hasMethod($methodOrProperty) ? $reflection->getMethod($methodOrProperty) : $reflection->getMethod($prefixed);
-            $cond = $isStatic ? $method->isStatic() : true;
-            $value = $cond && $method->isPublic() ? $method->invokeArgs($this->getObject(),
-                $args) : $value;
-        } elseif ($reflection->hasProperty($methodOrProperty)) {
+            if(($isStatic ? $method->isStatic() : true) && $method->isPublic()){
+                return $method->invokeArgs($object,$args);
+            }
+        }
+
+        if ($reflection->hasProperty($methodOrProperty)) {
             $property = $reflection->getProperty($methodOrProperty);
-            $cond = $isStatic ? $property->isStatic() : true;
-            if ($cond && $property->isPublic()) {
-                $value = $property->getValue($this->getObject());
+            $cond = ($isStatic ? $property->isStatic() : true) && $property->isPublic();
+            if ($cond) {
+                $value = $property->getValue($object);
                 if (!empty($args)) {
                     if (is_callable($value)) {
                         $value = call_user_func_array($value, $args);
@@ -166,6 +169,8 @@ class DataAdapter implements DataObjectInterface
                         $property->setValue($args);
                         $value = $args;
                     }
+                }else{
+                    $value = $property->getValue($object);
                 }
             }
         }

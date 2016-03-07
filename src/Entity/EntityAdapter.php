@@ -240,7 +240,10 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
             $this->mapper = new Mapper($this->getObject());
         }
 
-        return $this->getDefinition('mapper', $this->mapper);
+        $mapper = $this->getDefinition('mapper', $this->mapper);
+
+        //in this case the mapper should not be null
+        return null === $mapper ? $this->mapper : $mapper;
     }
 
     /**
