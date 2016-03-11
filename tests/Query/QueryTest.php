@@ -34,10 +34,10 @@ class QueryTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $connection = LocatorFacade::getConnectionManager()->addConnection( [
+        $connection = LocatorFacade::getConnectionManager()->add( [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
-        ])->getConnection();
+        ])->get();
 
         $connection->exec('CREATE TABLE post (id int, user_id int, title VARCHAR(255), content TEXT)');
         $connection->exec('CREATE TABLE user (id int, name VARCHAR(255))');
@@ -61,11 +61,11 @@ class QueryTest extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        $connection = LocatorFacade::getConnectionManager()->getConnection(ConnectionManagerInterface::DEFAULT_CONNECTION);
+        $connection = LocatorFacade::getConnectionManager()->get(ConnectionManagerInterface::DEFAULT_CONNECTION);
         $connection->exec('DROP TABLE post');
         $connection->exec('DROP TABLE user');
 
-        LocatorFacade::getConnectionManager()->__destruct();
+        LocatorFacade::getConnectionManager()->closeAll();
     }
 
     /**
@@ -239,7 +239,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
      */
     public function testCustomBuilderInstance()
     {
-        $builder = LocatorFacade::getConnectionManager()->getConnection()->createQueryBuilder();
+        $builder = LocatorFacade::getConnectionManager()->get()->createQueryBuilder();
         $query = new Query(null, $builder);
         $this->assertEquals($builder, $query->getBuilder());
     }

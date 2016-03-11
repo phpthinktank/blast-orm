@@ -28,10 +28,10 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $connection = LocatorFacade::getConnectionManager()->addConnection( [
+        $connection = LocatorFacade::getConnectionManager()->add( [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
-        ])->getConnection();
+        ])->get();
 
         $connection->exec('CREATE TABLE post (id int, user_id int, title VARCHAR(255), content TEXT)');
         $connection->exec('CREATE TABLE user (pk int, name VARCHAR(255))');
@@ -55,11 +55,11 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        $connection = LocatorFacade::getConnectionManager()->getConnection(ConnectionManagerInterface::DEFAULT_CONNECTION);
+        $connection = LocatorFacade::getConnectionManager()->get(ConnectionManagerInterface::DEFAULT_CONNECTION);
         $connection->exec('DROP TABLE post');
         $connection->exec('DROP TABLE user');
 
-        LocatorFacade::getConnectionManager()->__destruct();
+        LocatorFacade::getConnectionManager()->closeAll();
     }
 
     public function testImplementsRepositoryInterface(){

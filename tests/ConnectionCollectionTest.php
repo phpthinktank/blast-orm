@@ -15,6 +15,7 @@ use Blast\Orm\ConnectionFacade;
 use Blast\Orm\LocatorFacade;
 use Blast\Orm\ManagerInterface;
 use Doctrine\DBAL\Configuration;
+use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\DriverManager;
 use Interop\Container\ContainerInterface;
@@ -31,7 +32,7 @@ class ConnectionCollectionTest extends \PHPUnit_Framework_TestCase
 
     public function tearDown()
     {
-        LocatorFacade::getConnectionManager()->__destruct();
+        LocatorFacade::getConnectionManager()->closeAll();
     }
 
     public function testImplementsContainerCollectionInterface()
@@ -41,15 +42,15 @@ class ConnectionCollectionTest extends \PHPUnit_Framework_TestCase
 
     public function testAddConnectionString()
     {
-        LocatorFacade::getConnectionManager()->addConnection('sqlite:///:memory:', __METHOD__);
-        $this->assertInstanceOf(Connection::class, LocatorFacade::getConnectionManager()->getConnection(__METHOD__));
+        LocatorFacade::getConnectionManager()->add('sqlite:///:memory:', __METHOD__);
+        $this->assertInstanceOf(Connection::class, LocatorFacade::getConnectionManager()->get(__METHOD__));
     }
 
     public function testAddConnectionArray()
     {
-        LocatorFacade::getConnectionManager()->addConnection($this->dsn, __METHOD__);
+        LocatorFacade::getConnectionManager()->add($this->dsn, __METHOD__);
 
-        $this->assertInstanceOf(Connection::class, LocatorFacade::getConnectionManager()->getConnection(__METHOD__));
+        $this->assertInstanceOf(Connection::class, LocatorFacade::getConnectionManager()->get(__METHOD__));
     }
 
     public function testAddConnectionObject()
@@ -57,51 +58,51 @@ class ConnectionCollectionTest extends \PHPUnit_Framework_TestCase
         $dbalConfiguration = new Configuration();
         $connection = DriverManager::getConnection($this->dsn, $dbalConfiguration);
 
-        LocatorFacade::getConnectionManager()->addConnection($connection, __METHOD__);
+        LocatorFacade::getConnectionManager()->add($connection, __METHOD__);
 
-        $this->assertInstanceOf(Connection::class, LocatorFacade::getConnectionManager()->getConnection(__METHOD__));
+        $this->assertInstanceOf(Connection::class, LocatorFacade::getConnectionManager()->get(__METHOD__));
     }
 
     public function testGetConnections()
     {
-        LocatorFacade::getConnectionManager()->addConnection($this->dsn, __METHOD__);
+        LocatorFacade::getConnectionManager()->add($this->dsn, __METHOD__);
 
-        $this->assertArrayHasKey(__METHOD__, LocatorFacade::getConnectionManager()->getConnections());
-        $this->assertTrue(LocatorFacade::getConnectionManager()->hasConnection(__METHOD__));
+        $this->assertArrayHasKey(__METHOD__, LocatorFacade::getConnectionManager()->all());
+        $this->assertTrue(LocatorFacade::getConnectionManager()->has(__METHOD__));
     }
 
     public function testSetDefaultConnection()
     {
-        LocatorFacade::getConnectionManager()->addConnection($this->dsn, __METHOD__);
-        LocatorFacade::getConnectionManager()->addConnection($this->dsn, __METHOD__ . '2');
+        LocatorFacade::getConnectionManager()->add($this->dsn, __METHOD__);
+        LocatorFacade::getConnectionManager()->add($this->dsn, __METHOD__ . '2');
         LocatorFacade::getConnectionManager()->setDefaultConnection(__METHOD__ . '2');
 
-        $this->assertInternalType('array', LocatorFacade::getConnectionManager()->getPreviousConnections());
-        $this->assertInstanceOf(Connection::class, LocatorFacade::getConnectionManager()->getConnection());
+        $this->assertInternalType('array', LocatorFacade::getConnectionManager()->getPrevious());
+        $this->assertInstanceOf(Connection::class, LocatorFacade::getConnectionManager()->get());
     }
 
     public function testExceptionWhenSetUnknownDefaultConnection()
     {
-        $this->setExpectedException(InvalidArgumentException::class);
+        $this->setExpectedException(DBALException::class);
         LocatorFacade::getConnectionManager()->setDefaultConnection(__METHOD__);
     }
 
     public function testExceptionWhenGetUnknownConnection()
     {
-        $this->setExpectedException(InvalidArgumentException::class);
-        LocatorFacade::getConnectionManager()->getConnection(__METHOD__);
+        $this->setExpectedException(DBALException::class);
+        LocatorFacade::getConnectionManager()->get(__METHOD__);
     }
 
     public function testExceptionWhenSetExistingConnection()
     {
-        $this->setExpectedException(InvalidArgumentException::class);
-        LocatorFacade::getConnectionManager()->addConnection($this->dsn, ConnectionManagerInterface::DEFAULT_CONNECTION);
-        LocatorFacade::getConnectionManager()->addConnection($this->dsn, ConnectionManagerInterface::DEFAULT_CONNECTION);
+        $this->setExpectedException(DBALException::class);
+        LocatorFacade::getConnectionManager()->add($this->dsn, ConnectionManagerInterface::DEFAULT_CONNECTION);
+        LocatorFacade::getConnectionManager()->add($this->dsn, ConnectionManagerInterface::DEFAULT_CONNECTION);
     }
 
     public function testExceptionWhenSetInvalidConnection()
     {
-        $this->setExpectedException(RuntimeException::class);
-        LocatorFacade::getConnectionManager()->addConnection(1234, 'invalid');
+        $this->setExpectedException(DBALException::class);
+        LocatorFacade::getConnectionManager()->add(1234, 'invalid');
     }
 }

@@ -23,7 +23,7 @@ interface ConnectionManagerInterface
      * @param $name
      * @return $this
      */
-    public function addConnection($connection, $name);
+    public function add($connection, $name);
 
     /**
      * Activate a connection as default connection
@@ -35,11 +35,11 @@ interface ConnectionManagerInterface
      * @param $name
      * @return \Doctrine\DBAL\Connection
      */
-    public function getConnection($name = null);
+    public function get($name = null);
 
     /**
      * @return \Doctrine\DBAL\Connection[]
      */
-    public function getConnections();
+    public function all();
 
 }

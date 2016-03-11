@@ -94,7 +94,7 @@ class Query implements EmitterAwareInterface, QueryInterface
      */
     public function __construct($entity = null, $builder = null)
     {
-        $this->builder = $builder === null ? LocatorFacade::getConnectionManager()->getConnection()->createQueryBuilder() : $builder;
+        $this->builder = $builder === null ? LocatorFacade::getConnectionManager()->get()->createQueryBuilder() : $builder;
         $this->setEntity($entity);
     }
 
@@ -129,7 +129,7 @@ class Query implements EmitterAwareInterface, QueryInterface
         $adapter = $this->loadAdapter($builder->getEntity());
 
         //@todo this should be more dynamic for passing other connections
-        $connection = LocatorFacade::getConnectionManager()->getConnection();
+        $connection = LocatorFacade::getConnectionManager()->get();
         $isSelect = $builder->getType() === QueryBuilder::SELECT;
 
         $statement = $isSelect ?
