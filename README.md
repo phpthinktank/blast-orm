@@ -74,7 +74,7 @@ Add a connection. If second parameter name has been set, name is `default`.
 ```php
 <?php
 
-$connections->addConnection('mysql://root:root@localhost/defaultdb?charset=UTF-8');
+$connections->add('mysql://root:root@localhost/defaultdb?charset=UTF-8');
 ```
 
 Add another connection (with __UTF-8__)
@@ -82,7 +82,7 @@ Add another connection (with __UTF-8__)
 ```php
 <?php
 
-$connections->addConnection('another', 'mysql://root:root@localhost/another');
+$connections->add('another', 'mysql://root:root@localhost/another');
 
 ```
 
@@ -92,10 +92,10 @@ Get connection, default connection name is always `default`
 <?php
 
 //get default connection
-$defaultConnection = $connections->getConnection();
+$defaultConnection = $connections->get();
 
 //get connection by name
-$anotherConnection = $connections->getConnection('another');
+$anotherConnection = $connections->get('another');
 ```
 
 Swap default connection with another connection.
