@@ -12,10 +12,9 @@
 
 namespace Blast\Orm;
 
-use Blast\Orm\Data\DataHydratorInterface;
-use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityAwareTrait;
+use Blast\Orm\Entity\ProviderInterface;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
 use Blast\Orm\Entity\Entity;
@@ -80,7 +79,6 @@ class Query implements EmitterAwareInterface, QueryInterface
 
     use EmitterAwareTrait;
     use EntityAwareTrait;
-    use EntityAdapterLoaderTrait;
 
     /**
      * @var QueryBuilder
@@ -110,13 +108,13 @@ class Query implements EmitterAwareInterface, QueryInterface
      * Fetch data for entity
      *
      * @param string $option
-     * @return array|Entity|DataObject|bool
+     * @return array|Entity|\ArrayObject|bool
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function execute($option = DataHydratorInterface::AUTO)
+    public function execute($option = HydratorInterface::HYDRATE_AUTO)
     {
         //execute before events and proceed with builder from event
-        $adapter = $this->loadAdapter($this->getEntity());
+        $adapter = LocatorFacade::getProvider($this->getEntity());
         $event = $this->beforeExecute($adapter);
 
         if ($event->isCanceled()) {
@@ -126,7 +124,7 @@ class Query implements EmitterAwareInterface, QueryInterface
         $builder = $event->getBuilder();
 
         //convert entity to adapter again
-        $adapter = $this->loadAdapter($builder->getEntity());
+        $adapter = LocatorFacade::getProvider($builder->getEntity());
 
         //@todo this should be more dynamic for passing other connections
         $connection = LocatorFacade::getConnectionManager()->getConnection();
@@ -150,7 +148,7 @@ class Query implements EmitterAwareInterface, QueryInterface
             return false;
         }
 
-        $data = $adapter->hydrate($event->getResult(), $option);
+        $data = (new ArrayToObjectHydrator($adapter->getEntity()))->hydrate($event->getResult(), $option);
         gc_collect_cycles();
 
         return $data;

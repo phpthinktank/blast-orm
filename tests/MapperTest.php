@@ -67,7 +67,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $query = $mapper->select();
         $result = $query->where('user_id = 1')->execute();
 
-        $this->assertInstanceOf(DataObject::class, $result);
+        $this->assertInstanceOf(\ArrayObject::class, $result);
         $this->assertEquals(2, $result->count());
     }
 

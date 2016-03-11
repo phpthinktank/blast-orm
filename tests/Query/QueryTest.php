@@ -15,18 +15,13 @@ namespace Blast\Tests\Orm\Query;
 
 
 use Blast\Orm\ConnectionManagerInterface;
-use Blast\Orm\ConnectionFacade;
-use Blast\Orm\Data\DataObject;
-use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\ConnectionManager;
+use Blast\Orm\HydratorInterface;
 use Blast\Orm\LocatorFacade;
 use Blast\Orm\Query;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
 use Blast\Orm\Entity\Entity;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Interop\Container\ContainerInterface;
 use stdClass;
 
 class QueryTest extends \PHPUnit_Framework_TestCase
@@ -76,7 +71,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $query = new Query();
         $result = $query->select()->from('post')->execute();
 
-        $this->assertInstanceOf(DataObject::class, $result);
+        $this->assertInstanceOf(\ArrayObject::class, $result);
         $this->assertInstanceOf(Entity::class, $result->current());
     }
 
@@ -97,7 +92,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
     public function testForceSingleResult()
     {
         $query = new Query();
-        $result = $query->select()->from('post')->execute(EntityHydratorInterface::HYDRATE_ENTITY);
+        $result = $query->select()->from('post')->execute(HydratorInterface::HYDRATE_ENTITY);
 
         $this->assertInstanceOf(Entity::class, $result);
     }
@@ -108,9 +103,9 @@ class QueryTest extends \PHPUnit_Framework_TestCase
     public function testForceResultCollection()
     {
         $query = new Query();
-        $result = $query->select()->from('post')->where('id = 1')->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
+        $result = $query->select()->from('post')->where('id = 1')->execute(HydratorInterface::HYDRATE_COLLECTION);
 
-        $this->assertInstanceOf(DataObject::class, $result);
+        $this->assertInstanceOf(\ArrayObject::class, $result);
         $this->assertInstanceOf(Entity::class, $result->current());
     }
 

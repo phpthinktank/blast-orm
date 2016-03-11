@@ -16,8 +16,11 @@ namespace Blast\Orm;
 
 use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Entity\EntityAdapterManager;
-use Blast\Orm\Entity\EntityAdapterInterface;
+use Blast\Orm\Entity\AdapterInterface;
+use Blast\Orm\Entity\Provider;
+use Blast\Orm\Entity\ProviderInterface;
 use Blast\Orm\Facades\FacadeFactory;
+use League\Container\Container;
 
 class Locator implements LocatorInterface
 {
@@ -25,25 +28,11 @@ class Locator implements LocatorInterface
      * Get adapter for entity
      *
      * @param $entity
-     * @return EntityAdapterInterface
+     * @return ProviderInterface
      */
-    public function getAdapter($entity)
+    public function getProvider($entity)
     {
-        return $this->getAdapterManager()->get($entity);
-    }
-
-    /**
-     * Get adapter manager
-     *
-     * @return EntityAdapterManager
-     */
-    public function getAdapterManager()
-    {
-        $container = FacadeFactory::getContainer();
-        if (!$container->has(EntityAdapterManager::class)) {
-            $container->share(EntityAdapterManager::class);
-        }
-        return $container->get(EntityAdapterManager::class);
+        return new Provider($entity);
     }
 
     /**
@@ -68,6 +57,8 @@ class Locator implements LocatorInterface
      */
     public function getMapper($entity)
     {
-        return $this->getAdapter($entity)->getMapper();
+        $mapperInterface = $this->getProvider($entity)->getMapper();
+
+        return $mapperInterface;
     }
 }

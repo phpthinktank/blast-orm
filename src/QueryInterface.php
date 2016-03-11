@@ -13,16 +13,13 @@
 
 namespace Blast\Orm;
 
-
-use Blast\Orm\Data\DataObject;
-
 interface QueryInterface
 {
     /**
      * Fetch data for entity
      *
      * @param string $option
-     * @return array|Result|DataObject
+     * @return array|Result|\ArrayObject
      * @throws \Doctrine\DBAL\DBALException
      */
     public function execute($option = ResultDataDecorator::AUTO);

@@ -20,8 +20,8 @@ use Blast\Orm\Facades\FacadeFactory;
 /**
  * Class LocatorFacade
  * @package Blast\Orm
- * @method static \Blast\Orm\Entity\EntityAdapter getAdapter($entity)
- * @method static \Blast\Orm\Entity\EntityAdapterManager getAdapterManager()
+ * @method static \Blast\Orm\Entity\Provider getProvider($entity)
+ * @method static \League\Container\ContainerInterface getProviderManager()
  * @method static \Blast\Orm\ConnectionManager getConnectionManager()
  * @method static \Blast\Orm\MapperInterface getMapper($entity)
  */

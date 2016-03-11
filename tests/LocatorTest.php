@@ -16,6 +16,7 @@ namespace Blast\Tests\Orm;
 
 use Blast\Orm\ConnectionManagerInterface;
 use Blast\Orm\Entity\EntityAdapter;
+use Blast\Orm\Entity\ProviderInterface;
 use Blast\Orm\Locator;
 use Blast\Orm\LocatorFacade;
 use Blast\Orm\LocatorInterface;
@@ -31,10 +32,10 @@ class LocatorTest extends \PHPUnit_Framework_TestCase
 
     public function testGetEntityAdapter(){
         $locator = new Locator();
-        $adapter = $locator->getAdapter(Address::class);
+        $provider = $locator->getProvider(Address::class);
 
-        $this->assertInstanceOf(EntityAdapter::class, $adapter);
-        $this->assertEquals(Address::class, $adapter->getClassName());
+        $this->assertInstanceOf(ProviderInterface::class, $provider);
+        $this->assertEquals(Address::class, get_class($provider->getEntity()));
     }
 
     public function testGetConnections(){
@@ -52,10 +53,10 @@ class LocatorTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testGetEntityAdapterFromFacade(){
-        $adapter = LocatorFacade::getAdapter(Address::class);
+        $provider = LocatorFacade::getProvider(Address::class);
 
-        $this->assertInstanceOf(EntityAdapter::class, $adapter);
-        $this->assertEquals(Address::class, $adapter->getClassName());
+        $this->assertInstanceOf(ProviderInterface::class, $provider);
+        $this->assertEquals(Address::class, get_class($provider->getEntity()));
     }
 
     public function testGetConnectionsFromFacade(){

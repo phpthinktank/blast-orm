@@ -89,7 +89,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
 
     public function testBelongsTo()
     {
-        $post = LocatorFacade::getAdapterManager()->get(Post::class)->getMapper()->find(1)->execute();
+        $post = LocatorFacade::getProviderManager()->get(Post::class)->getMapper()->find(1)->execute();
         $relation = new BelongsTo($post, User::class);
 
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
@@ -98,17 +98,17 @@ class RelationTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testHasMany(){
-        $user = LocatorFacade::getAdapterManager()->get(User::class)->getMapper()->find(1)->execute();
+        $user = LocatorFacade::getProviderManager()->get(User::class)->getMapper()->find(1)->execute();
         $relation = new HasMany($user, Post::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
         $posts = $relation->execute();
-        $this->assertInstanceOf(DataObject::class, $posts);
+        $this->assertInstanceOf(\ArrayObject::class, $posts);
         $this->assertInstanceOf(Post::class, $posts->current());
 
     }
 
     public function testHasOne(){
-        $user = LocatorFacade::getAdapterManager()->get(User::class)->getMapper()->find(1)->execute();
+        $user = LocatorFacade::getProviderManager()->get(User::class)->getMapper()->find(1)->execute();
 
         $relation = new HasOne($user, Address::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
@@ -119,12 +119,12 @@ class RelationTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testManyToMany(){
-        $user = LocatorFacade::getAdapterManager()->get(User::class)->getMapper()->find(1)->execute();
+        $user = LocatorFacade::getProviderManager()->get(User::class)->getMapper()->find(1)->execute();
         $relation = new ManyToMany($user, Role::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
 
         $result = $relation->execute();
-        $this->assertInstanceOf(DataObject::class, $result);
+        $this->assertInstanceOf(\ArrayObject::class, $result);
         $this->assertInstanceOf(Role::class, $result->current());
     }
 }

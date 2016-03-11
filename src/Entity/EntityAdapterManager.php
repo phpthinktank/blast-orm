@@ -20,7 +20,7 @@ class EntityAdapterManager
 {
 
     /**
-     * @var EntityAdapterInterface[]
+     * @var AdapterInterface[]
      */
     private $adapters = [];
 
@@ -50,7 +50,7 @@ class EntityAdapterManager
         }
 
         $adapter = $container->get($hash);
-        $adapter->setObject($object instanceof Definition ? $object->getEntity() : $object);
+        $adapter->setObject($object instanceof Provider ? $object->getEntity() : $object);
 
         return $adapter;
 
@@ -73,7 +73,7 @@ class EntityAdapterManager
             }elseif (class_exists($object)) {
                 $object = new $object;
             } else {
-                $object = new Definition($object);
+                $object = new Provider($object);
             }
         }
         // @coverageIgnoreEnd
@@ -86,7 +86,7 @@ class EntityAdapterManager
     }
 
     /**
-     * @return EntityAdapterInterface[]
+     * @return AdapterInterface[]
      */
     public function getAdapters()
     {
@@ -104,7 +104,7 @@ class EntityAdapterManager
         } elseif ($object instanceof \stdClass) {
             $array = (array)$object;
             $hash = md5(json_encode(array_keys($array)));
-        }elseif ($object instanceof Definition) {
+        }elseif ($object instanceof Provider) {
             $hash = md5($object->getTableName());
         } else {
             $hash = md5(get_class($object));

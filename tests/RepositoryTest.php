@@ -84,7 +84,7 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
     {
         $posts = (new PostRepository())->all();
 
-        $this->assertInstanceOf(DataObject::class, $posts);
+        $this->assertInstanceOf(\ArrayObject::class, $posts);
         $this->assertNotInstanceOf(Post::class, $posts);
     }
 
