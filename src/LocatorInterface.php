@@ -13,9 +13,6 @@
 
 namespace Blast\Orm;
 
-
-use Blast\Orm\Entity\AdapterInterface;
-use Blast\Orm\Entity\EntityAdapterManager;
 use Blast\Orm\Entity\ProviderInterface;
 
 interface LocatorInterface

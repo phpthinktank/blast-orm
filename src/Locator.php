@@ -13,14 +13,9 @@
 
 namespace Blast\Orm;
 
-
-use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\Entity\EntityAdapterManager;
-use Blast\Orm\Entity\AdapterInterface;
 use Blast\Orm\Entity\Provider;
 use Blast\Orm\Entity\ProviderInterface;
 use Blast\Orm\Facades\FacadeFactory;
-use League\Container\Container;
 
 class Locator implements LocatorInterface
 {
