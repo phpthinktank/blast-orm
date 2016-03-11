@@ -108,14 +108,14 @@ class Query implements EmitterAwareInterface, QueryInterface
      * Fetch data for entity
      *
      * @param string $option
-     * @return array|Entity|\ArrayObject|bool
+     * @return array|\SplStack|\ArrayObject|bool
      * @throws \Doctrine\DBAL\DBALException
      */
     public function execute($option = HydratorInterface::HYDRATE_AUTO)
     {
         //execute before events and proceed with builder from event
-        $adapter = LocatorFacade::getProvider($this->getEntity());
-        $event = $this->beforeExecute($adapter);
+        $provider = LocatorFacade::getProvider($this->getEntity());
+        $event = $this->beforeExecute($provider);
 
         if ($event->isCanceled()) {
             return false;
@@ -124,7 +124,7 @@ class Query implements EmitterAwareInterface, QueryInterface
         $builder = $event->getBuilder();
 
         //convert entity to adapter again
-        $adapter = LocatorFacade::getProvider($builder->getEntity());
+        $provider = LocatorFacade::getProvider($builder->getEntity());
 
         //@todo this should be more dynamic for passing other connections
         $connection = LocatorFacade::getConnectionManager()->getConnection();
@@ -142,13 +142,13 @@ class Query implements EmitterAwareInterface, QueryInterface
             $isSelect ?
                 $statement->fetchAll() :
                 $statement,
-            $adapter, $builder);
+            $provider, $builder);
 
         if ($event->isCanceled()) {
             return false;
         }
 
-        $data = (new ArrayToObjectHydrator($adapter->getEntity()))->hydrate($event->getResult(), $option);
+        $data = (new ArrayToObjectHydrator($provider->getEntity()))->hydrate($event->getResult(), $option);
         gc_collect_cycles();
 
         return $data;
