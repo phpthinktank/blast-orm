@@ -16,7 +16,7 @@ namespace Blast\Orm\Relations;
 use Blast\Orm\Entity\EntityAdapterInterface;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\Entity\Definition;
+use Blast\Orm\Entity\Definition\Definition;
 use Blast\Orm\Query;
 
 class ManyToMany implements RelationInterface

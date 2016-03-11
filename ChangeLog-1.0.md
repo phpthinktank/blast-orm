@@ -9,13 +9,14 @@ All notable changes of the Blast orm 1.0 release series are documented in this f
  - `Blast\Orm\Locator` deliver methods to access adapters, mappers and connections and replaces `Blast\Orm\Entity\EntityAdapterCollectionFacade` and `Blast\Orm\ConnectionCollectionFacade`
  - `Blast\Orm\LocatorFacade` solves IoC concerns by providing swappable locator from container.
  - `Blast\Orm\Entity\Entity` replacing `Blast\Orm\Query\Result` and `Blast\Orm\Entity\GenericEntity`
- - `Blast\Orm\Entity\Definition` knows definition for entity
+ - `Blast\Orm\Entity\Definition\Definition` knows definition for entity
 
 ### Altered
 
  - `Blast\Orm\Data\DataAdapter` is now delivering logic to call data
  - `Blast\Orm\Entity\EntityAdapter` is now delivering logic to call definitions
  - Rename `Blast\Orm\Entity\EntityAdapterCollection` to `Blast\Orm\Entity\EntityAdapterManager`
+ - Connection manager simplify redundant method names. Removed `Configuration` word from `get, set, getPrevious`, `getConnections` becomes `all` 
 
 ### Removed
 

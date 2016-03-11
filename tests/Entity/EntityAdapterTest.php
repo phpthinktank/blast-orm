@@ -16,7 +16,7 @@ namespace Blast\Tests\Orm\Entity;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Entity\EntityAdapter;
 use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\Entity\Definition;
+use Blast\Orm\Entity\Definition\Definition;
 use Blast\Orm\LocatorFacade;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Entity\Entity;

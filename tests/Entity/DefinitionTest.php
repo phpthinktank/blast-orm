@@ -14,9 +14,8 @@
 namespace Blast\Tests\Orm\Entity;
 
 
-use Blast\Orm\Entity\Definition;
+use Blast\Orm\Entity\Definition\Definition;
 use Blast\Orm\LocatorFacade;
-use Blast\Orm\MapperInterface;
 use Blast\Tests\Orm\Stubs\Entities\Post;
 
 class DefinitionTest extends \PHPUnit_Framework_TestCase

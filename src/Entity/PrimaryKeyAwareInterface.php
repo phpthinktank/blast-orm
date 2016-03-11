@@ -16,6 +16,9 @@ namespace Blast\Orm\Entity;
 
 interface PrimaryKeyAwareInterface
 {
+
+    const DEFAULT_PRIMARY_KEY_NAME = 'id';
+
     /**
      * Name of primary key
      *

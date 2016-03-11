@@ -11,9 +11,14 @@
  *
  */
 
-namespace Blast\Orm\Entity;
+namespace Blast\Orm\Entity\Definition;
 
 
+use Blast\Orm\Entity\EntityAwareInterface;
+use Blast\Orm\Entity\FieldAwareInterface;
+use Blast\Orm\Entity\IndexAwareInterface;
+use Blast\Orm\Entity\PrimaryKeyAwareInterface;
+use Blast\Orm\Entity\TableNameAwareInterface;
 use Blast\Orm\MapperAwareInterface;
 
 interface DefinitionInterface extends FieldAwareInterface, IndexAwareInterface,

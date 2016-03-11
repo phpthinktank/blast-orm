@@ -16,7 +16,7 @@ namespace Blast\Orm\Entity;
 
 use Blast\Orm\Data\DataAdapter;
 use Blast\Orm\Data\DataObject;
-use Blast\Orm\Data\DataObjectInterface;
+use Blast\Orm\Entity\Definition\Definition;
 use Blast\Orm\LocatorFacade;
 use Blast\Orm\Mapper;
 use Blast\Orm\MapperInterface;
@@ -145,7 +145,7 @@ class EntityAdapter extends DataAdapter implements EntityAdapterInterface
     public function getPrimaryKeyName()
     {
         if(empty($this->primaryKeyName)){
-            $this->primaryKeyName = $this->getDefinition('primaryKeyName', static::DEFAULT_PRIMARY_KEY_NAME);
+            $this->primaryKeyName = $this->getDefinition('primaryKeyName', PrimaryKeyAwareInterface::DEFAULT_PRIMARY_KEY_NAME);
         }
         return $this->primaryKeyName;
     }

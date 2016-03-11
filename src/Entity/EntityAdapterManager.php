@@ -13,6 +13,7 @@
 
 namespace Blast\Orm\Entity;
 
+use Blast\Orm\Entity\Definition\Definition;
 use Blast\Orm\Facades\FacadeFactory;
 use Interop\Container\ContainerInterface;
 

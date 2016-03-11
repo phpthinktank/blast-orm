@@ -11,10 +11,14 @@
  *
  */
 
-namespace Blast\Orm\Entity;
+namespace Blast\Orm\Entity\Definition;
 
 
 
+use Blast\Orm\Entity\Entity;
+use Blast\Orm\Entity\EntityAdapterInterface;
+use Blast\Orm\Entity\EntityAwareTrait;
+use Blast\Orm\Entity\PrimaryKeyAwareInterface;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Relations\RelationInterface;
 use Doctrine\DBAL\Schema\Column;
@@ -42,7 +46,7 @@ class Definition implements DefinitionInterface
     /**
      * @var string
      */
-    private $primaryKeyName = EntityAdapterInterface::DEFAULT_PRIMARY_KEY_NAME;
+    private $primaryKeyName = PrimaryKeyAwareInterface::DEFAULT_PRIMARY_KEY_NAME;
 
     /**
      * @var string

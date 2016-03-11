@@ -15,7 +15,6 @@ namespace Blast\Orm\Entity;
 
 use Blast\Orm\MapperAwareInterface;
 use Blast\Orm\Query;
-use Blast\Orm\Query\QueryAwareInterface;
 use Blast\Orm\Relations\RelationsAwareInterface;
 use League\Event\EmitterAwareInterface;
 
@@ -27,7 +26,6 @@ interface EntityAdapterInterface extends EntityHydratorInterface, EmitterAwareIn
     const IS_PROPERTY = 256;
     const IS_METHOD = 512;
     const IS_CONSTANT = 1024;
-    const DEFAULT_PRIMARY_KEY_NAME = 'id';
 
     /**
      * Entity class name
