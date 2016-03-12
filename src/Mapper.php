@@ -127,7 +127,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
         }
 
         foreach ($data as $key => $value) {
-            if (!($value instanceof RelationInterface)) {
+            if ($value instanceof RelationInterface) {
                 continue;
             }
             $query->setValue($key, $query->createPositionalParameter($value));
@@ -162,7 +162,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $data = $adapter->getData();
 
         foreach ($data as $key => $value) {
-            if (!($value instanceof RelationInterface)) {
+            if ($value instanceof RelationInterface) {
                 continue;
             }
             $query->set($key, $query->createPositionalParameter($value));

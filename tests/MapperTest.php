@@ -123,7 +123,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $mapper = new Mapper(new Post);
         $result = $mapper->find(1)->execute();
         $this->assertInstanceOf(Post::class, $result);
-        $result->title .= ' Again!';
+        $result['title'] = $result['title'] . ' Again!';
 
         $this->assertEquals(1, $mapper->update($result)->execute());
     }
