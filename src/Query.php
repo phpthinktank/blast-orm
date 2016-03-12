@@ -147,7 +147,8 @@ class Query implements EmitterAwareInterface, QueryInterface
             return false;
         }
 
-        $data = (new ArrayToObjectHydrator($provider->getEntity()))->hydrate($event->getResult(), $option);
+        $result = $event->getResult();
+        $data = (new ArrayToObjectHydrator($provider->getEntity()))->hydrate($result, $option);
         gc_collect_cycles();
 
         return $data;

@@ -91,10 +91,10 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $mapper = new Mapper(new Post);
 
         $post = new Post();
-        $post->id = 3;
-        $post->user_id = 1;
-        $post->title = 'first created post';
-        $post->content = 'A new post!';
+        $post['id'] = 3;
+        $post['user_id'] = 1;
+        $post['title'] = 'first created post';
+        $post['content'] = 'A new post!';
 
         $result = $mapper->create($post)->execute();
 

@@ -13,7 +13,9 @@ use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Entity\Provider;
 use Blast\Orm\Entity\ProviderInterface;
+use Blast\Orm\Hydrator\ObjectToArrayHydrator;
 use Blast\Orm\Query;
+use Blast\Orm\Relations\RelationInterface;
 use stdClass;
 
 /**
@@ -29,7 +31,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     use EntityAwareTrait;
 
     /**
-     * @var AdapterInterface
+     * @var ProviderInterface
      */
     private $provider;
 
@@ -39,10 +41,10 @@ class Mapper implements MapperInterface, EntityAwareInterface
      */
     public function __construct($entity)
     {
-        if($entity instanceof ProviderInterface){
+        if ($entity instanceof ProviderInterface) {
             $this->setEntity($entity->getEntity());
             $this->provider = $entity;
-        }else{
+        } else {
             $this->setEntity($entity);
             $this->provider = LocatorFacade::getProvider($this->getEntity());
         }
@@ -54,7 +56,8 @@ class Mapper implements MapperInterface, EntityAwareInterface
      */
     public function createQuery()
     {
-        return new Query($this->getEntity(), LocatorFacade::getConnectionManager()->getConnection()->createQueryBuilder());
+        return new Query($this->getEntity(),
+            LocatorFacade::getConnectionManager()->getConnection()->createQueryBuilder());
     }
 
     /**
@@ -76,6 +79,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $query = $this->select();
         $field = $this->getProvider()->getPrimaryKeyName();
         $query->where($query->expr()->eq($field, $query->createPositionalParameter($primaryKey)));
+
         return $query;
     }
 
@@ -106,7 +110,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $adapter = $this->prepareProvider($entity);
 
         //disallow differing entities
-        if(get_class($adapter->getEntity()) !== $this->getProvider()->getClassName()){
+        if (get_class($adapter->getEntity()) !== get_class($this->getProvider()->getEntity())) {
             throw new \InvalidArgumentException('Try to create differing entity!');
         }
 
@@ -115,14 +119,17 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $query->insert($adapter->getTableName());
 
         //pass data without relations
-        $data = $adapter->getDataWithoutRelations();
+        $data = $adapter->getData();
 
         //cancel if $data has no entries
-        if(count($data) < 1){
+        if (count($data) < 1) {
             return false;
         }
 
         foreach ($data as $key => $value) {
+            if (!($value instanceof RelationInterface)) {
+                continue;
+            }
             $query->setValue($key, $query->createPositionalParameter($value));
         }
 
@@ -141,7 +148,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $adapter = $this->prepareProvider($entity);
 
         //disallow differing entities
-        if($adapter->getClassName() !== $this->getProvider()->getClassName()){
+        if (get_class($adapter->getEntity()) !== get_class($this->getProvider()->getEntity())) {
             throw new \InvalidArgumentException('Try to update differing entity!');
         }
 
@@ -152,9 +159,12 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $query->update($adapter->getTableName());
 
         //pass data without relations
-        $data = $adapter->getDataWithoutRelations();
+        $data = $adapter->getData();
 
         foreach ($data as $key => $value) {
+            if (!($value instanceof RelationInterface)) {
+                continue;
+            }
             $query->set($key, $query->createPositionalParameter($value));
         }
 
@@ -198,7 +208,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
      */
     public function save($entity)
     {
-//        return LocatorFacade::getProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
+        return LocatorFacade::getProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
     }
 
     /**

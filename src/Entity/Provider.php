@@ -15,6 +15,9 @@ namespace Blast\Orm\Entity;
 
 
 use Blast\Orm\Facades\FacadeFactory;
+use Blast\Orm\Hydrator\ArrayToObjectHydrator;
+use Blast\Orm\Hydrator\HydratorInterface;
+use Blast\Orm\Hydrator\ObjectToArrayHydrator;
 use Blast\Orm\Mapper;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Relations\RelationInterface;
@@ -200,5 +203,18 @@ class Provider implements ProviderInterface
         }
 
         return $this;
+    }
+
+    public function getData(array $additionalData = []){
+        return (new ObjectToArrayHydrator($this->entity))->hydrate($additionalData);
+    }
+
+    public function setData(array $data = [], $option = HydratorInterface::HYDRATE_AUTO){
+        return (new ArrayToObjectHydrator($this->entity))->hydrate($data, $option);
+    }
+
+    public function isNew(){
+        $data = $this->getData();
+        return isset($data[$this->getPrimaryKeyName()]) ? empty($data[$this->getPrimaryKeyName()]) : true;
     }
 }

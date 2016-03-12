@@ -12,6 +12,7 @@
 
 namespace Blast\Orm\Hydrator;
 
+use Adamlc\LetterCase\LetterCase;
 use Blast\Orm\LocatorFacade;
 
 class ArrayToObjectHydrator implements HydratorInterface
@@ -35,7 +36,7 @@ class ArrayToObjectHydrator implements HydratorInterface
     public function hydrate($data = [], $option = self::HYDRATE_AUTO)
     {
         $count = count($data);
-        $option = $this->determineOption($option, $count);
+        $option = $this->determineOption($data, $option, $count);
 
         switch ($option) {
             case self::HYDRATE_RAW:
@@ -63,26 +64,39 @@ class ArrayToObjectHydrator implements HydratorInterface
 
         if ($entity instanceof \ArrayObject) {
             $entity->exchangeArray($data);
-
-            return $entity;
         }
 
         $reflection = new \ReflectionObject($entity);
-
+        $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
         $methods = $reflection->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $arrayReflection = new \ReflectionClass(\ArrayObject::class);
+
+        foreach($properties as $property){
+            if($property->isStatic() || isset($data[$property->getName()])){
+                continue;
+            }
+
+            $fieldName = $property->getName();
+            if (isset($data[$fieldName])) {
+                $property->setValue($this->entity, $data[$fieldName]);
+            }
+        }
 
         foreach ($methods as $method) {
+            //remove get name
+            $valid = substr($method->getName(), 0, 3);
+            $key = substr($method->getName(), 3);
             if (
                 $method->isStatic() ||
-                false === strpos($method->getName(), 'set') ||
-                4 > strlen($method->getName()) ||
+                $valid ||
+                0 !== strlen($key) ||
+                $arrayReflection->hasMethod($method->getName()) ||
                 0 === $method->getNumberOfParameters()
             ) {
                 continue;
             }
 
-            $key = str_replace('set', '', $method->getName());
-            $fieldName = ltrim(strtolower(preg_replace('/[A-Z]/', '_$0', $key)), '_');
+            $fieldName = (new LetterCase())->snake(str_replace('set', '', $method->getName()));
 
             if (isset($data[$fieldName])) {
                 $method->invokeArgs($entity, [$data[$fieldName]]);
@@ -109,16 +123,18 @@ class ArrayToObjectHydrator implements HydratorInterface
     }
 
     /**
+     * @param $data
      * @param $option
      * @param $count
      * @return string
      */
-    protected function determineOption($option, $count)
+    protected function determineOption($data, $option, $count)
     {
+        if(!is_array($data)){
+            return self::HYDRATE_RAW;
+        }
         if ($option === self::HYDRATE_AUTO) {
             $option = $count > 1 || $count === 0 ? self::HYDRATE_COLLECTION : self::HYDRATE_ENTITY;
-
-            return $option;
         }
 
         return $option;
