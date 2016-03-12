@@ -13,12 +13,9 @@
 
 namespace Blast\Orm;
 
-use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
-use Blast\Orm\HydratorInterface;
-use Blast\Orm\Entity\Entity;
+use Blast\Orm\Hydrator\HydratorInterface;
 
 abstract class AbstractRepository implements EntityAwareInterface, RepositoryInterface
 {

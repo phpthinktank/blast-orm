@@ -103,10 +103,10 @@ class Mapper implements MapperInterface, EntityAwareInterface
     public function create($entity)
     {
         //load entity adaption
-        $adapter = $this->prepareAdapter($entity);
+        $adapter = $this->prepareProvider($entity);
 
         //disallow differing entities
-        if($adapter->getClassName() !== $this->getProvider()->getClassName()){
+        if(get_class($adapter->getEntity()) !== $this->getProvider()->getClassName()){
             throw new \InvalidArgumentException('Try to create differing entity!');
         }
 
@@ -138,7 +138,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     public function update($entity)
     {
         //load entity adaption
-        $adapter = $this->prepareAdapter($entity);
+        $adapter = $this->prepareProvider($entity);
 
         //disallow differing entities
         if($adapter->getClassName() !== $this->getProvider()->getClassName()){
@@ -198,22 +198,22 @@ class Mapper implements MapperInterface, EntityAwareInterface
      */
     public function save($entity)
     {
-        return $this->loadAdapter($entity)->isNew() ? $this->create($entity) : $this->update($entity);
+//        return LocatorFacade::getProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
     }
 
     /**
      * @param $entity
-     * @return EntityAdapter $adapter
+     * @return Provider $adapter
      */
-    private function prepareAdapter($entity)
+    private function prepareProvider($entity)
     {
         if (is_array($entity)) {
             $data = $entity;
             $entity = $this->getEntity();
-            $adapter = $this->loadAdapter($entity);
-            $adapter->setData($data);
+            $adapter = LocatorFacade::getProvider($entity);
+//            $adapter->setData($data);
         } elseif (is_object($entity)) {
-            $adapter = $this->loadAdapter($entity);
+            $adapter = LocatorFacade::getProvider($entity);
         } else {
             throw new \InvalidArgumentException('entity needs to be an array of data or object. ' . gettype($entity) . ' given');
         }

@@ -12,12 +12,11 @@
 
 namespace Blast\Orm;
 
-use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityAwareTrait;
-use Blast\Orm\Entity\ProviderInterface;
+use Blast\Orm\Hydrator\ArrayToObjectHydrator;
+use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
-use Blast\Orm\Entity\Entity;
 use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\EmitterAwareInterface;
 use League\Event\EmitterAwareTrait;

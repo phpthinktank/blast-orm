@@ -15,7 +15,7 @@ namespace Blast\Orm\Relations;
 
 use Blast\Orm\Entity\AdapterInterface;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
-use Blast\Orm\HydratorInterface;
+use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Entity\Provider;
 use Blast\Orm\Query;
 

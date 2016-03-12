@@ -14,7 +14,7 @@
 namespace Blast\Orm\Relations;
 
 
-use Blast\Orm\HydratorInterface;
+use Blast\Orm\Hydrator\HydratorInterface;
 
 class HasOne extends HasMany
 {

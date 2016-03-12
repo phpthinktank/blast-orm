@@ -15,7 +15,7 @@ namespace Blast\Tests\Orm\Query;
 
 
 use Blast\Orm\ConnectionManagerInterface;
-use Blast\Orm\HydratorInterface;
+use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\LocatorFacade;
 use Blast\Orm\Query;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
