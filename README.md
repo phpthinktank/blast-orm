@@ -398,8 +398,8 @@ Create mapper from adapter
 <?php
 
 //access via locator
-$adapter = LocatorFacade::getAdapterManager()->get($post);
-$mapper = $adapter->getMapper();
+$provider = LocatorFacade::getAdapterManager()->get($post);
+$mapper = $provider->getMapper();
 
 ```
 
@@ -636,7 +636,7 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
     /**
      * @var EntityAdapter
      */
-    protected $adapter = null;
+    protected $provider = null;
 
     /**
      * Get adapter for entity
@@ -678,7 +678,7 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
      */
     public function save($data){
         $mapper = $this->getAdapter()->getMapper();
-        $query = $adapter->isNew() ? $mapper->create($data) : $mapper->update($data);
+        $query = $provider->isNew() ? $mapper->create($data) : $mapper->update($data);
         return $query->execute();
     }
 

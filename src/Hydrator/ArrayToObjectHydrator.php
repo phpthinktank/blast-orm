@@ -14,6 +14,7 @@ namespace Blast\Orm\Hydrator;
 
 use Adamlc\LetterCase\LetterCase;
 use Blast\Orm\LocatorFacade;
+use Doctrine\DBAL\Driver\Statement;
 
 class ArrayToObjectHydrator implements HydratorInterface
 {
@@ -46,6 +47,7 @@ class ArrayToObjectHydrator implements HydratorInterface
                 return $this->hydrateCollection($data);
             //if entity has one item, return the entity
             case self::HYDRATE_ENTITY:
+                $data = array_shift($data);
                 return $this->hydrateEntity($data);
         }
 
@@ -114,7 +116,7 @@ class ArrayToObjectHydrator implements HydratorInterface
     {
         $stack = new \SplStack();
         foreach ($data as $key => $value) {
-            $stack->push($this->hydrate($value, self::HYDRATE_ENTITY));
+            $stack->push($this->hydrateEntity($value));
         }
 
         $stack->rewind();
@@ -130,7 +132,12 @@ class ArrayToObjectHydrator implements HydratorInterface
      */
     protected function determineOption($data, $option, $count)
     {
-        if(!is_array($data)){
+        if($option === self::HYDRATE_RAW ||
+            $data instanceof Statement ||
+            is_scalar($data) ||
+            is_bool($data) ||
+            $data = null
+        ){
             return self::HYDRATE_RAW;
         }
         if ($option === self::HYDRATE_AUTO) {

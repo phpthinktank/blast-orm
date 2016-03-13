@@ -74,7 +74,7 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
         $post = (new PostRepository())->find(1);
 
         $this->assertInstanceOf(Post::class, $post);
-        $this->assertEquals($post->get('id'), 1);
+        $this->assertEquals($post['id'], 1);
     }
 
     /**
@@ -90,8 +90,8 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
     public function testSaveNewObject(){
         $post = new Post();
-        $post->set('title', 'My very new Title');
-        $post->set('content', 'the content!');
+        $post['title'] = 'My very new Title';
+        $post['content'] = 'the content!';
 
         $repository = new PostRepository();
         $result = $repository->save($post);
@@ -113,7 +113,7 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
         $repository = new PostRepository();
         $post = $repository->find(1);
-        $post->set('title', 'My very new Title');
+        $post['title'] = 'My very new Title';
         $result = $repository->save($post);
 
         $this->assertEquals(1, $result);

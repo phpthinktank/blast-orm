@@ -134,16 +134,16 @@ class ManyToMany implements RelationInterface
     }
 
     protected function init(){
-        $adapter = $this->loadAdapter($this->getEntity());
+        $provider = $this->loadAdapter($this->getEntity());
         $foreignAdapter = $this->loadAdapter($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
         $junction = $this->getJunction();
         $junctionLocalKey = $this->getJunctionLocalKey();
         $junctionForeignKey = $this->getJunctionForeignKey();
 
-        $data = $adapter->getData();
+        $data = $provider->getData();
 
-        $localKey = $adapter->getPrimaryKeyName();
+        $localKey = $provider->getPrimaryKeyName();
 
         //determine foreign key
         if ($foreignKey === null) {
@@ -152,12 +152,12 @@ class ManyToMany implements RelationInterface
 
         //determine through
         if (!is_string($junction) || $junction === null) {
-            $junction = $adapter->getTableName() . '_' . $foreignAdapter->getTableName();
+            $junction = $provider->getTableName() . '_' . $foreignAdapter->getTableName();
         }
 
         //determine through local key
         if($junctionLocalKey === null){
-            $junctionLocalKey = $adapter->getTableName() . '_' . $localKey;
+            $junctionLocalKey = $provider->getTableName() . '_' . $localKey;
         }
 
         //determine through foreign key

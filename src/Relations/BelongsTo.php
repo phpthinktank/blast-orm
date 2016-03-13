@@ -75,7 +75,7 @@ class BelongsTo implements RelationInterface
     }
 
     protected function init(){
-        $adapter = $this->loadAdapter($this->getEntity());
+        $provider = $this->loadAdapter($this->getEntity());
         $foreignAdapter = $this->loadAdapter($this->getForeignEntity());
         $localKey = $this->getLocalKey();
 
@@ -83,7 +83,7 @@ class BelongsTo implements RelationInterface
             $localKey = $foreignAdapter->getTableName() . '_' . $foreignAdapter->getPrimaryKeyName();
         }
 
-        $data = $adapter->getData();
+        $data = $provider->getData();
 
         //find primary key
         $primaryKey = null;
@@ -91,7 +91,7 @@ class BelongsTo implements RelationInterface
         if(isset($data[$localKey])){
             $primaryKey = $data[$localKey];
         }else{
-            $primaryKey = $adapter->access($localKey);
+            $primaryKey = $provider->access($localKey);
         }
 
         $mapper = $foreignAdapter->getMapper();

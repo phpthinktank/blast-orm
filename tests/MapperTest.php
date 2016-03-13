@@ -136,10 +136,9 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $mapper = new Mapper(new Post);
 
         $post = new Post();
-        $post->id = 3;
-        $post->user_id = 1;
-        $post->title = 'first created post';
-        $post->content = 'A new post!';
+        $post['user_id'] = 1;
+        $post['title'] = 'first created post';
+        $post['content'] = 'A new post!';
 
         $result = $mapper->save($post)->execute();
 
@@ -154,7 +153,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $mapper = new Mapper(new Post);
         $result = $mapper->find(1)->execute();
         $this->assertInstanceOf(Post::class, $result);
-        $result->title .= ' Again!';
+        $result['title'] = $result['title'] . ' Again!';
 
         $this->assertEquals(1, $mapper->save($result)->execute());
     }

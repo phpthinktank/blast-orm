@@ -17,6 +17,7 @@ use Blast\Orm\Facades\FacadeFactory;
 use Blast\Orm\Relations\HasOne;
 use Blast\Orm\Relations\RelationInterface;
 use Blast\Tests\Orm\Stubs\Entities\Post;
+use Blast\Tests\Orm\Stubs\Entities\User;
 
 class ProviderTest extends \PHPUnit_Framework_TestCase
 {
@@ -65,5 +66,10 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
         $this->assertInternalType('array', $relations);
         $relation = array_shift($relations);
         $this->assertInstanceOf(RelationInterface::class, $relation);
+    }
+
+    public function testProvidePrimaryKeyField(){
+        $this->assertEquals('id', (new Provider(Post::class))->getPrimaryKeyName());
+        $this->assertEquals('pk', (new Provider(User::class))->getPrimaryKeyName());
     }
 }
