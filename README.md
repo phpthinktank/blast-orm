@@ -57,10 +57,6 @@ The following versions of PHP are supported by this version.
 * PHP 7.0
 * HHVM
 
-## Example
-
-An example can be found in this [blog post](http://bit.ly/php-orm).
-
 ## Concept
 
 ### Locator
