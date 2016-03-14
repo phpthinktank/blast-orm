@@ -74,7 +74,7 @@ class ConnectionManager implements ConnectionManagerInterface
             throw new DBALException(sprintf('Connection with name %s already exists!', $name));
         }
 
-        $connection = $this->determineConnection($connection);
+        $connection = static::create($connection);
 
         $this->connections[$name] = $connection;
 
@@ -172,7 +172,7 @@ class ConnectionManager implements ConnectionManagerInterface
      *
      * @throws \Doctrine\DBAL\DBALException
      */
-    protected function determineConnection($definition)
+    public static function create($definition)
     {
         // create connection from definition
         if($definition instanceof Connection){

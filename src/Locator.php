@@ -27,7 +27,11 @@ class Locator implements LocatorInterface
      */
     public function getProvider($entity)
     {
-        return new Provider($entity);
+        $container = FacadeFactory::getContainer();
+        if (!$container->has(ProviderInterface::class)) {
+            $container->add(ProviderInterface::class, Provider::class);
+        }
+        return FacadeFactory::getContainer()->get(ProviderInterface::class, [$entity]);
     }
 
     /**

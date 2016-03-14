@@ -32,8 +32,9 @@ abstract class AbstractRepository implements EntityAwareInterface, RepositoryInt
      *
      * @return Provider
      */
-    private function getProvider(){
-        if($this->provider === null){
+    private function getProvider()
+    {
+        if ($this->provider === null) {
             $this->provider = LocatorFacade::getProvider($this->getEntity());
         }
         return $this->provider;
@@ -55,7 +56,8 @@ abstract class AbstractRepository implements EntityAwareInterface, RepositoryInt
      * @param mixed $primaryKey
      * @return \ArrayObject|\stdClass|object
      */
-    public function find($primaryKey){
+    public function find($primaryKey)
+    {
         return $this->getProvider()->getMapper()->find($primaryKey)->execute(HydratorInterface::HYDRATE_ENTITY);
     }
 
@@ -65,12 +67,13 @@ abstract class AbstractRepository implements EntityAwareInterface, RepositoryInt
      * @param object|array $data
      * @return int|bool
      */
-    public function save($data){
+    public function save($data)
+    {
 
-        if(is_array($data)){
+        if (is_array($data)) {
             $provider = LocatorFacade::getProvider($this->getEntity());
             $provider->fromArrayToObject($data);
-        }else{
+        } else {
             $provider = $this->getProvider();
         }
 

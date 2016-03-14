@@ -86,42 +86,46 @@ class Query implements EmitterAwareInterface, QueryInterface
     private $builder;
 
     /**
-     * @var \Doctrine\DBAL\Driver\Connection
+     * @var \Doctrine\DBAL\Connection
      */
     private $connection;
 
     /**
      * Statement constructor.
      * @param array|stdClass|\ArrayObject|object|string $entity
-     * @param Query $builder
-     * @param null|\Doctrine\DBAL\Driver\Connection $connection
+     *
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function __construct($entity = null, $builder = null, $connection = null)
+    public function __construct($entity = null)
     {
-        $this->connection = null === $connection ? LocatorFacade::getConnectionManager()->get() : $connection;
-        $this->builder = $builder === null ? $this->connection->createQueryBuilder() : $builder;
         $this->setEntity($entity);
     }
 
     /**
-     * @return QueryBuilder
+     * @return \Doctrine\DBAL\Query\QueryBuilder
      */
     public function getBuilder()
     {
+        if(null === $this->builder){
+            $this->builder = $this->getConnection()->createQueryBuilder();
+        }
         return $this->builder;
     }
 
     /**
-     * @param QueryBuilder $builder
+     * @param \Doctrine\DBAL\Query\QueryBuilder $builder
+     *
+     * @return $this
      */
-    public function setBuilder($builder)
+    public function setBuilder(QueryBuilder $builder)
     {
         $this->builder = $builder;
+
+        return $this;
     }
 
     /**
-     * @return Connection
+     * @return \Doctrine\DBAL\Connection
      */
     public function getConnection()
     {
@@ -132,11 +136,14 @@ class Query implements EmitterAwareInterface, QueryInterface
     }
 
     /**
-     * @param Connection $connection
+     * @param \Doctrine\DBAL\Connection $connection
+     * @return $this
      */
-    public function setConnection($connection)
+    public function setConnection(Connection $connection)
     {
         $this->connection = $connection;
+
+        return $this;
     }
 
     /**

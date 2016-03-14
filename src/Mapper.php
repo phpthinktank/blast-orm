@@ -64,7 +64,8 @@ class Mapper implements MapperInterface, EntityAwareInterface
      */
     public function createQuery()
     {
-        return new Query($this->getEntity(), null, $this->connection);
+        $query = new Query($this->getEntity());
+        return null !== $this->connection ? $query->setConnection($this->connection) : $query;
     }
 
     /**
