@@ -16,11 +16,11 @@ namespace Blast\Orm\Relations;
 
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
+use Blast\Orm\LocatorFacade;
 use Blast\Orm\Query;
 
 class BelongsTo implements RelationInterface
 {
-    use EntityAdapterLoaderTrait;
     use RelationTrait;
     /**
      * @var
@@ -74,25 +74,20 @@ class BelongsTo implements RelationInterface
         return $this->localKey;
     }
 
-    protected function init(){
-        $provider = $this->loadAdapter($this->getEntity());
-        $foreignAdapter = $this->loadAdapter($this->getForeignEntity());
+    protected function init()
+    {
+        $provider = LocatorFacade::getProvider($this->getEntity());
+        $foreignAdapter = LocatorFacade::getProvider($this->getForeignEntity());
         $localKey = $this->getLocalKey();
 
-        if($localKey === null){
+        if ($localKey === null) {
             $localKey = $foreignAdapter->getTableName() . '_' . $foreignAdapter->getPrimaryKeyName();
         }
 
-        $data = $provider->getData();
+        $data = $provider->fromObjectToArray();
 
         //find primary key
-        $primaryKey = null;
-
-        if(isset($data[$localKey])){
-            $primaryKey = $data[$localKey];
-        }else{
-            $primaryKey = $provider->access($localKey);
-        }
+        $primaryKey = $data[$localKey];
 
         $mapper = $foreignAdapter->getMapper();
 
@@ -102,10 +97,11 @@ class BelongsTo implements RelationInterface
     }
 
     /**
-     * @return array|\Blast\Orm\Data\\ArrayObject|Query\Entity|bool
+     * @return array|\ArrayObject|object|bool
      */
-    public function execute(){
-        return $this->getQuery()->execute(HydratorInterface::AUTO);
+    public function execute()
+    {
+        return $this->getQuery()->execute(HydratorInterface::HYDRATE_AUTO);
     }
 
 }

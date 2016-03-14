@@ -13,6 +13,7 @@ use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Entity\Provider;
 use Blast\Orm\Entity\ProviderInterface;
+use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Hydrator\ObjectToArrayHydrator;
 use Blast\Orm\Query;
 use Blast\Orm\Relations\RelationInterface;
@@ -57,7 +58,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     public function createQuery()
     {
         return new Query($this->getEntity(),
-            LocatorFacade::getConnectionManager()->getConnection()->createQueryBuilder());
+            LocatorFacade::getConnectionManager()->get()->createQueryBuilder());
     }
 
     /**
@@ -106,8 +107,8 @@ class Mapper implements MapperInterface, EntityAwareInterface
      */
     public function create($entity)
     {
-        //load entity adaption
-        $provider = LocatorFacade::getProvider($entity);
+        //load entity provider
+        $provider = $this->prepareProvider($entity);
 
         //disallow differing entities
         if (get_class($provider->getEntity()) !== get_class($this->getProvider()->getEntity())) {
@@ -119,7 +120,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $query->insert($provider->getTableName());
 
         //pass data without relations
-        $data = $provider->getData();
+        $data = $provider->fromObjectToArray();
 
         //cancel if $data has no entries
         if (count($data) < 1) {
@@ -139,13 +140,13 @@ class Mapper implements MapperInterface, EntityAwareInterface
     /**
      * Update query for existing Model or a collection of entities in storage
      *
-     * @param array|\ArrayObject|\ArrayObject|\stdClass|Entity|object $entity
+     * @param array|\ArrayObject|\stdClass|object $entity
      * @return Query
      */
     public function update($entity)
     {
-        //load entity adaption
-        $provider = LocatorFacade::getProvider($entity);
+        //load entity provider
+        $provider = $this->prepareProvider($entity);
 
         //disallow differing entities
         if (get_class($provider->getEntity()) !== get_class($this->getProvider()->getEntity())) {
@@ -159,7 +160,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $query->update($provider->getTableName());
 
         //pass data without relations
-        $data = $provider->getData();
+        $data = $provider->fromObjectToArray();
 
         foreach ($data as $key => $value) {
             if ($value instanceof RelationInterface) {
@@ -209,5 +210,22 @@ class Mapper implements MapperInterface, EntityAwareInterface
     public function save($entity)
     {
         return LocatorFacade::getProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
+    }
+
+    /**
+     * @param $entity
+     * @return Provider
+     */
+    public function prepareProvider($entity)
+    {
+        if (is_array($entity)) {
+            $provider = LocatorFacade::getProvider($this->getEntity());
+
+            //reset entity in provider
+            $provider->setEntity($provider->fromArrayToObject($entity, HydratorInterface::HYDRATE_ENTITY));
+        } else {
+            $provider = LocatorFacade::getProvider($entity);
+        }
+        return $provider;
     }
 }

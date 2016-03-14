@@ -12,7 +12,6 @@
 
 namespace Blast\Orm\Hydrator;
 
-
 use Adamlc\LetterCase\LetterCase;
 use Blast\Orm\LocatorFacade;
 

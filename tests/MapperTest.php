@@ -12,6 +12,7 @@ use Blast\Orm\ConnectionManagerInterface;
 use Blast\Orm\ConnectionFacade;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\ConnectionManager;
+use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\LocatorFacade;
 use Blast\Orm\Mapper;
 use Blast\Tests\Orm\Stubs\Entities\Post;

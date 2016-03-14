@@ -81,7 +81,7 @@ class HasMany implements RelationInterface
         $foreignProvider = LocatorFacade::getProvider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
 
-        $data = $provider->getData();
+        $data = $provider->fromObjectToArray();
 
         //find primary key
         if ($foreignKey === null) {

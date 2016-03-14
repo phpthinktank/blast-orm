@@ -89,7 +89,7 @@ class RelationTest extends \PHPUnit_Framework_TestCase
 
     public function testBelongsTo()
     {
-        $post = LocatorFacade::getProviderManager()->get(Post::class)->getMapper()->find(1)->execute();
+        $post = LocatorFacade::getProvider(Post::class)->getMapper()->find(1)->execute();
         $relation = new BelongsTo($post, User::class);
 
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
@@ -98,17 +98,17 @@ class RelationTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testHasMany(){
-        $user = LocatorFacade::getProviderManager()->get(User::class)->getMapper()->find(1)->execute();
+        $user = LocatorFacade::getProvider(User::class)->getMapper()->find(1)->execute();
         $relation = new HasMany($user, Post::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
         $posts = $relation->execute();
-        $this->assertInstanceOf(\ArrayObject::class, $posts);
+        $this->assertInstanceOf(\SplStack::class, $posts);
         $this->assertInstanceOf(Post::class, $posts->current());
 
     }
 
     public function testHasOne(){
-        $user = LocatorFacade::getProviderManager()->get(User::class)->getMapper()->find(1)->execute();
+        $user = LocatorFacade::getProvider(User::class)->getMapper()->find(1)->execute();
 
         $relation = new HasOne($user, Address::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
@@ -119,12 +119,12 @@ class RelationTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testManyToMany(){
-        $user = LocatorFacade::getProviderManager()->get(User::class)->getMapper()->find(1)->execute();
+        $user = LocatorFacade::getProvider(User::class)->getMapper()->find(1)->execute();
         $relation = new ManyToMany($user, Role::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
 
         $result = $relation->execute();
-        $this->assertInstanceOf(\ArrayObject::class, $result);
+        $this->assertInstanceOf(\SplStack::class, $result);
         $this->assertInstanceOf(Role::class, $result->current());
     }
 }

@@ -84,7 +84,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $query = new Query();
         $result = $query->select()->from('post')->where('id = 1')->execute();
 
-        $this->assertInstanceOf(Entity::class, $result);
+        $this->assertInstanceOf(\ArrayObject::class, $result);
     }
 
     /**
@@ -95,7 +95,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $query = new Query();
         $result = $query->select()->from('post')->execute(HydratorInterface::HYDRATE_ENTITY);
 
-        $this->assertInstanceOf(Entity::class, $result);
+        $this->assertInstanceOf(\ArrayObject::class, $result);
     }
 
     /**
@@ -106,8 +106,8 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $query = new Query();
         $result = $query->select()->from('post')->where('id = 1')->execute(HydratorInterface::HYDRATE_COLLECTION);
 
-        $this->assertInstanceOf(\ArrayObject::class, $result);
-        $this->assertInstanceOf(Entity::class, $result->current());
+        $this->assertInstanceOf(\SplStack::class, $result);
+        $this->assertInstanceOf(\ArrayObject::class, $result->current());
     }
 
     /**
@@ -168,7 +168,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
 
         $result = $query->select()->from('post')->where('id = 1')->execute();
 
-        $data = $result->getData();
+        $data = $result->getArrayCopy();
 
         $this->assertEquals($data['contentSize'], strlen($data['content']));
     }

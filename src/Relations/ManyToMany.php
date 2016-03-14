@@ -17,11 +17,11 @@ use Blast\Orm\Entity\AdapterInterface;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Entity\Provider;
+use Blast\Orm\LocatorFacade;
 use Blast\Orm\Query;
 
 class ManyToMany implements RelationInterface
 {
-    use EntityAdapterLoaderTrait;
     use RelationTrait;
     /**
      * @var object|string
@@ -134,14 +134,14 @@ class ManyToMany implements RelationInterface
     }
 
     protected function init(){
-        $provider = $this->loadAdapter($this->getEntity());
-        $foreignAdapter = $this->loadAdapter($this->getForeignEntity());
+        $provider = LocatorFacade::getProvider($this->getEntity());
+        $foreignAdapter = LocatorFacade::getProvider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
         $junction = $this->getJunction();
         $junctionLocalKey = $this->getJunctionLocalKey();
         $junctionForeignKey = $this->getJunctionForeignKey();
 
-        $data = $provider->getData();
+        $data = $provider->fromObjectToArray();
 
         $localKey = $provider->getPrimaryKeyName();
 
@@ -169,11 +169,11 @@ class ManyToMany implements RelationInterface
 
         //get relations by through db object
         if(isset($data[$localKey])){
-            $junctionAdapter = $this->loadAdapter(is_string($junction) ? new Provider($junction) : $junction);
+            $junctionAdapter = LocatorFacade::getProvider(is_string($junction) ? new Provider($junction) : $junction);
             $results = $junctionAdapter->getMapper()
                 ->select([$junctionForeignKey])
                 ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
-                ->execute(AdapterInterface::HYDRATE_RAW);
+                ->execute(HydratorInterface::HYDRATE_RAW);
 
             $foreignQuery = $foreignAdapter->getMapper()->select();
 
@@ -190,7 +190,7 @@ class ManyToMany implements RelationInterface
     }
 
     /**
-     * @return \Blast\Orm\Data\\ArrayObject
+     * @return \SplStack
      */
     public function execute(){
         return $this->getQuery()->execute(HydratorInterface::HYDRATE_COLLECTION);

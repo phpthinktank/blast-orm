@@ -59,6 +59,10 @@ class Provider implements ProviderInterface
      */
     private $relations = [];
 
+    /**
+     * Provider constructor.
+     * @param $tableName
+     */
     public function __construct($tableName)
     {
         $this->init($tableName);
@@ -158,6 +162,10 @@ class Provider implements ProviderInterface
         return $this;
     }
 
+    /**
+     * @param array $definition
+     * @return $this
+     */
     protected function define(array $definition = [])
     {
         $entity = $this->getEntity();
@@ -191,27 +199,40 @@ class Provider implements ProviderInterface
             $this->tableName = ltrim(strtolower(preg_replace('/[A-Z]/', '_$0', $reflection->getShortName())), '_');
         }
 
-        if (null === $this->tableName) {
-            throw new \LogicException('Unable to get table name from entity');
-        }
-
         return $this;
     }
 
-    public function getData(array $additionalData = [])
+    /**
+     * Convert object properties or object getter to array
+     *
+     * @param array $additionalData
+     * @return mixed
+     */
+    public function fromObjectToArray(array $additionalData = [])
     {
         return (new ObjectToArrayHydrator($this->entity))->hydrate($additionalData);
     }
 
-    public function setData(array $data = [], $option = HydratorInterface::HYDRATE_AUTO)
+    /**
+     * Convert array to object properties or object setter
+     *
+     * @param array $data
+     * @param string $option
+     * @return mixed
+     */
+    public function fromArrayToObject(array $data = [], $option = HydratorInterface::HYDRATE_AUTO)
     {
         return (new ArrayToObjectHydrator($this->entity))->hydrate($data, $option);
     }
 
+    /**
+     * Check if entity is new or not
+     *
+     * @return bool
+     */
     public function isNew()
     {
-        $data = $this->getData();
-
+        $data = $this->fromObjectToArray();
         return isset($data[$this->getPrimaryKeyName()]) ? empty($data[$this->getPrimaryKeyName()]) : true;
     }
 
