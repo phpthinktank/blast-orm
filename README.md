@@ -35,10 +35,6 @@ It is recommended to use accessors (getters) and mutators (setters) for properti
 
 Entity classes could also be instances of [`stdClass`](http://php.net/manual/en/reserved.classes.php), 
 [`ArrayObject`](http://php.net/manual/de/class.arrayobject.php) or [`DataObject`](src/Data/DataObject.php)
-
-#### Adapters
-
-Blast ORM adapts an entity to access or determine data and definition.
  
 ### Mappers
 

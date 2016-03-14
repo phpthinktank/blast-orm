@@ -37,10 +37,16 @@ class Mapper implements MapperInterface, EntityAwareInterface
     private $provider;
 
     /**
+     * @var \Doctrine\DBAL\Driver\Connection|null
+     */
+    private $connection;
+
+    /**
      * Disable direct access to mapper
      * @param array|\ArrayObject|stdClass|\ArrayObject|object|string $entity
+     * @param \Doctrine\DBAL\Driver\Connection $connection
      */
-    public function __construct($entity)
+    public function __construct($entity, $connection = null)
     {
         if ($entity instanceof ProviderInterface) {
             $this->setEntity($entity->getEntity());
@@ -49,6 +55,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
             $this->setEntity($entity);
             $this->provider = LocatorFacade::getProvider($this->getEntity());
         }
+        $this->connection = $connection;
     }
 
     /**
@@ -57,8 +64,25 @@ class Mapper implements MapperInterface, EntityAwareInterface
      */
     public function createQuery()
     {
-        return new Query($this->getEntity(),
-            LocatorFacade::getConnectionManager()->get()->createQueryBuilder());
+        return new Query($this->getEntity(), null, $this->connection);
+    }
+
+    /**
+     * Get current connection
+     *
+     * @return \Doctrine\DBAL\Driver\Connection|null
+     */
+    public function getConnection()
+    {
+        return $this->connection;
+    }
+
+    /**
+     * @param \Doctrine\DBAL\Driver\Connection|null $connection
+     */
+    public function setConnection($connection)
+    {
+        $this->connection = $connection;
     }
 
     /**
@@ -102,7 +126,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     /**
      * Create query for new entity.
      *
-     * @param array|\ArrayObject|\ArrayObject|\stdClass|Entity|object $entity
+     * @param array|\ArrayObject|\stdClass|object $entity
      * @return Query|bool
      */
     public function create($entity)

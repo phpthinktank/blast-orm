@@ -16,7 +16,8 @@ All notable changes of the Blast orm 1.0 release series are documented in this f
  - `Blast\Orm\Data\DataAdapter` is now delivering logic to call data
  - `Blast\Orm\Entity\EntityAdapter` is now delivering logic to call definitions
  - Rename `Blast\Orm\Entity\EntityAdapterCollection` to `Blast\Orm\Entity\EntityAdapterManager`
- - Connection manager simplify redundant method names. Removed `Configuration` word from `get, set, getPrevious`, `getConnections` becomes `all` 
+ - Connection manager simplify redundant method names. Removed `Configuration` word from `get, set, getPrevious`, `getConnections` becomes `all`
+ - Connection initiation to mapper or query
 
 ### Removed
 
@@ -27,6 +28,8 @@ All notable changes of the Blast orm 1.0 release series are documented in this f
  - `Blast\Orm\Query\Result`
  - `Blast\Orm\Query\GenericEntity`
  - `Blast\Orm\Query\ResultInterface`
+ - `Blast\Orm\Data`
+ - `Blast\Orm\Hook`
 
 ## 0.3
 

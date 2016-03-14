@@ -17,6 +17,7 @@ use Blast\Orm\Hydrator\ArrayToObjectHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
+use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\EmitterAwareInterface;
 use League\Event\EmitterAwareTrait;
@@ -85,13 +86,21 @@ class Query implements EmitterAwareInterface, QueryInterface
     private $builder;
 
     /**
+     * @var \Doctrine\DBAL\Driver\Connection
+     */
+    private $connection;
+
+    /**
      * Statement constructor.
      * @param array|stdClass|\ArrayObject|object|string $entity
      * @param Query $builder
+     * @param null|\Doctrine\DBAL\Driver\Connection $connection
+     * @throws \Doctrine\DBAL\DBALException
      */
-    public function __construct($entity = null, $builder = null)
+    public function __construct($entity = null, $builder = null, $connection = null)
     {
-        $this->builder = $builder === null ? LocatorFacade::getConnectionManager()->get()->createQueryBuilder() : $builder;
+        $this->connection = null === $connection ? LocatorFacade::getConnectionManager()->get() : $connection;
+        $this->builder = $builder === null ? $this->connection->createQueryBuilder() : $builder;
         $this->setEntity($entity);
     }
 
@@ -101,6 +110,33 @@ class Query implements EmitterAwareInterface, QueryInterface
     public function getBuilder()
     {
         return $this->builder;
+    }
+
+    /**
+     * @param QueryBuilder $builder
+     */
+    public function setBuilder($builder)
+    {
+        $this->builder = $builder;
+    }
+
+    /**
+     * @return Connection
+     */
+    public function getConnection()
+    {
+        if(null === $this->connection){
+            $this->connection = LocatorFacade::getConnectionManager()->get();
+        }
+        return $this->connection;
+    }
+
+    /**
+     * @param Connection $connection
+     */
+    public function setConnection($connection)
+    {
+        $this->connection = $connection;
     }
 
     /**
