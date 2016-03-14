@@ -67,7 +67,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $query = $mapper->select();
         $result = $query->where('user_id = 1')->execute();
 
-        $this->assertInstanceOf(DataObject::class, $result);
+        $this->assertInstanceOf(\SplStack::class, $result);
         $this->assertEquals(2, $result->count());
     }
 
@@ -91,10 +91,10 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $mapper = new Mapper(new Post);
 
         $post = new Post();
-        $post->id = 3;
-        $post->user_id = 1;
-        $post->title = 'first created post';
-        $post->content = 'A new post!';
+        $post['id'] = 3;
+        $post['user_id'] = 1;
+        $post['title'] = 'first created post';
+        $post['content'] = 'A new post!';
 
         $result = $mapper->create($post)->execute();
 
@@ -123,7 +123,7 @@ class MapperTest extends \PHPUnit_Framework_TestCase
         $mapper = new Mapper(new Post);
         $result = $mapper->find(1)->execute();
         $this->assertInstanceOf(Post::class, $result);
-        $result->title .= ' Again!';
+        $result['title'] = $result['title'] . ' Again!';
 
         $this->assertEquals(1, $mapper->update($result)->execute());
     }

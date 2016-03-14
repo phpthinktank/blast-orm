@@ -16,23 +16,20 @@ use Blast\Orm\Data\MutableDataObjectTrait;
 use Blast\Orm\Data\MutatorInterface;
 use Blast\Orm\Data\MutatorTrait;
 use Blast\Orm\Relations\BelongsTo;
+use Blast\Tests\Orm\Stubs\Data\ArrayObject;
 
 /**
  * @codeCoverageIgnore
  */
-class Post implements DataObjectInterface, AccessorInterface, MutatorInterface
+class Post extends \ArrayObject
 {
-    use MutableDataObjectTrait;
-    use AccessorTrait;
-    use MutatorTrait;
-    use ImmutableDataObjectTrait;
 
     /**
      * Get table for model
      *
      * @return string
      */
-    public static function getTable()
+    public static function table()
     {
         return 'post';
     }

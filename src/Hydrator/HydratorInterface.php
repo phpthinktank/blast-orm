@@ -11,12 +11,10 @@
  *
  */
 
-namespace Blast\Orm\Entity;
+namespace Blast\Orm\Hydrator;
 
 
-use Blast\Orm\Data\DataHydratorInterface;
-
-interface EntityHydratorInterface extends DataHydratorInterface
+interface HydratorInterface
 {
     /**
      *
@@ -31,4 +29,16 @@ interface EntityHydratorInterface extends DataHydratorInterface
      *
      */
     const HYDRATE_RAW = 'raw';
+
+    /**
+     *
+     */
+    const HYDRATE_AUTO = 'auto';
+
+    /**
+     * @param array $data
+     * @param string $option
+     * @return mixed
+     */
+    public function hydrate($data = [], $option = self::HYDRATE_AUTO);
 }

@@ -20,7 +20,7 @@ use Blast\Orm\Relations\HasOne;
 /**
  * @codeCoverageIgnore
  */
-class EntityWithRelation extends DataObject
+class EntityWithRelation extends \ArrayObject
 {
     /**
      * Get table for model
@@ -32,7 +32,7 @@ class EntityWithRelation extends DataObject
         return 'testTable';
     }
 
-    public static function relations(EntityWithRelation $entity){
+    public static function relations(EntityWithRelation $entity, $mapper){
         return [
             new HasOne($entity, 'otherTable')
         ];

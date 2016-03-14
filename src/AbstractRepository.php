@@ -13,14 +13,9 @@
 
 namespace Blast\Orm;
 
-
-use Blast\Orm\Data\DataObject;
-use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
-use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\Entity\Entity;
+use Blast\Orm\Hydrator\HydratorInterface;
 
 abstract class AbstractRepository implements EntityAwareInterface, RepositoryInterface
 {
@@ -47,21 +42,21 @@ abstract class AbstractRepository implements EntityAwareInterface, RepositoryInt
     /**
      * Get a collection of all entities
      *
-     * @return \ArrayObject|\stdClass|DataObject|object
+     * @return \ArrayObject|\stdClass|\ArrayObject|object
      */
     public function all()
     {
-        return $this->getAdapter()->getMapper()->select()->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
+        return $this->getAdapter()->getMapper()->select()->execute(HydratorInterface::HYDRATE_COLLECTION);
     }
 
     /**
      * Find entity by primary key
      *
      * @param mixed $primaryKey
-     * @return \ArrayObject|\stdClass|Entity|DataObject|object
+     * @return \ArrayObject|\stdClass|Entity|\ArrayObject|object
      */
     public function find($primaryKey){
-        return $this->getAdapter()->getMapper()->find($primaryKey)->execute(EntityHydratorInterface::HYDRATE_ENTITY);
+        return $this->getAdapter()->getMapper()->find($primaryKey)->execute(HydratorInterface::HYDRATE_ENTITY);
     }
 
     /**

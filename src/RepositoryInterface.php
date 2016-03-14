@@ -14,7 +14,7 @@
 namespace Blast\Orm;
 
 
-use Blast\Orm\Data\DataObject;
+use Blast\Orm\Data\\ArrayObject;
 use Blast\Orm\Entity\Entity;
 
 interface RepositoryInterface
@@ -23,14 +23,14 @@ interface RepositoryInterface
      * Find entity by primary key
      *
      * @param mixed $primaryKey
-     * @return \ArrayObject|\stdClass|Entity|DataObject|object
+     * @return \ArrayObject|\stdClass|Entity|\ArrayObject|object
      */
     public function find($primaryKey);
 
     /**
      * Get a collection of all entities
      *
-     * @return \ArrayObject|\stdClass|DataObject|object
+     * @return \ArrayObject|\stdClass|\ArrayObject|object
      */
     public function all();
 

@@ -14,7 +14,7 @@
 namespace Blast\Orm\Relations;
 
 
-use Blast\Orm\Entity\EntityHydratorInterface;
+use Blast\Orm\Hydrator\HydratorInterface;
 
 class HasOne extends HasMany
 {
@@ -28,7 +28,7 @@ class HasOne extends HasMany
      * @return \Blast\Orm\Entity\Entity|object
      */
     public function execute(){
-        return $this->getQuery()->execute(EntityHydratorInterface::HYDRATE_ENTITY);
+        return $this->getQuery()->execute(HydratorInterface::HYDRATE_ENTITY);
     }
 
 }

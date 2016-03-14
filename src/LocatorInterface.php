@@ -13,9 +13,7 @@
 
 namespace Blast\Orm;
 
-
-use Blast\Orm\Entity\EntityAdapterInterface;
-use Blast\Orm\Entity\EntityAdapterManager;
+use Blast\Orm\Entity\ProviderInterface;
 
 interface LocatorInterface
 {
@@ -24,16 +22,10 @@ interface LocatorInterface
      * Get adapter for entity
      *
      * @param $entity
-     * @return EntityAdapterInterface
-     */
-    public function getAdapter($entity);
-
-    /**
-     * Get adapter manager
      *
-     * @return EntityAdapterManager
+     * @return ProviderInterface
      */
-    public function getAdapterManager();
+    public function getProvider($entity);
 
     /**
      * Get connection manager
@@ -46,7 +38,8 @@ interface LocatorInterface
      * Get mapper for entity
      *
      * @param $entity
-     * @return EntityAdapterInterface
+     *
+     * @return MapperInterface
      */
     public function getMapper($entity);
 

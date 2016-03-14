@@ -15,7 +15,7 @@ namespace Blast\Orm\Relations;
 
 
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
-use Blast\Orm\Entity\EntityHydratorInterface;
+use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
 
 class BelongsTo implements RelationInterface
@@ -102,10 +102,10 @@ class BelongsTo implements RelationInterface
     }
 
     /**
-     * @return array|\Blast\Orm\Data\DataObject|Query\Entity|bool
+     * @return array|\Blast\Orm\Data\\ArrayObject|Query\Entity|bool
      */
     public function execute(){
-        return $this->getQuery()->execute(EntityHydratorInterface::AUTO);
+        return $this->getQuery()->execute(HydratorInterface::AUTO);
     }
 
 }
