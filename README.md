@@ -52,11 +52,30 @@ The repository is mediating between persistence layer and abstract from persiste
   
 ## Usage
 
-### Configure connections
+### Connections
 
-Access connections via locator, which delivers a connection manager accessor. 
+Blast ORM is managing all connections with `\Blast\Orm\ConnectionManager`. You are able to create connections directly 
+or add connections to manager cache and access them later on.
 
-Access connection manager
+#### Direct access
+
+Create a new connection
+
+```php
+<?php
+
+use Blast\Orm\LocatorFacade;
+
+$connection = ConnectionManager::create('mysql://root:root@localhost/defaultdb?charset=UTF-8');
+```
+
+#### Stored and named connections
+
+##### Connection manager
+
+The connection manager stores all connection in it's own cache by name.  
+
+It is recommended to use connection manager via facade to access connections on different points in your application.  
 
 ```php
 <?php
@@ -64,22 +83,27 @@ Access connection manager
 use Blast\Orm\LocatorFacade;
 
 $connections = LocatorFacade::getConnectionManager();
+
 ```
 
-Add a connection. If second parameter name has been set, name is `default`.
-```php
-<?php
-
-$connections->add('mysql://root:root@localhost/defaultdb?charset=UTF-8');
-```
-
-Add another connection (with __UTF-8__)
+In some cases you would like to use a new connection manager instance, e.g. in a separate container.
 
 ```php
 <?php
 
-$connections->add('another', 'mysql://root:root@localhost/another');
+use Blast\Orm\ConnectionManager;
 
+$connections = new ConnectionManager();
+
+```
+
+##### Work with connections
+
+Add a connection. If second parameter name is not set, name is `default`.
+```php
+<?php
+
+$connections->add('mysql://root:root@localhost/defaultdb?charset=UTF-8', 'myconnectionname');
 ```
 
 Get connection, default connection name is always `default`
@@ -112,19 +136,51 @@ $connections = $connections->__instance();
 
 ### Query
 
-The query object is is providing all high level API methods of [doctrine 2 query builder](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/query-builder.html#security-safely-preventing-sql-injection).
+The query object is is providing high level API methods of [doctrine 2 query builder](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/query-builder.html#security-safely-preventing-sql-injection).
 
-Create a new query for entity
+Create a new query
 
 ```php
 <?php
 
+use Blast\Orm\Query;
+
 $query = new Query();
+```
+
+or create a new query for an entity
+
+```php
+<?php
+
+use Blast\Orm\Query;
+
+$query = new Query(Post::class);
+```
+
+Custom connection for the query
+
+```php
+<?php
+
+use Blast\Orm\Connection;
+
+$query->setConnection(ConnectionManager::create('mysql://root:root@localhost/acme'));
+
+```
+
+Custom query builder
+
+```php
+<?php
+
+$query->setBuilder($connection->createQueryBuilder());
+
 ```
 
 #### select
 
-Get all posts as `Blast\Orm\Data\DataObject` containing post as `Blast\Orm\Query\Result` 
+Get all posts as collection `\SplStack` containing post as `\ArrayObject` 
 
 ```php
 <?php
@@ -134,10 +190,9 @@ $result = $query->select()->from('post', 'p')->execute();
 //get data from result
 $title = $result->get('title');
 $content = $result->get('content');
-
 ```
 
-Get post by id as `Blast\Orm\Query\Result`
+Get post by id as `\ArrayObject`
 
 ```php
 <?php
@@ -164,7 +219,7 @@ Create a new entry and get number of affected rows
 ```php
 <?php
 
-$affectedRows = $query->insert()
+$affectedRows = $query->insert('post')
     ->setValue('title', 'New Blog post')
     ->setValue('content', 'some blog content')
     ->execute();
@@ -177,7 +232,7 @@ Update an entry and get number of affected rows
 ```php
 <?php
 
-$affectedRows = $query->update()
+$affectedRows = $query->update('post')
     ->set('title', 'New Blog post')
     ->where('id = :id')
     ->setParameter('id', 1)
@@ -191,7 +246,7 @@ Delete entries and get number of affected rows
 ```php
 <?php
 
-$affectedRows = $query->delete()
+$affectedRows = $query->delete('post')
     ->where('id = :id')
     ->setParameter('id', 1)
     ->execute();
@@ -204,7 +259,7 @@ Execute query and get result as entity
 ```php
 <?php
 
-$post = $query->execute(EntityHydratorInterface::RESULT_ENTITY);
+$post = $query->execute(HydratorInterface::RESULT_ENTITY);
 ```
 
 Execute query and get result as collection
@@ -212,7 +267,7 @@ Execute query and get result as collection
 ```php
 <?php
 
-$posts = $query->execute(EntityHydratorInterface::RESULT_COLLECTION);
+$posts = $query->execute(HydratorInterface::RESULT_COLLECTION);
 ```
 
 Execute query and get raw result as array
@@ -220,10 +275,10 @@ Execute query and get raw result as array
 ```php
 <?php
 
-$result = $query->execute(EntityHydratorInterface::RESULT_RAW);
+$result = $query->execute(HydratorInterface::RESULT_RAW);
 ```
 
-### Working with Entities
+### Entities
 
 Entity classes are independent of Blast ORM.
 
@@ -237,31 +292,41 @@ class Post
 
 ```
 
-#### Generic entities
+#### Provider
 
-Use generic entities to access tables without creating a entity class. This is useful for accessing junction tables or 
+Providers are used to determine the entity definition and hydrate data to entity and vice versa. You could pass an 
+object, class name or table name to provider. 
+
+If the entity class does not have a definition. the definition is determined automatically by the provider. Definitions 
+are represented by static entity methods and / or properties. 
+
+Use providers to access tables without creating a entity class. This is useful for accessing junction tables or 
 temporary tables.
- 
+
 ```php
 <?php
 
-use Blast\Orm\Entities\GenericEntity;
+use Blast\Orm\Entity\Provider;
 
-$tableName = 'user_roles';
-$userRolesJunction = new GenericEntity($tableName);
+// add an entity as class name
+$provider = new Provider(Post::class);
+
+// add an entity as object
+$provider = new Provider(Post::class);
+
+// add an entity as table name
+// entity object is an array object
+$provider = new Provider('user_roles');
 ```
 
-#### Definition
-
-A entity does not need any definition. If the entity class does not have a definition. the definition is determined 
-automatically. Declare a definition as static method or property. 
+Add definition to entity by public static property or method.
 
 #### Table name 
 
 Return table name as `string`
 
  - Default: class name without namespace, camelcase converts to underscores e.g. `App\Entities\Post` will have `post` as table name.
- - Static method: `YourEntity::getTable()` or `YourEntity::table()`
+ - Static method: or `YourEntity::table()`
  - Static property: `YourEntity::$table`
 
 ```php
@@ -275,7 +340,7 @@ class Post
      *
      * @var string
      */
-    private static $tableName = 'post';
+    public static $tableName = 'post';
 }
 
 ```
@@ -285,7 +350,7 @@ class Post
 Return primary key name as `string`
  
  - Default: `id`
- - Static method: `YourEntity::getPrimaryKeyName()` or `Entity::primaryKeyName()`
+ - Static method: `Entity::primaryKeyName()`
  - Static property: `YourEntity::$primaryKeyName`
 
 ```php
@@ -299,7 +364,7 @@ class Post
      *
      * @var string
      */
-    private static $primaryKeyName = 'id';
+    public static $primaryKeyName = 'id';
     
 }
 
@@ -310,7 +375,7 @@ class Post
 Return mapper class name as `string` or a instance of `Blast\Orm\MapperInterface`
 
  - Default: An instance of `Blast\Orm\Mapper`
- - Static method: `YourEntity::getMapper()` or `Entity::mapper()`
+ - Static method: `Entity::mapper()`
  - Static property: `YourEntity::$mapper`
 
 ```php
@@ -326,23 +391,52 @@ class Post
      *
      * @return string
      */
-    private static $mapper = Mapper::class;
+    public static $mapper = Mapper::class;
 }
 
 ```
 
-#### Adapters
+#### Mapper
 
-Adapters grant access to data and definition, even if your entity class does not have definitions at all.
+Return relations as `array` containing instance of `Blast\Orm\Relations\RelationInterface`.
+
+ - Default: `[]`
+ - Static method: `Entity::relations()`
 
 ```php
 <?php
 
 use Blast\Orm\Mapper;
 
+class Post
+{
+
+    /**
+     * Get mapper for entity
+     *
+     * @return string
+     */
+    public static function relations(EntityWithRelation $entity, $mapper){
+        return [
+            new HasOne($entity, 'otherTable')
+        ];
+    }
+}
+
+```
+
+#### Access definition from provider
+
+Adapters grant access to data and definition, even if your entity class does not have definitions at all.
+
+```php
+<?php
+
+use Blast\Orm\Entity\Provider;
+
 $post = new Post;
 
-$postAdapter = new EntityAdapter($post);
+$postProvider = new Provider(Post::class);
 
 ```
 
@@ -350,7 +444,7 @@ Get table name
 
 ```php
 <?php
-$tableName = $postAdapter->getTableName();
+$tableName = $postProvider->getTableName();
 
 ```
 
@@ -358,7 +452,7 @@ Get primary key name
 
 ```php
 <?php
-$primaryKeyName = $postAdapter->getPrimaryKeyName();
+$primaryKeyName = $postProvider->getPrimaryKeyName();
 
 ```
 
@@ -366,7 +460,31 @@ Get entities mapper
 
 ```php
 <?php
-$mapper = $postAdapter->getMapper();
+$mapper = $postProvider->getMapper();
+
+```
+
+Get entities relation
+
+```php
+<?php
+$mapper = $postProvider->getRelations();
+
+```
+
+Hydrate data as array to entity
+
+```php
+<?php
+$entity = $postProvider->fromArrayToObject(['title' => 'Hello World']);
+
+```
+
+Hydrate data as entity to array
+
+```php
+<?php
+$data = $postProvider->fromObjectToArray();
 
 ```
 
@@ -456,18 +574,6 @@ Pass relations as `array` by computed static relation method in entity class
 
 class Post {
 
-    /**
-     * @var Query
-     */
-    $comments = [];
-    
-    /**
-     * @return \Blast\Orm\Relations\RelationInterface
-     */
-    public function getComments(){
-        return $this->comments;
-    }
-
     public static function relation(Post $entity){
         return [
             HasMany($entity, Comments::class)
@@ -476,13 +582,14 @@ class Post {
 }
 
 $post = $mapper->find(1);
+$postProvider = new Provider($post);
 
-$relation = $post->getComments();
-$comments = $relation->execute();
+$relations = $postProvider->getRelations();
+$comments = $relations['comment']->execute();
 
 ```
 
-Execute directly in custom method
+Even easier access by executing directly in custom method
 
 ```php
 <?php
@@ -503,14 +610,14 @@ class Post {
 
 Access relation query and modify the result.
 
-__For example__: We assume we have _accepted_ and _denied_ comments. We only want to receive _accepted_ comments.
-
 ```php
 <?php
 
-$publishedComments = $relation->getQuery()->where('published = 1')->execute();
+$comments = $relation->execute();
 
 ```
+
+You could also extend the relation query with `RelationInterface::getQuery`.
 
 #### HasOne (one-to-one)
 
@@ -612,15 +719,14 @@ Create from interface
 <?php
 
 use Blast\Orm\RepositoryInterface;
-use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
+use Blast\Orm\Entity\Provider;
+use Blast\Orm\Hydrator\HydratorInterface;
 
 class PostRepository implements EntityAwareInterface, RepositoryInterface
 {
     use EntityAwareTrait;
-    use EntityAdapterLoaderTrait;
     
     /**
      * Init repository and bind related entity
@@ -630,40 +736,42 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
     }
 
     /**
-     * @var EntityAdapter
+     * @var \Blast\Orm\Entity\ProviderInterface
      */
     protected $provider = null;
 
     /**
      * Get adapter for entity
      *
-     * @return \Blast\Orm\Entity\EntityAdapter
+     * @return Provider
      */
-    private function getAdapter(){
-        if($this->adapter === null){
-            $this->adapter = $this->loadAdapter($this->getEntity());
+    private function getProvider()
+    {
+        if ($this->provider === null) {
+            $this->provider = LocatorFacade::getProvider($this->getEntity());
         }
-        return $this->adapter;
+        return $this->provider;
     }
 
     /**
      * Get a collection of all entities
      *
-     * @return \ArrayObject|\stdClass|\Blast\Orm\Data\DataObject|object
+     * @return \SplStack|array
      */
     public function all()
     {
-        return $this->getAdapter()->getMapper()->select()->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
+        return $this->getProvider()->getMapper()->select()->execute(HydratorInterface::HYDRATE_COLLECTION);
     }
 
     /**
      * Find entity by primary key
      *
      * @param mixed $primaryKey
-     * @return \ArrayObject|\stdClass|\Blast\Orm\Query\Result|\Blast\Orm\Data\DataObject|object
+     * @return \ArrayObject|\stdClass|object
      */
-    public function find($primaryKey){
-        return $this->getAdapter()->getMapper()->find($primaryKey)->execute(EntityHydratorInterface::HYDRATE_ENTITY);
+    public function find($primaryKey)
+    {
+        return $this->getProvider()->getMapper()->find($primaryKey)->execute(HydratorInterface::HYDRATE_ENTITY);
     }
 
     /**
@@ -672,9 +780,19 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
      * @param object|array $data
      * @return int|bool
      */
-    public function save($data){
-        $mapper = $this->getAdapter()->getMapper();
-        $query = $provider->isNew() ? $mapper->create($data) : $mapper->update($data);
+    public function save($data)
+    {
+
+        if (is_array($data)) {
+            $provider = LocatorFacade::getProvider($this->getEntity());
+            $provider->fromArrayToObject($data);
+        } else {
+            $provider = $this->getProvider();
+        }
+
+        $mapper = $this->getProvider()->getMapper();
+        $enw = $provider->isNew();
+        $query = $enw ? $mapper->create($data) : $mapper->update($data);
         return $query->execute();
     }
 
