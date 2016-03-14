@@ -907,7 +907,7 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
 [ico-travis]: https://img.shields.io/travis/phpthinktank/blast-orm/master.svg?style=flat-square
 [ico-downloads]: https://img.shields.io/packagist/dt/blast/orm.svg?style=flat-square
-[ico-coveralls]: https://img.shields.io/coveralls/phpthinktank/blast-orm/master.svg?style=flat-square)](https://coveralls.io/github/phpthinktank/blast-orm?branch=1.0.x-dev
+[ico-coveralls]: https://img.shields.io/coveralls/phpthinktank/blast-orm/master.svg?style=flat-square)](https://coveralls.io/github/phpthinktank/blast-orm?branch=master
 
 [link-packagist]: https://packagist.org/packages/blast/orm
 [link-travis]: https://travis-ci.org/phpthinktank/blast-orm
