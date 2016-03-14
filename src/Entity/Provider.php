@@ -86,11 +86,11 @@ class Provider implements ProviderInterface
      */
     public function getMapper()
     {
-        if($this->mapper instanceof MapperInterface){
+        if ($this->mapper instanceof MapperInterface) {
             return $this->mapper;
         }
         $container = FacadeFactory::getContainer();
-        if(!$container->has($this->mapper)){
+        if (!$container->has($this->mapper)) {
             $container->add($this->mapper, new Mapper($this->getEntity()));
         }
         return $container->get($this->mapper);
@@ -117,6 +117,9 @@ class Provider implements ProviderInterface
      */
     public function getTableName()
     {
+        if (null === $this->tableName) {
+            throw new \LogicException('Unable to get table name from entity');
+        }
         return $this->tableName;
     }
 
@@ -141,7 +144,7 @@ class Provider implements ProviderInterface
                 $this->entity = $container->get($tableName);
             } elseif (class_exists($tableName)) {
                 $this->entity = new $tableName;
-            }else{
+            } else {
                 $this->entity = new \ArrayObject();
                 $this->tableName = $tableName;
             }
@@ -173,10 +176,10 @@ class Provider implements ProviderInterface
         } elseif (isset($methods['mapper'])) {
             $mapper = $methods['mapper']->invokeArgs($entity, [$entity]);
             unset($methods['mapper']);
-        }else{
-            if(FacadeFactory::getContainer()->has(MapperInterface::class)){
+        } else {
+            if (FacadeFactory::getContainer()->has(MapperInterface::class)) {
                 $mapper = FacadeFactory::getContainer()->get(MapperInterface::class);
-            }else{
+            } else {
                 $mapper = new Mapper($this);
             }
         }
@@ -194,26 +197,25 @@ class Provider implements ProviderInterface
             $this->{$key} = $value;
         }
 
-        if(null === $this->tableName && $reflection->getName() !== \ArrayObject::class){
+        if (null === $this->tableName && $reflection->getName() !== \ArrayObject::class) {
             $this->tableName = ltrim(strtolower(preg_replace('/[A-Z]/', '_$0', $reflection->getShortName())), '_');
-        }
-
-        if(null === $this->tableName){
-            throw new \LogicException('Unable to get table name from entity');
         }
 
         return $this;
     }
 
-    public function getData(array $additionalData = []){
+    public function getData(array $additionalData = [])
+    {
         return (new ObjectToArrayHydrator($this->entity))->hydrate($additionalData);
     }
 
-    public function setData(array $data = [], $option = HydratorInterface::HYDRATE_AUTO){
+    public function setData(array $data = [], $option = HydratorInterface::HYDRATE_AUTO)
+    {
         return (new ArrayToObjectHydrator($this->entity))->hydrate($data, $option);
     }
 
-    public function isNew(){
+    public function isNew()
+    {
         $data = $this->getData();
         return isset($data[$this->getPrimaryKeyName()]) ? empty($data[$this->getPrimaryKeyName()]) : true;
     }
