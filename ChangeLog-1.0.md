@@ -2,14 +2,14 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
-## 0.4
+## 0.4.0
 
 ### Added
 
- - `Blast\Orm\Locator` deliver methods to access adapters, mappers and connections and replaces `Blast\Orm\Entity\EntityAdapterCollectionFacade` and `Blast\Orm\ConnectionCollectionFacade`
+ - `Blast\Orm\Locator` deliver methods to access providers, mappers and connections and replaces `Blast\Orm\Entity\EntityAdapterCollectionFacade` and `Blast\Orm\ConnectionCollectionFacade`
  - `Blast\Orm\LocatorFacade` solves IoC concerns by providing swappable locator from container.
  - `Blast\Orm\Entity\Provider` replaces entity adaption 
- - `Blast\Orm\Hydrator` manages hydration of to from object to array and vice versa 
+ - `Blast\Orm\Hydrator` manages hydration from object to array and vice versa 
 
 ### Altered
 
@@ -18,15 +18,16 @@ All notable changes of the Blast orm 1.0 release series are documented in this f
  - Rename `Blast\Orm\Entity\EntityAdapterCollection` to `Blast\Orm\Entity\EntityAdapterManager`
  - Connection manager simplify redundant method names. Removed `Configuration` word from `get, set, getPrevious`, `getConnections` becomes `all`
  - Connection initiation to mapper or query
+ - Add query event classes
 
 ### Removed
 
  - Replace `Blast\Orm\Container` with `League\Container`
+ - `Blast\Orm\Entity\Provider` replaces entity adapter classes and definition interfaces
  - `Blast\Orm\Object\ObjectAdapter`
- - `Blast\Orm\Entity\EntityAdapterCollectionFacade`
  - `Blast\Orm\ConnectionCollectionFacade`
  - `Blast\Orm\Query\Result`
- - `Blast\Orm\Query\GenericEntity`
+ - `Blast\Orm\Entity\GenericEntity`
  - `Blast\Orm\Query\ResultInterface`
  - `Blast\Orm\Data`
  - `Blast\Orm\Hook`
