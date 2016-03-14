@@ -14,18 +14,14 @@
 namespace Blast\Tests\Orm\Query;
 
 
-use Blast\Orm\ConnectionCollectionInterface;
-use Blast\Orm\ConnectionFacade;
-use Blast\Orm\Data\DataObject;
-use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\ConnectionCollection;
+use Blast\Orm\ConnectionManagerInterface;
+use Blast\Orm\Hydrator\HydratorInterface;
+use Blast\Orm\LocatorFacade;
 use Blast\Orm\Query;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
-use Blast\Orm\Query\Result;
+use Blast\Orm\Entity\Entity;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Interop\Container\ContainerInterface;
 use stdClass;
 
 class QueryTest extends \PHPUnit_Framework_TestCase
@@ -33,10 +29,10 @@ class QueryTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $connection = ConnectionFacade::addConnection( [
+        $connection = LocatorFacade::getConnectionManager()->add( [
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
-        ])->getConnection();
+        ])->get();
 
         $connection->exec('CREATE TABLE post (id int, user_id int, title VARCHAR(255), content TEXT)');
         $connection->exec('CREATE TABLE user (id int, name VARCHAR(255))');
@@ -60,11 +56,11 @@ class QueryTest extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        $connection = ConnectionFacade::getConnection(ConnectionCollectionInterface::DEFAULT_CONNECTION);
+        $connection = LocatorFacade::getConnectionManager()->get(ConnectionManagerInterface::DEFAULT_CONNECTION);
         $connection->exec('DROP TABLE post');
         $connection->exec('DROP TABLE user');
 
-        ConnectionFacade::__destruct();
+        LocatorFacade::getConnectionManager()->closeAll();
     }
 
     /**
@@ -75,8 +71,9 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $query = new Query();
         $result = $query->select()->from('post')->execute();
 
-        $this->assertInstanceOf(DataObject::class, $result);
-        $this->assertInstanceOf(Result::class, $result->current());
+        $this->assertInstanceOf(\SplStack::class, $result);
+        $current = $result->current();
+        $this->assertInstanceOf(\ArrayObject::class, $current);
     }
 
     /**
@@ -87,7 +84,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $query = new Query();
         $result = $query->select()->from('post')->where('id = 1')->execute();
 
-        $this->assertInstanceOf(Result::class, $result);
+        $this->assertInstanceOf(\ArrayObject::class, $result);
     }
 
     /**
@@ -96,9 +93,9 @@ class QueryTest extends \PHPUnit_Framework_TestCase
     public function testForceSingleResult()
     {
         $query = new Query();
-        $result = $query->select()->from('post')->execute(EntityHydratorInterface::HYDRATE_ENTITY);
+        $result = $query->select()->from('post')->execute(HydratorInterface::HYDRATE_ENTITY);
 
-        $this->assertInstanceOf(Result::class, $result);
+        $this->assertInstanceOf(\ArrayObject::class, $result);
     }
 
     /**
@@ -107,10 +104,10 @@ class QueryTest extends \PHPUnit_Framework_TestCase
     public function testForceResultCollection()
     {
         $query = new Query();
-        $result = $query->select()->from('post')->where('id = 1')->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
+        $result = $query->select()->from('post')->where('id = 1')->execute(HydratorInterface::HYDRATE_COLLECTION);
 
-        $this->assertInstanceOf(DataObject::class, $result);
-        $this->assertInstanceOf(Result::class, $result->current());
+        $this->assertInstanceOf(\SplStack::class, $result);
+        $this->assertInstanceOf(\ArrayObject::class, $result->current());
     }
 
     /**
@@ -171,7 +168,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
 
         $result = $query->select()->from('post')->where('id = 1')->execute();
 
-        $data = $result->getData();
+        $data = $result->getArrayCopy();
 
         $this->assertEquals($data['contentSize'], strlen($data['content']));
     }
@@ -238,7 +235,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
      */
     public function testCustomBuilderInstance()
     {
-        $builder = ConnectionFacade::getConnection()->createQueryBuilder();
+        $builder = LocatorFacade::getConnectionManager()->get()->createQueryBuilder();
         $query = new Query(null, $builder);
         $this->assertEquals($builder, $query->getBuilder());
     }

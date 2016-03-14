@@ -13,9 +13,6 @@
 
 namespace Blast\Tests\Orm\Stubs\Entities;
 
-
-use Blast\Orm\Data\DataObject;
-
 /**
  * @codeCoverageIgnore
  */
@@ -32,16 +29,16 @@ class User
     private $name;
 
     /**
-     * @var DataObject|Post
+     * @var \ArrayObject|Post
      */
     private $post;
 
     /**
-     * @var DataObject
+     * @var \ArrayObject
      */
     private $address;
 
-    public static function getPrimaryKeyName(){
+    public static function primaryKeyName(){
         return 'pk';
     }
 
@@ -82,7 +79,7 @@ class User
     }
 
     /**
-     * @return DataObject|Post
+     * @return \ArrayObject|Post
      */
     public function getPost()
     {
@@ -90,7 +87,7 @@ class User
     }
 
     /**
-     * @return DataObject
+     * @return \ArrayObject
      */
     public function getAddress()
     {
@@ -98,7 +95,7 @@ class User
     }
 
     /**
-     * @param DataObject $address
+     * @param \ArrayObject $address
      */
     public function setAddress($address)
     {

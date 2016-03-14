@@ -10,9 +10,7 @@
  * Time: 10:20
  *
  */
-
 namespace Blast\Orm\Entity;
-
 
 use Blast\Orm\Facades\FacadeFactory;
 
@@ -22,7 +20,6 @@ trait EntityAwareTrait
      * @var array|\stdClass|\ArrayObject|object
      */
     private $entity;
-
     /**
      * @return array|\stdClass|\ArrayObject|object
      */
@@ -30,10 +27,9 @@ trait EntityAwareTrait
     {
         return $this->entity;
     }
-
     /**
      * @param array|\ArrayObject|\stdClass|object|string $entity
-     * @return Query
+     * @return $this
      */
     public function setEntity($entity)
     {

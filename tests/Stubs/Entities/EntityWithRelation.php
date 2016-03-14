@@ -17,19 +17,22 @@ namespace Blast\Tests\Orm\Stubs\Entities;
 use Blast\Orm\Data\DataObject;
 use Blast\Orm\Relations\HasOne;
 
-class EntityWithRelation extends DataObject
+/**
+ * @codeCoverageIgnore
+ */
+class EntityWithRelation extends \ArrayObject
 {
     /**
      * Get table for model
      *
      * @return string
      */
-    public static function getTable()
+    public static function table()
     {
         return 'testTable';
     }
 
-    public static function relations(EntityWithRelation $entity){
+    public static function relations(EntityWithRelation $entity, $mapper){
         return [
             new HasOne($entity, 'otherTable')
         ];

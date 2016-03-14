@@ -15,13 +15,13 @@ namespace Blast\Orm\Relations;
 
 
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
-use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\Entity\GenericEntity;
+use Blast\Orm\Hydrator\HydratorInterface;
+use Blast\Orm\LocatorFacade;
 use Blast\Orm\Query;
 
 class HasMany implements RelationInterface
 {
-    use EntityAdapterLoaderTrait;
+
     use RelationTrait;
     /**
      * @var
@@ -77,20 +77,20 @@ class HasMany implements RelationInterface
 
     protected function init()
     {
-        $adapter = $this->loadAdapter($this->getEntity());
-        $foreignAdapter = $this->loadAdapter($this->getForeignEntity());
+        $provider = LocatorFacade::getProvider($this->getEntity());
+        $foreignProvider = LocatorFacade::getProvider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
 
-        $data = $adapter->getData();
+        $data = $provider->fromObjectToArray();
 
         //find primary key
         if ($foreignKey === null) {
-            $foreignKey = $adapter->getTableName() . '_' . $adapter->getPrimaryKeyName();
+            $foreignKey = $provider->getTableName() . '_' . $provider->getPrimaryKeyName();
         }
 
-        $mapper = $foreignAdapter->getMapper();
+        $mapper = $foreignProvider->getMapper();
 
-        $foreignKeyValue = isset($data[$adapter->getPrimaryKeyName()]) ? $data[$adapter->getPrimaryKeyName()] : false;
+        $foreignKeyValue = isset($data[$provider->getPrimaryKeyName()]) ? $data[$provider->getPrimaryKeyName()] : false;
 
         //if no primary key is available, return a select
         $query = $mapper->select();
@@ -99,15 +99,15 @@ class HasMany implements RelationInterface
 
         }
         $this->query = $query;
-        $this->name = $foreignAdapter->getTableName();
+        $this->name = $foreignProvider->getTableName();
     }
 
     /**
-     * @return \Blast\Orm\Data\DataObject
+     * @return \Blast\Orm\Data\\ArrayObject
      */
     public function execute()
     {
-        return $this->getQuery()->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
+        return $this->getQuery()->execute(HydratorInterface::HYDRATE_COLLECTION);
     }
 
 

@@ -13,15 +13,15 @@
 
 namespace Blast\Orm\Relations;
 
-use Blast\Orm\Entity\EntityAdapterInterface;
+use Blast\Orm\Entity\AdapterInterface;
 use Blast\Orm\Entity\EntityAdapterLoaderTrait;
-use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\Entity\GenericEntity;
+use Blast\Orm\Hydrator\HydratorInterface;
+use Blast\Orm\Entity\Provider;
+use Blast\Orm\LocatorFacade;
 use Blast\Orm\Query;
 
 class ManyToMany implements RelationInterface
 {
-    use EntityAdapterLoaderTrait;
     use RelationTrait;
     /**
      * @var object|string
@@ -134,16 +134,16 @@ class ManyToMany implements RelationInterface
     }
 
     protected function init(){
-        $adapter = $this->loadAdapter($this->getEntity());
-        $foreignAdapter = $this->loadAdapter($this->getForeignEntity());
+        $provider = LocatorFacade::getProvider($this->getEntity());
+        $foreignAdapter = LocatorFacade::getProvider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
         $junction = $this->getJunction();
         $junctionLocalKey = $this->getJunctionLocalKey();
         $junctionForeignKey = $this->getJunctionForeignKey();
 
-        $data = $adapter->getData();
+        $data = $provider->fromObjectToArray();
 
-        $localKey = $adapter->getPrimaryKeyName();
+        $localKey = $provider->getPrimaryKeyName();
 
         //determine foreign key
         if ($foreignKey === null) {
@@ -152,12 +152,12 @@ class ManyToMany implements RelationInterface
 
         //determine through
         if (!is_string($junction) || $junction === null) {
-            $junction = $adapter->getTableName() . '_' . $foreignAdapter->getTableName();
+            $junction = $provider->getTableName() . '_' . $foreignAdapter->getTableName();
         }
 
         //determine through local key
         if($junctionLocalKey === null){
-            $junctionLocalKey = $adapter->getTableName() . '_' . $localKey;
+            $junctionLocalKey = $provider->getTableName() . '_' . $localKey;
         }
 
         //determine through foreign key
@@ -169,11 +169,11 @@ class ManyToMany implements RelationInterface
 
         //get relations by through db object
         if(isset($data[$localKey])){
-            $junctionAdapter = $this->loadAdapter(is_string($junction) ? new GenericEntity($junction) : $junction);
+            $junctionAdapter = LocatorFacade::getProvider(is_string($junction) ? new Provider($junction) : $junction);
             $results = $junctionAdapter->getMapper()
                 ->select([$junctionForeignKey])
                 ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
-                ->execute(EntityAdapterInterface::HYDRATE_RAW);
+                ->execute(HydratorInterface::HYDRATE_RAW);
 
             $foreignQuery = $foreignAdapter->getMapper()->select();
 
@@ -190,9 +190,9 @@ class ManyToMany implements RelationInterface
     }
 
     /**
-     * @return \Blast\Orm\Data\DataObject
+     * @return \SplStack
      */
     public function execute(){
-        return $this->getQuery()->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
+        return $this->getQuery()->execute(HydratorInterface::HYDRATE_COLLECTION);
     }
 }

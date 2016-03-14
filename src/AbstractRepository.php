@@ -13,55 +13,52 @@
 
 namespace Blast\Orm;
 
-
-use Blast\Orm\Data\DataObject;
-use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
-use Blast\Orm\Entity\EntityHydratorInterface;
-use Blast\Orm\Query\Result;
+use Blast\Orm\Entity\Provider;
+use Blast\Orm\Hydrator\HydratorInterface;
 
 abstract class AbstractRepository implements EntityAwareInterface, RepositoryInterface
 {
     use EntityAwareTrait;
-    use EntityAdapterLoaderTrait;
 
     /**
-     * @var EntityAdapter
+     * @var Provider
      */
-    protected $adapter = null;
+    protected $provider = null;
 
     /**
      * Get adapter for entity
      *
-     * @return EntityAdapter
+     * @return Provider
      */
-    private function getAdapter(){
-        if($this->adapter === null){
-            $this->adapter = $this->loadAdapter($this->getEntity());
+    private function getProvider()
+    {
+        if ($this->provider === null) {
+            $this->provider = LocatorFacade::getProvider($this->getEntity());
         }
-        return $this->adapter;
+        return $this->provider;
     }
 
     /**
      * Get a collection of all entities
      *
-     * @return \ArrayObject|\stdClass|DataObject|object
+     * @return \SplStack|array
      */
     public function all()
     {
-        return $this->getAdapter()->getMapper()->select()->execute(EntityHydratorInterface::HYDRATE_COLLECTION);
+        return $this->getProvider()->getMapper()->select()->execute(HydratorInterface::HYDRATE_COLLECTION);
     }
 
     /**
      * Find entity by primary key
      *
      * @param mixed $primaryKey
-     * @return \ArrayObject|\stdClass|Result|DataObject|object
+     * @return \ArrayObject|\stdClass|object
      */
-    public function find($primaryKey){
-        return $this->getAdapter()->getMapper()->find($primaryKey)->execute(EntityHydratorInterface::HYDRATE_ENTITY);
+    public function find($primaryKey)
+    {
+        return $this->getProvider()->getMapper()->find($primaryKey)->execute(HydratorInterface::HYDRATE_ENTITY);
     }
 
     /**
@@ -70,17 +67,19 @@ abstract class AbstractRepository implements EntityAwareInterface, RepositoryInt
      * @param object|array $data
      * @return int|bool
      */
-    public function save($data){
+    public function save($data)
+    {
 
-        if(is_array($data)){
-            $adapter = $this->loadAdapter($this->getEntity());
-            $adapter->setData($data);
-        }else{
-            $adapter = $this->getAdapter();
+        if (is_array($data)) {
+            $provider = LocatorFacade::getProvider($this->getEntity());
+            $provider->fromArrayToObject($data);
+        } else {
+            $provider = $this->getProvider();
         }
 
-        $mapper = $this->getAdapter()->getMapper();
-        $query = $adapter->isNew() ? $mapper->create($data) : $mapper->update($data);
+        $mapper = $this->getProvider()->getMapper();
+        $enw = $provider->isNew();
+        $query = $enw ? $mapper->create($data) : $mapper->update($data);
         return $query->execute();
     }
 

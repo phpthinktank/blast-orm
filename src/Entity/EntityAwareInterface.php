@@ -10,9 +10,7 @@
  * Time: 10:20
  *
  */
-
 namespace Blast\Orm\Entity;
-
 
 interface EntityAwareInterface
 {
@@ -20,10 +18,9 @@ interface EntityAwareInterface
      * @return array|\stdClass|\ArrayObject|object
      */
     public function getEntity();
-
     /**
      * @param array|\ArrayObject|\stdClass|object $entity
-     * @return Query
+     * @return $this
      */
     public function setEntity($entity);
 }

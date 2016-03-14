@@ -12,13 +12,12 @@
 
 namespace Blast\Orm;
 
-use Blast\Orm\Data\DataHydratorInterface;
-use Blast\Orm\Data\DataObject;
-use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityAwareTrait;
+use Blast\Orm\Hydrator\ArrayToObjectHydrator;
+use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
-use Blast\Orm\Query\Result;
+use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\EmitterAwareInterface;
 use League\Event\EmitterAwareTrait;
@@ -80,7 +79,6 @@ class Query implements EmitterAwareInterface, QueryInterface
 
     use EmitterAwareTrait;
     use EntityAwareTrait;
-    use EntityAdapterLoaderTrait;
 
     /**
      * @var QueryBuilder
@@ -88,36 +86,78 @@ class Query implements EmitterAwareInterface, QueryInterface
     private $builder;
 
     /**
+     * @var \Doctrine\DBAL\Connection
+     */
+    private $connection;
+
+    /**
      * Statement constructor.
      * @param array|stdClass|\ArrayObject|object|string $entity
-     * @param Query $builder
+     *
+     * @throws \Doctrine\DBAL\DBALException
      */
-    public function __construct($entity = null, $builder = null)
+    public function __construct($entity = null)
     {
-        $this->builder = $builder === null ? ConnectionFacade::getConnection()->createQueryBuilder() : $builder;
         $this->setEntity($entity);
     }
 
     /**
-     * @return QueryBuilder
+     * @return \Doctrine\DBAL\Query\QueryBuilder
      */
     public function getBuilder()
     {
+        if(null === $this->builder){
+            $this->builder = $this->getConnection()->createQueryBuilder();
+        }
         return $this->builder;
+    }
+
+    /**
+     * @param \Doctrine\DBAL\Query\QueryBuilder $builder
+     *
+     * @return $this
+     */
+    public function setBuilder(QueryBuilder $builder)
+    {
+        $this->builder = $builder;
+
+        return $this;
+    }
+
+    /**
+     * @return \Doctrine\DBAL\Connection
+     */
+    public function getConnection()
+    {
+        if(null === $this->connection){
+            $this->connection = LocatorFacade::getConnectionManager()->get();
+        }
+        return $this->connection;
+    }
+
+    /**
+     * @param \Doctrine\DBAL\Connection $connection
+     * @return $this
+     */
+    public function setConnection(Connection $connection)
+    {
+        $this->connection = $connection;
+
+        return $this;
     }
 
     /**
      * Fetch data for entity
      *
      * @param string $option
-     * @return array|Result|DataObject|bool
+     * @return array|\SplStack|\ArrayObject|bool
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function execute($option = DataHydratorInterface::AUTO)
+    public function execute($option = HydratorInterface::HYDRATE_AUTO)
     {
         //execute before events and proceed with builder from event
-        $adapter = $this->loadAdapter($this->getEntity());
-        $event = $this->beforeExecute($adapter);
+        $provider = LocatorFacade::getProvider($this->getEntity());
+        $event = $this->beforeExecute($provider);
 
         if ($event->isCanceled()) {
             return false;
@@ -126,31 +166,36 @@ class Query implements EmitterAwareInterface, QueryInterface
         $builder = $event->getBuilder();
 
         //convert entity to adapter again
-        $adapter = $this->loadAdapter($builder->getEntity());
+        $provider = LocatorFacade::getProvider($builder->getEntity());
 
         //@todo this should be more dynamic for passing other connections
-        $connection = ConnectionFacade::getConnection();
+        $connection = LocatorFacade::getConnectionManager()->get();
         $isSelect = $builder->getType() === QueryBuilder::SELECT;
 
+        $sql = $this->getSQL();
+        if(true){
+
+        }
         $statement = $isSelect ?
             //execute query and receive a statement
-            $connection->executeQuery($this->getSQL(), $this->getParameters(), $this->getParameterTypes()) :
+            $connection->executeQuery($sql, $this->getParameters(), $this->getParameterTypes()) :
 
             //execute query and receive a count of affected rows
-            $connection->executeUpdate($this->getSQL(), $this->getParameters(), $this->getParameterTypes());
+            $connection->executeUpdate($sql, $this->getParameters(), $this->getParameterTypes());
 
         //execute after events and proceed with result from event
         $event = $this->afterExecute(
             $isSelect ?
                 $statement->fetchAll() :
                 $statement,
-            $adapter, $builder);
+            $provider, $builder);
 
         if ($event->isCanceled()) {
             return false;
         }
 
-        $data = $adapter->hydrate($event->getResult(), $option);
+        $result = $event->getResult();
+        $data = (new ArrayToObjectHydrator($provider->getEntity()))->hydrate($result, $option);
         gc_collect_cycles();
 
         return $data;

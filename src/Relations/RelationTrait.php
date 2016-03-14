@@ -31,6 +31,8 @@ trait RelationTrait
 
     /**
      * Placeholder init function
+     *
+     * @codeCoverageIgnore
      */
     protected function init()
     {

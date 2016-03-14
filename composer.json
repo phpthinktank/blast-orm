@@ -19,9 +19,11 @@
   ],
   "require": {
     "php": ">=5.5.0",
+    "adamlc/lettercase": "~0.1",
     "blast/facades": "~1.0",
     "container-interop/container-interop": "~1.1",
     "doctrine/dbal": "~2.5.1",
+    "league/container": "~2.0",
     "league/event": "~2.0"
   },
   "require-dev": {
@@ -39,7 +41,7 @@
   },
   "extra": {
     "branch-alias": {
-      "dev-master": "1.x-dev"
+      "dev-master": "0.4-dev"
     }
   },
   "scripts": {

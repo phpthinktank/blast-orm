@@ -13,8 +13,6 @@
 
 namespace Blast\Orm\Relations;
 
-
-use Blast\Orm\Data\DataObject;
 use Blast\Orm\Query;
 
 interface RelationInterface
@@ -32,7 +30,7 @@ interface RelationInterface
     public function getName();
 
     /**
-     * @return array|\Blast\Orm\Data\DataObject|\Blast\Orm\Query\Result|bool
+     * @return array|\ArrayObject||bool
      */
     public function execute();
 }

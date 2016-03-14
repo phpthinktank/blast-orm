@@ -14,26 +14,46 @@ namespace Blast\Orm\Facades;
 
 
 use Blast\Facades\FacadeFactory as BlastFacadeFactory;
-use Blast\Orm\Container\Container;
-use Blast\Orm\Container\ContainerAdd;
 use Interop\Container\ContainerInterface;
+use League\Container\Container;
 
 class FacadeFactory extends BlastFacadeFactory
 {
+    /**
+     * @return Container
+     * @throws \Exception
+     */
     public static function getContainer()
     {
         if(parent::$container === null){
             parent::setContainer(new Container());
         }
 
+        if(!(parent::$container instanceof \League\Container\ContainerInterface)){
+            $container = new Container();
+            $container->delegate(parent::$container);
+            parent::setContainer($container);
+        }
+
+        /**
+         * @var Container
+         */
         $container = parent::$container;
 
-        if(!$container->has(ContainerInterface::class)){
-            ContainerAdd::add($container, ContainerInterface::class, $container);
-            parent::$container = $container;
+        if(!$container->has(ContainerInterface::class) && $container instanceof Container){
+            $container->add(ContainerInterface::class, $container);
+            parent::setContainer($container);
         }
 
         return parent::getContainer();
+    }
+
+    /**
+     * @param ContainerInterface|Container $container
+     */
+    public static function setContainer(ContainerInterface $container)
+    {
+        parent::setContainer($container);
     }
 
 

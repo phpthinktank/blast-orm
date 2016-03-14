@@ -9,14 +9,14 @@
 namespace Blast\Orm;
 
 use ArrayObject;
-use Blast\Orm\Data\DataObject;
-use Blast\Orm\Entity\EntityAdapter;
-use Blast\Orm\Entity\EntityAdapterInterface;
-use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
+use Blast\Orm\Entity\Provider;
+use Blast\Orm\Entity\ProviderInterface;
+use Blast\Orm\Hydrator\HydratorInterface;
+use Blast\Orm\Hydrator\ObjectToArrayHydrator;
 use Blast\Orm\Query;
-use Blast\Orm\Query\Result;
+use Blast\Orm\Relations\RelationInterface;
 use stdClass;
 
 /**
@@ -30,21 +30,32 @@ class Mapper implements MapperInterface, EntityAwareInterface
 {
 
     use EntityAwareTrait;
-    use EntityAdapterLoaderTrait;
 
     /**
-     * @var EntityAdapterInterface
+     * @var ProviderInterface
      */
-    private $adapter;
+    private $provider;
+
+    /**
+     * @var \Doctrine\DBAL\Driver\Connection|null
+     */
+    private $connection;
 
     /**
      * Disable direct access to mapper
-     * @param array|\ArrayObject|stdClass|DataObject|object|string $entity
+     * @param array|\ArrayObject|stdClass|\ArrayObject|object|string $entity
+     * @param \Doctrine\DBAL\Driver\Connection $connection
      */
-    public function __construct($entity)
+    public function __construct($entity, $connection = null)
     {
-        $this->setEntity($entity);
-        $this->adapter = $this->loadAdapter($this->getEntity());
+        if ($entity instanceof ProviderInterface) {
+            $this->setEntity($entity->getEntity());
+            $this->provider = $entity;
+        } else {
+            $this->setEntity($entity);
+            $this->provider = LocatorFacade::getProvider($this->getEntity());
+        }
+        $this->connection = $connection;
     }
 
     /**
@@ -53,15 +64,34 @@ class Mapper implements MapperInterface, EntityAwareInterface
      */
     public function createQuery()
     {
-        return new Query($this->getEntity(), ConnectionFacade::getConnection()->createQueryBuilder());
+        $query = new Query($this->getEntity());
+        return null !== $this->connection ? $query->setConnection($this->connection) : $query;
     }
 
     /**
-     * @return EntityAdapterInterface
+     * Get current connection
+     *
+     * @return \Doctrine\DBAL\Driver\Connection|null
      */
-    public function getAdapter()
+    public function getConnection()
     {
-        return $this->adapter;
+        return $this->connection;
+    }
+
+    /**
+     * @param \Doctrine\DBAL\Driver\Connection|null $connection
+     */
+    public function setConnection($connection)
+    {
+        $this->connection = $connection;
+    }
+
+    /**
+     * @return ProviderInterface
+     */
+    public function getProvider()
+    {
+        return $this->provider;
     }
 
     /**
@@ -73,8 +103,9 @@ class Mapper implements MapperInterface, EntityAwareInterface
     public function find($primaryKey)
     {
         $query = $this->select();
-        $field = $this->getAdapter()->getPrimaryKeyName();
+        $field = $this->getProvider()->getPrimaryKeyName();
         $query->where($query->expr()->eq($field, $query->createPositionalParameter($primaryKey)));
+
         return $query;
     }
 
@@ -88,7 +119,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
     {
         $query = $this->createQuery();
         $query->select($selects);
-        $query->from($this->getAdapter()->getTableName());
+        $query->from($this->getProvider()->getTableName());
 
         return $query;
     }
@@ -96,32 +127,35 @@ class Mapper implements MapperInterface, EntityAwareInterface
     /**
      * Create query for new entity.
      *
-     * @param array|DataObject|\ArrayObject|\stdClass|Result|object $entity
+     * @param array|\ArrayObject|\stdClass|object $entity
      * @return Query|bool
      */
     public function create($entity)
     {
-        //load entity adaption
-        $adapter = $this->prepareAdapter($entity);
+        //load entity provider
+        $provider = $this->prepareProvider($entity);
 
         //disallow differing entities
-        if($adapter->getClassName() !== $this->getAdapter()->getClassName()){
+        if (get_class($provider->getEntity()) !== get_class($this->getProvider()->getEntity())) {
             throw new \InvalidArgumentException('Try to create differing entity!');
         }
 
         //prepare statement
         $query = $this->createQuery();
-        $query->insert($adapter->getTableName());
+        $query->insert($provider->getTableName());
 
         //pass data without relations
-        $data = $adapter->getDataWithoutRelations();
+        $data = $provider->fromObjectToArray();
 
         //cancel if $data has no entries
-        if(count($data) < 1){
+        if (count($data) < 1) {
             return false;
         }
 
         foreach ($data as $key => $value) {
+            if ($value instanceof RelationInterface) {
+                continue;
+            }
             $query->setValue($key, $query->createPositionalParameter($value));
         }
 
@@ -131,29 +165,32 @@ class Mapper implements MapperInterface, EntityAwareInterface
     /**
      * Update query for existing Model or a collection of entities in storage
      *
-     * @param array|DataObject|\ArrayObject|\stdClass|Result|object $entity
+     * @param array|\ArrayObject|\stdClass|object $entity
      * @return Query
      */
     public function update($entity)
     {
-        //load entity adaption
-        $adapter = $this->prepareAdapter($entity);
+        //load entity provider
+        $provider = $this->prepareProvider($entity);
 
         //disallow differing entities
-        if($adapter->getClassName() !== $this->getAdapter()->getClassName()){
+        if (get_class($provider->getEntity()) !== get_class($this->getProvider()->getEntity())) {
             throw new \InvalidArgumentException('Try to update differing entity!');
         }
 
-        $pkName = $adapter->getPrimaryKeyName();
+        $pkName = $provider->getPrimaryKeyName();
 
         //prepare statement
         $query = $this->createQuery();
-        $query->update($adapter->getTableName());
+        $query->update($provider->getTableName());
 
         //pass data without relations
-        $data = $adapter->getDataWithoutRelations();
+        $data = $provider->fromObjectToArray();
 
         foreach ($data as $key => $value) {
+            if ($value instanceof RelationInterface) {
+                continue;
+            }
             $query->set($key, $query->createPositionalParameter($value));
         }
 
@@ -174,12 +211,12 @@ class Mapper implements MapperInterface, EntityAwareInterface
             $identifiers = [$identifiers];
         }
 
-        $adapter = $this->getAdapter();
+        $provider = $this->getProvider();
 
         //prepare statement
-        $pkName = $adapter->getPrimaryKeyName();
+        $pkName = $provider->getPrimaryKeyName();
         $query = $this->createQuery();
-        $query->delete($adapter->getTableName());
+        $query->delete($provider->getTableName());
 
         //add entities by pk to delete
         foreach ($identifiers as $identifier) {
@@ -192,31 +229,28 @@ class Mapper implements MapperInterface, EntityAwareInterface
     /**
      * Create or update an entity
      *
-     * @param DataObject|\ArrayObject|\stdClass|Result|object $entity
+     * @param \ArrayObject|\SplStack|\stdClass|object $entity
      * @return Query
      */
     public function save($entity)
     {
-        return $this->loadAdapter($entity)->isNew() ? $this->create($entity) : $this->update($entity);
+        return LocatorFacade::getProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
     }
 
     /**
      * @param $entity
-     * @return EntityAdapter $adapter
+     * @return Provider
      */
-    private function prepareAdapter($entity)
+    public function prepareProvider($entity)
     {
         if (is_array($entity)) {
-            $data = $entity;
-            $entity = $this->getEntity();
-            $adapter = $this->loadAdapter($entity);
-            $adapter->setData($data);
-        } elseif (is_object($entity)) {
-            $adapter = $this->loadAdapter($entity);
-        } else {
-            throw new \InvalidArgumentException('entity needs to be an array of data or object. ' . gettype($entity) . ' given');
-        }
+            $provider = LocatorFacade::getProvider($this->getEntity());
 
-        return $adapter;
+            //reset entity in provider
+            $provider->setEntity($provider->fromArrayToObject($entity, HydratorInterface::HYDRATE_ENTITY));
+        } else {
+            $provider = LocatorFacade::getProvider($entity);
+        }
+        return $provider;
     }
 }

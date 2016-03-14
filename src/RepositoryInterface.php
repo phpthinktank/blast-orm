@@ -14,23 +14,20 @@
 namespace Blast\Orm;
 
 
-use Blast\Orm\Data\DataObject;
-use Blast\Orm\Query\Result;
-
 interface RepositoryInterface
 {
     /**
      * Find entity by primary key
      *
      * @param mixed $primaryKey
-     * @return \ArrayObject|\stdClass|Result|DataObject|object
+     * @return \ArrayObject|\stdClass|object|array
      */
     public function find($primaryKey);
 
     /**
      * Get a collection of all entities
      *
-     * @return \ArrayObject|\stdClass|DataObject|object
+     * @return \SplStack|array
      */
     public function all();
 
