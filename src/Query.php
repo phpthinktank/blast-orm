@@ -129,12 +129,16 @@ class Query implements EmitterAwareInterface, QueryInterface
         $connection = LocatorFacade::getConnectionManager()->get();
         $isSelect = $builder->getType() === QueryBuilder::SELECT;
 
+        $sql = $this->getSQL();
+        if(true){
+
+        }
         $statement = $isSelect ?
             //execute query and receive a statement
-            $connection->executeQuery($this->getSQL(), $this->getParameters(), $this->getParameterTypes()) :
+            $connection->executeQuery($sql, $this->getParameters(), $this->getParameterTypes()) :
 
             //execute query and receive a count of affected rows
-            $connection->executeUpdate($this->getSQL(), $this->getParameters(), $this->getParameterTypes());
+            $connection->executeUpdate($sql, $this->getParameters(), $this->getParameterTypes());
 
         //execute after events and proceed with result from event
         $event = $this->afterExecute(

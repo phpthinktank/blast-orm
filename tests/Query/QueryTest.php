@@ -71,8 +71,9 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $query = new Query();
         $result = $query->select()->from('post')->execute();
 
-        $this->assertInstanceOf(\ArrayObject::class, $result);
-        $this->assertInstanceOf(Entity::class, $result->current());
+        $this->assertInstanceOf(\SplStack::class, $result);
+        $current = $result->current();
+        $this->assertInstanceOf(\ArrayObject::class, $current);
     }
 
     /**

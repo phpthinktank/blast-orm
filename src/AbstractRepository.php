@@ -25,7 +25,7 @@ abstract class AbstractRepository implements EntityAwareInterface, RepositoryInt
     /**
      * @var EntityAdapter
      */
-    protected $adapter = null;
+    protected $provider = null;
 
     /**
      * Get adapter for entity
@@ -68,14 +68,14 @@ abstract class AbstractRepository implements EntityAwareInterface, RepositoryInt
     public function save($data){
 
         if(is_array($data)){
-            $adapter = $this->loadAdapter($this->getEntity());
-            $adapter->setData($data);
+            $provider = $this->loadAdapter($this->getEntity());
+            $provider->setData($data);
         }else{
-            $adapter = $this->getAdapter();
+            $provider = $this->getAdapter();
         }
 
         $mapper = $this->getAdapter()->getMapper();
-        $query = $adapter->isNew() ? $mapper->create($data) : $mapper->update($data);
+        $query = $provider->isNew() ? $mapper->create($data) : $mapper->update($data);
         return $query->execute();
     }
 

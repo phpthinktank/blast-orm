@@ -40,8 +40,8 @@ class ObjectToArrayHydrator implements HydratorInterface
             $arrayCopy = $this->entity->getArrayCopy();
             $data = array_merge($data, $arrayCopy);
         }
-        $reflection = new \ReflectionObject($this->entity);
 
+        $reflection = new \ReflectionObject($this->entity);
         $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
         $methods = $reflection->getMethods(\ReflectionMethod::IS_PUBLIC);
         $arrayReflection = new \ReflectionClass(\ArrayObject::class);
@@ -51,7 +51,13 @@ class ObjectToArrayHydrator implements HydratorInterface
                 continue;
             }
 
-            $data[$property->getName()] = $property->getValue($this->entity);
+            $value = $property->getValue($this->entity);
+
+            if(isset($data[$property->getName()]) && null === $value){
+                continue;
+            }
+
+            $data[$property->getName()] = $value;
         }
 
         foreach ($methods as $name => $method) {
@@ -63,9 +69,6 @@ class ObjectToArrayHydrator implements HydratorInterface
             //remove get name
             $valid = substr($method->getName(), 0, 3);
             $key = substr($method->getName(), 3);
-            if(true){
-
-            }
             if (
                 $method->isStatic() ||
                 $valid ||
@@ -73,8 +76,15 @@ class ObjectToArrayHydrator implements HydratorInterface
             ) {
                 continue;
             }
+
             $fieldName = (new LetterCase())->snake(substr($method->getName(), 3));
-            $data[$fieldName] = $method->invoke($this->entity);
+            $value = $method->invoke($this->entity);
+
+            if(isset($data[$fieldName]) && null === $value){
+                continue;
+            }
+
+            $data[$fieldName] = $value;
         }
 
         return $data;

@@ -160,45 +160,39 @@ class Provider implements ProviderInterface
 
     protected function define(array $definition = [])
     {
-        $defaultDefinition = get_object_vars($this);
-
-
         $entity = $this->getEntity();
         $reflection = new \ReflectionObject($entity);
 
-        $methods = $reflection->getMethods(\ReflectionMethod::IS_STATIC | \ReflectionMethod::IS_PUBLIC);
-
         //mapper is needed to for events, therefore we need to fetch mapper first
-        $mapper = null;
-        if (isset($definition['mapper'])) {
-            $mapper = $definition['mapper'];
-            unset($definition['mapper']);
-        } elseif (isset($methods['mapper'])) {
-            $mapper = $methods['mapper']->invokeArgs($entity, [$entity]);
-            unset($methods['mapper']);
-        } else {
-            if (FacadeFactory::getContainer()->has(MapperInterface::class)) {
-                $mapper = FacadeFactory::getContainer()->get(MapperInterface::class);
-            } else {
-                $mapper = new Mapper($this);
+        $this->mapper = $this->findMapper($definition, $reflection, $entity);
+
+        $defaultDefinition = get_object_vars($this);
+        $definition = array_merge($defaultDefinition, $definition);
+
+
+        foreach ($definition as $key => $value) {
+            if ('mapper' === $key) {
+                continue;
             }
-        }
-
-        $this->mapper = $mapper;
-
-        foreach ($defaultDefinition as $key => $value) {
-            if (isset($definition[$key])) {
-                $value = is_callable($definition[$key]) ?
-                    call_user_func_array($definition[$key], [$entity, $mapper]) :
-                    $definition[$key];
-            } elseif (isset($methods[$key])) {
-                $value = $methods[$key]->invokeArgs($entity, [$entity, $mapper]);
+            if ($reflection->hasMethod($key)) {
+                $method = $reflection->getMethod($key);
+                if ($method->isPublic() && $method->isStatic()) {
+                    $value = $method->invokeArgs($entity, [$entity, $this->mapper]);
+                }
+            } else {
+                $value = is_callable($value) ?
+                    call_user_func_array($value, [$entity, $this->mapper]) :
+                    $value;
             }
             $this->{$key} = $value;
         }
 
         if (null === $this->tableName && $reflection->getName() !== \ArrayObject::class) {
             $this->tableName = ltrim(strtolower(preg_replace('/[A-Z]/', '_$0', $reflection->getShortName())), '_');
+        }
+
+        if (null === $this->tableName) {
+            throw new \LogicException('Unable to get table name from entity');
         }
 
         return $this;
@@ -217,6 +211,30 @@ class Provider implements ProviderInterface
     public function isNew()
     {
         $data = $this->getData();
+
         return isset($data[$this->getPrimaryKeyName()]) ? empty($data[$this->getPrimaryKeyName()]) : true;
+    }
+
+    /**
+     * @param array $definition
+     * @param $reflection
+     * @param $entity
+     * @return array
+     */
+    protected function findMapper(array $definition, \ReflectionClass $reflection, $entity)
+    {
+
+        if (isset($definition['mapper'])) {
+            return $definition['mapper'];
+        }
+        if ($reflection->hasMethod('mapper')) {
+            return $reflection->getMethod('mapper')->invokeArgs($entity, [$entity]);
+        }
+        if (FacadeFactory::getContainer()->has(MapperInterface::class)) {
+            return FacadeFactory::getContainer()->get(MapperInterface::class);
+        }
+
+        return new Mapper($this);
+
     }
 }
