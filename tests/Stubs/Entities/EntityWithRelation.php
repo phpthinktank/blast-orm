@@ -27,7 +27,7 @@ class EntityWithRelation extends \ArrayObject
      *
      * @return string
      */
-    public static function getTable()
+    public static function table()
     {
         return 'testTable';
     }
