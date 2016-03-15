@@ -80,7 +80,8 @@ entity and mapper or query.
 ### Mappers
 
 Each entity does have it's own mapper. A mapper is determined by the entity provider. Mappers mediate between dbal 
-and entity and provide convenient CRUD (Create, Read, Update, Delete).
+and entity and provide convenient CRUD (Create, Read, Update, Delete). In addition to CRUD, the mapper is also delivering 
+convenient methods to to work with relations.
 
 ### Query
 

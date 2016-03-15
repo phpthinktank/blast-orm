@@ -179,7 +179,7 @@ class Provider implements ProviderInterface
     }
 
     /**
-     * @return MapperInterface
+     * @return MapperInterface|Mapper
      */
     public function getMapper()
     {
