@@ -31,7 +31,7 @@ class LocatorFacade extends AbstractFacade
     {
         $accessor = LocatorInterface::class;
 
-        if(!FacadeFactory::getContainer()->has($accessor)){
+        if (!FacadeFactory::getContainer()->has($accessor)) {
             FacadeFactory::getContainer()->share($accessor, new Locator());
         }
 

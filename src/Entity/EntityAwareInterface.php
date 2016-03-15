@@ -18,6 +18,7 @@ interface EntityAwareInterface
      * @return array|\stdClass|\ArrayObject|object
      */
     public function getEntity();
+
     /**
      * @param array|\ArrayObject|\stdClass|object $entity
      * @return $this

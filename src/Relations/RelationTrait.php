@@ -30,16 +30,6 @@ trait RelationTrait
     protected $name = null;
 
     /**
-     * Placeholder init function
-     *
-     * @codeCoverageIgnore
-     */
-    protected function init()
-    {
-
-    }
-
-    /**
      * Query for accessing related data
      *
      * @return Query
@@ -48,6 +38,16 @@ trait RelationTrait
     {
         $this->init();
         return $this->query;
+    }
+
+    /**
+     * Placeholder init function
+     *
+     * @codeCoverageIgnore
+     */
+    protected function init()
+    {
+
     }
 
     /**

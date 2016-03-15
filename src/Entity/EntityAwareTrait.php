@@ -20,6 +20,7 @@ trait EntityAwareTrait
      * @var array|\stdClass|\ArrayObject|object
      */
     private $entity;
+
     /**
      * @return array|\stdClass|\ArrayObject|object
      */
@@ -27,6 +28,7 @@ trait EntityAwareTrait
     {
         return $this->entity;
     }
+
     /**
      * @param array|\ArrayObject|\stdClass|object|string $entity
      * @return $this

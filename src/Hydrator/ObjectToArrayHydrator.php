@@ -52,7 +52,7 @@ class ObjectToArrayHydrator implements HydratorInterface
 
             $value = $property->getValue($this->entity);
 
-            if(isset($data[$property->getName()]) && null === $value){
+            if (isset($data[$property->getName()]) && null === $value) {
                 continue;
             }
 
@@ -61,7 +61,7 @@ class ObjectToArrayHydrator implements HydratorInterface
 
         foreach ($methods as $name => $method) {
             if (
-                $arrayReflection->hasMethod($method->getName())
+            $arrayReflection->hasMethod($method->getName())
             ) {
                 continue;
             }
@@ -79,7 +79,7 @@ class ObjectToArrayHydrator implements HydratorInterface
             $fieldName = (new LetterCase())->snake(substr($method->getName(), 3));
             $value = $method->invoke($this->entity);
 
-            if(isset($data[$fieldName]) && null === $value){
+            if (isset($data[$fieldName]) && null === $value) {
                 continue;
             }
 
@@ -89,3 +89,4 @@ class ObjectToArrayHydrator implements HydratorInterface
         return $data;
     }
 }
+

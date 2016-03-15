@@ -14,7 +14,6 @@ use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Entity\Provider;
 use Blast\Orm\Entity\ProviderInterface;
 use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\Hydrator\ObjectToArrayHydrator;
 use Blast\Orm\Query;
 use Blast\Orm\Relations\RelationInterface;
 use stdClass;
@@ -59,16 +58,6 @@ class Mapper implements MapperInterface, EntityAwareInterface
     }
 
     /**
-     * Create a new Query instance
-     * @return Query
-     */
-    public function createQuery()
-    {
-        $query = new Query($this->getEntity());
-        return null !== $this->connection ? $query->setConnection($this->connection) : $query;
-    }
-
-    /**
      * Get current connection
      *
      * @return \Doctrine\DBAL\Driver\Connection|null
@@ -84,14 +73,6 @@ class Mapper implements MapperInterface, EntityAwareInterface
     public function setConnection($connection)
     {
         $this->connection = $connection;
-    }
-
-    /**
-     * @return ProviderInterface
-     */
-    public function getProvider()
-    {
-        return $this->provider;
     }
 
     /**
@@ -125,78 +106,21 @@ class Mapper implements MapperInterface, EntityAwareInterface
     }
 
     /**
-     * Create query for new entity.
-     *
-     * @param array|\ArrayObject|\stdClass|object $entity
-     * @return Query|bool
+     * Create a new Query instance
+     * @return Query
      */
-    public function create($entity)
+    public function createQuery()
     {
-        //load entity provider
-        $provider = $this->prepareProvider($entity);
-
-        //disallow differing entities
-        if (get_class($provider->getEntity()) !== get_class($this->getProvider()->getEntity())) {
-            throw new \InvalidArgumentException('Try to create differing entity!');
-        }
-
-        //prepare statement
-        $query = $this->createQuery();
-        $query->insert($provider->getTableName());
-
-        //pass data without relations
-        $data = $provider->fromObjectToArray();
-
-        //cancel if $data has no entries
-        if (count($data) < 1) {
-            return false;
-        }
-
-        foreach ($data as $key => $value) {
-            if ($value instanceof RelationInterface) {
-                continue;
-            }
-            $query->setValue($key, $query->createPositionalParameter($value));
-        }
-
-        return $query;
+        $query = new Query($this->getEntity());
+        return null !== $this->connection ? $query->setConnection($this->connection) : $query;
     }
 
     /**
-     * Update query for existing Model or a collection of entities in storage
-     *
-     * @param array|\ArrayObject|\stdClass|object $entity
-     * @return Query
+     * @return ProviderInterface
      */
-    public function update($entity)
+    public function getProvider()
     {
-        //load entity provider
-        $provider = $this->prepareProvider($entity);
-
-        //disallow differing entities
-        if (get_class($provider->getEntity()) !== get_class($this->getProvider()->getEntity())) {
-            throw new \InvalidArgumentException('Try to update differing entity!');
-        }
-
-        $pkName = $provider->getPrimaryKeyName();
-
-        //prepare statement
-        $query = $this->createQuery();
-        $query->update($provider->getTableName());
-
-        //pass data without relations
-        $data = $provider->fromObjectToArray();
-
-        foreach ($data as $key => $value) {
-            if ($value instanceof RelationInterface) {
-                continue;
-            }
-            $query->set($key, $query->createPositionalParameter($value));
-        }
-
-        $query->where($query->expr()->eq($pkName, $data[$pkName]));
-
-        return $query;
+        return $this->provider;
     }
 
     /**
@@ -238,6 +162,44 @@ class Mapper implements MapperInterface, EntityAwareInterface
     }
 
     /**
+     * Create query for new entity.
+     *
+     * @param array|\ArrayObject|\stdClass|object $entity
+     * @return Query|bool
+     */
+    public function create($entity)
+    {
+        //load entity provider
+        $provider = $this->prepareProvider($entity);
+
+        //disallow differing entities
+        if (get_class($provider->getEntity()) !== get_class($this->getProvider()->getEntity())) {
+            throw new \InvalidArgumentException('Try to create differing entity!');
+        }
+
+        //prepare statement
+        $query = $this->createQuery();
+        $query->insert($provider->getTableName());
+
+        //pass data without relations
+        $data = $provider->fromObjectToArray();
+
+        //cancel if $data has no entries
+        if (count($data) < 1) {
+            return false;
+        }
+
+        foreach ($data as $key => $value) {
+            if ($value instanceof RelationInterface) {
+                continue;
+            }
+            $query->setValue($key, $query->createPositionalParameter($value));
+        }
+
+        return $query;
+    }
+
+    /**
      * @param $entity
      * @return Provider
      */
@@ -252,5 +214,42 @@ class Mapper implements MapperInterface, EntityAwareInterface
             $provider = LocatorFacade::getProvider($entity);
         }
         return $provider;
+    }
+
+    /**
+     * Update query for existing Model or a collection of entities in storage
+     *
+     * @param array|\ArrayObject|\stdClass|object $entity
+     * @return Query
+     */
+    public function update($entity)
+    {
+        //load entity provider
+        $provider = $this->prepareProvider($entity);
+
+        //disallow differing entities
+        if (get_class($provider->getEntity()) !== get_class($this->getProvider()->getEntity())) {
+            throw new \InvalidArgumentException('Try to update differing entity!');
+        }
+
+        $pkName = $provider->getPrimaryKeyName();
+
+        //prepare statement
+        $query = $this->createQuery();
+        $query->update($provider->getTableName());
+
+        //pass data without relations
+        $data = $provider->fromObjectToArray();
+
+        foreach ($data as $key => $value) {
+            if ($value instanceof RelationInterface) {
+                continue;
+            }
+            $query->set($key, $query->createPositionalParameter($value));
+        }
+
+        $query->where($query->expr()->eq($pkName, $data[$pkName]));
+
+        return $query;
     }
 }

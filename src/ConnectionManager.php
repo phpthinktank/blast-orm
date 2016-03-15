@@ -12,7 +12,6 @@ use Blast\Orm\Facades\FacadeFactory;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\DriverManager;
-use Doctrine\DBAL\Exception\InvalidArgumentException;
 
 class ConnectionManager implements ConnectionManagerInterface
 {
@@ -28,6 +27,14 @@ class ConnectionManager implements ConnectionManagerInterface
      * @var Connection
      */
     protected $defaultConnection = null;
+
+    /**
+     * Close all connections on
+     */
+    public function __destruct()
+    {
+        $this->closeAll();
+    }
 
     /**
      * disconnect all connections and remove all connections
@@ -48,11 +55,13 @@ class ConnectionManager implements ConnectionManagerInterface
     }
 
     /**
-     * Close all connections on
+     * Get all connections
+     *
+     * @return \Doctrine\DBAL\Connection[]
      */
-    public function __destruct()
+    public function all()
     {
-        $this->closeAll();
+        return $this->connections;
     }
 
     /**
@@ -87,57 +96,6 @@ class ConnectionManager implements ConnectionManagerInterface
     }
 
     /**
-     * Activate a connection as default connection
-     * @param string $name
-     *
-     * @return $this
-     *
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    public function setDefaultConnection($name)
-    {
-        if (!$this->has($name)) {
-            throw new DBALException(sprintf('Connection with name %s not found!', $name));
-        }
-
-        if ($this->defaultConnection !== null) {
-            $this->previousConnections[] = $this->defaultConnection;
-        }
-        $this->defaultConnection = $this->get($name);
-
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getPrevious()
-    {
-        return $this->previousConnections;
-    }
-
-    /**
-     * Get connection by name.
-     *
-     * @param $name
-     *
-     * @return \Doctrine\DBAL\Connection
-     *
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    public function get($name = null)
-    {
-        if ($name === null) {
-            return $this->defaultConnection;
-        }
-        if ($this->has($name)) {
-            return $this->connections[$name];
-        }
-
-        throw new DBALException('Unknown connection ' . $name);
-    }
-
-    /**
      * Check if connections exists
      *
      * @param $name
@@ -146,16 +104,6 @@ class ConnectionManager implements ConnectionManagerInterface
     public function has($name)
     {
         return isset($this->connections[$name]);
-    }
-
-    /**
-     * Get all connections
-     *
-     * @return \Doctrine\DBAL\Connection[]
-     */
-    public function all()
-    {
-        return $this->connections;
     }
 
     /**
@@ -175,7 +123,7 @@ class ConnectionManager implements ConnectionManagerInterface
     public static function create($definition)
     {
         // create connection from definition
-        if($definition instanceof Connection){
+        if ($definition instanceof Connection) {
             return $definition;
         }
 
@@ -201,7 +149,7 @@ class ConnectionManager implements ConnectionManagerInterface
             }
         }
 
-        if(!is_array($definition)){
+        if (!is_array($definition)) {
             throw new DBALException('Unable to determine parameter array from definition');
         }
 
@@ -212,5 +160,56 @@ class ConnectionManager implements ConnectionManagerInterface
         }
 
         return $connection;
+    }
+
+    /**
+     * Activate a connection as default connection
+     * @param string $name
+     *
+     * @return $this
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function setDefaultConnection($name)
+    {
+        if (!$this->has($name)) {
+            throw new DBALException(sprintf('Connection with name %s not found!', $name));
+        }
+
+        if ($this->defaultConnection !== null) {
+            $this->previousConnections[] = $this->defaultConnection;
+        }
+        $this->defaultConnection = $this->get($name);
+
+        return $this;
+    }
+
+    /**
+     * Get connection by name.
+     *
+     * @param $name
+     *
+     * @return \Doctrine\DBAL\Connection
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function get($name = null)
+    {
+        if ($name === null) {
+            return $this->defaultConnection;
+        }
+        if ($this->has($name)) {
+            return $this->connections[$name];
+        }
+
+        throw new DBALException('Unknown connection ' . $name);
+    }
+
+    /**
+     * @return array
+     */
+    public function getPrevious()
+    {
+        return $this->previousConnections;
     }
 }

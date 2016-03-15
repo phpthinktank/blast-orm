@@ -52,27 +52,11 @@ class HasMany implements RelationInterface
     }
 
     /**
-     * @return mixed
+     * @return \Blast\Orm\Data\\ArrayObject
      */
-    public function getEntity()
+    public function execute()
     {
-        return $this->entity;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getForeignEntity()
-    {
-        return $this->foreignEntity;
-    }
-
-    /**
-     * @return null
-     */
-    public function getForeignKey()
-    {
-        return $this->foreignKey;
+        return $this->getQuery()->execute(HydratorInterface::HYDRATE_COLLECTION);
     }
 
     protected function init()
@@ -103,11 +87,27 @@ class HasMany implements RelationInterface
     }
 
     /**
-     * @return \Blast\Orm\Data\\ArrayObject
+     * @return mixed
      */
-    public function execute()
+    public function getEntity()
     {
-        return $this->getQuery()->execute(HydratorInterface::HYDRATE_COLLECTION);
+        return $this->entity;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getForeignEntity()
+    {
+        return $this->foreignEntity;
+    }
+
+    /**
+     * @return null
+     */
+    public function getForeignKey()
+    {
+        return $this->foreignKey;
     }
 
 

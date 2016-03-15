@@ -51,27 +51,11 @@ class BelongsTo implements RelationInterface
     }
 
     /**
-     * @return mixed
+     * @return array|\ArrayObject|object|bool
      */
-    public function getEntity()
+    public function execute()
     {
-        return $this->entity;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getForeignEntity()
-    {
-        return $this->foreignEntity;
-    }
-
-    /**
-     * @return null
-     */
-    public function getLocalKey()
-    {
-        return $this->localKey;
+        return $this->getQuery()->execute(HydratorInterface::HYDRATE_AUTO);
     }
 
     protected function init()
@@ -97,11 +81,27 @@ class BelongsTo implements RelationInterface
     }
 
     /**
-     * @return array|\ArrayObject|object|bool
+     * @return mixed
      */
-    public function execute()
+    public function getEntity()
     {
-        return $this->getQuery()->execute(HydratorInterface::HYDRATE_AUTO);
+        return $this->entity;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getForeignEntity()
+    {
+        return $this->foreignEntity;
+    }
+
+    /**
+     * @return null
+     */
+    public function getLocalKey()
+    {
+        return $this->localKey;
     }
 
 }

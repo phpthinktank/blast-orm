@@ -28,6 +28,16 @@ abstract class AbstractRepository implements EntityAwareInterface, RepositoryInt
     protected $provider = null;
 
     /**
+     * Get a collection of all entities
+     *
+     * @return \SplStack|array
+     */
+    public function all()
+    {
+        return $this->getProvider()->getMapper()->select()->execute(HydratorInterface::HYDRATE_COLLECTION);
+    }
+
+    /**
      * Get adapter for entity
      *
      * @return Provider
@@ -38,16 +48,6 @@ abstract class AbstractRepository implements EntityAwareInterface, RepositoryInt
             $this->provider = LocatorFacade::getProvider($this->getEntity());
         }
         return $this->provider;
-    }
-
-    /**
-     * Get a collection of all entities
-     *
-     * @return \SplStack|array
-     */
-    public function all()
-    {
-        return $this->getProvider()->getMapper()->select()->execute(HydratorInterface::HYDRATE_COLLECTION);
     }
 
     /**

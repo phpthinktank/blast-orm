@@ -54,6 +54,56 @@ class ArrayToObjectHydrator implements HydratorInterface
     }
 
     /**
+     * @param $data
+     * @param $option
+     * @return string
+     */
+    protected function determineOption($data, $option)
+    {
+        if ($option === self::HYDRATE_RAW ||
+            $data instanceof Statement ||
+            is_scalar($data) ||
+            is_bool($data) ||
+            null === $data
+        ) {
+            return self::HYDRATE_RAW;
+        }
+        if ($option === self::HYDRATE_AUTO) {
+            $option = $this->isCollectable($data) && (count($data) === 0 || count($data) > 1) ? self::HYDRATE_COLLECTION : self::HYDRATE_ENTITY;
+        }
+
+        return $option;
+    }
+
+    /**
+     * @param $data
+     * @return mixed
+     */
+    public function isCollectable($data)
+    {
+        if (!is_array($data)) {
+            return false;
+        }
+        return is_array(reset($data));
+    }
+
+    /**
+     * @param $data
+     * @return array
+     */
+    protected function hydrateCollection($data)
+    {
+        $stack = new \SplStack();
+        foreach ($data as $key => $value) {
+            $stack->push($this->hydrateEntity($value));
+        }
+
+        $stack->rewind();
+
+        return $stack;
+    }
+
+    /**
      * Hydrates data to an entity
      *
      * @param $data
@@ -105,55 +155,5 @@ class ArrayToObjectHydrator implements HydratorInterface
         }
 
         return $entity;
-    }
-
-    /**
-     * @param $data
-     * @return array
-     */
-    protected function hydrateCollection($data)
-    {
-        $stack = new \SplStack();
-        foreach ($data as $key => $value) {
-            $stack->push($this->hydrateEntity($value));
-        }
-
-        $stack->rewind();
-
-        return $stack;
-    }
-
-    /**
-     * @param $data
-     * @param $option
-     * @return string
-     */
-    protected function determineOption($data, $option)
-    {
-        if ($option === self::HYDRATE_RAW ||
-            $data instanceof Statement ||
-            is_scalar($data) ||
-            is_bool($data) ||
-            null === $data
-        ) {
-            return self::HYDRATE_RAW;
-        }
-        if ($option === self::HYDRATE_AUTO) {
-            $option = $this->isCollectable($data) && (count($data) === 0 || count($data) > 1) ? self::HYDRATE_COLLECTION : self::HYDRATE_ENTITY;
-        }
-
-        return $option;
-    }
-
-    /**
-     * @param $data
-     * @return mixed
-     */
-    public function isCollectable($data)
-    {
-        if(!is_array($data)){
-            return false;
-        }
-        return is_array(reset($data));
     }
 }

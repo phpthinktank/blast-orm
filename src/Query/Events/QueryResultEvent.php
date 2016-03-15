@@ -14,8 +14,6 @@
 namespace Blast\Orm\Query\Events;
 
 
-use League\Event\AbstractEvent;
-
 class QueryResultEvent extends AbstractQueryEvent
 {
     /**
@@ -33,7 +31,8 @@ class QueryResultEvent extends AbstractQueryEvent
      * @param string $name
      * @param boolean|array $result
      */
-    public function __construct($name, $result){
+    public function __construct($name, $result)
+    {
         $this->name = $name;
         $this->result = $result;
     }

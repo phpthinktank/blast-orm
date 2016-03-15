@@ -20,21 +20,6 @@ use Blast\Orm\Facades\FacadeFactory;
 class Locator implements LocatorInterface
 {
     /**
-     * Get adapter for entity
-     *
-     * @param $entity
-     * @return ProviderInterface
-     */
-    public function getProvider($entity)
-    {
-        $container = FacadeFactory::getContainer();
-        if (!$container->has(ProviderInterface::class)) {
-            $container->add(ProviderInterface::class, Provider::class);
-        }
-        return FacadeFactory::getContainer()->get(ProviderInterface::class, [$entity]);
-    }
-
-    /**
      * Get connection manager
      *
      * @return ConnectionManager
@@ -59,5 +44,20 @@ class Locator implements LocatorInterface
         $mapperInterface = $this->getProvider($entity)->getMapper();
 
         return $mapperInterface;
+    }
+
+    /**
+     * Get adapter for entity
+     *
+     * @param $entity
+     * @return ProviderInterface
+     */
+    public function getProvider($entity)
+    {
+        $container = FacadeFactory::getContainer();
+        if (!$container->has(ProviderInterface::class)) {
+            $container->add(ProviderInterface::class, Provider::class);
+        }
+        return FacadeFactory::getContainer()->get(ProviderInterface::class, [$entity]);
     }
 }

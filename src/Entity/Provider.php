@@ -70,64 +70,6 @@ class Provider implements ProviderInterface
     }
 
     /**
-     * @return \Doctrine\DBAL\Schema\Column[]
-     */
-    public function getFields()
-    {
-        return $this->fields;
-    }
-
-    /**
-     * @return \Doctrine\DBAL\Schema\Index[]
-     */
-    public function getIndexes()
-    {
-        return $this->indexes;
-    }
-
-    /**
-     * @return MapperInterface
-     */
-    public function getMapper()
-    {
-        if ($this->mapper instanceof MapperInterface) {
-            return $this->mapper;
-        }
-        $container = FacadeFactory::getContainer();
-        if (!$container->has($this->mapper)) {
-            $container->add($this->mapper, new Mapper($this->getEntity()));
-        }
-        return $container->get($this->mapper);
-    }
-
-    /**
-     * @return string
-     */
-    public function getPrimaryKeyName()
-    {
-        return $this->primaryKeyName;
-    }
-
-    /**
-     * @return \Blast\Orm\Relations\RelationInterface[]
-     */
-    public function getRelations()
-    {
-        return $this->relations;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTableName()
-    {
-        if (null === $this->tableName) {
-            throw new \LogicException('Unable to get table name from entity');
-        }
-        return $this->tableName;
-    }
-
-    /**
      * Initialize provider
      *
      * @param $tableName
@@ -203,14 +145,76 @@ class Provider implements ProviderInterface
     }
 
     /**
-     * Convert object properties or object getter to array
-     *
-     * @param array $additionalData
-     * @return mixed
+     * @param array $definition
+     * @param $reflection
+     * @param $entity
+     * @return array
      */
-    public function fromObjectToArray(array $additionalData = [])
+    protected function findMapper(array $definition, \ReflectionClass $reflection, $entity)
     {
-        return (new ObjectToArrayHydrator($this->entity))->hydrate($additionalData);
+
+        if (isset($definition['mapper'])) {
+            return $definition['mapper'];
+        }
+        if ($reflection->hasMethod('mapper')) {
+            return $reflection->getMethod('mapper')->invokeArgs($entity, [$entity]);
+        }
+        if (FacadeFactory::getContainer()->has(MapperInterface::class)) {
+            return FacadeFactory::getContainer()->get(MapperInterface::class);
+        }
+
+        return new Mapper($this);
+
+    }
+
+    /**
+     * @return \Doctrine\DBAL\Schema\Column[]
+     */
+    public function getFields()
+    {
+        return $this->fields;
+    }
+
+    /**
+     * @return \Doctrine\DBAL\Schema\Index[]
+     */
+    public function getIndexes()
+    {
+        return $this->indexes;
+    }
+
+    /**
+     * @return MapperInterface
+     */
+    public function getMapper()
+    {
+        if ($this->mapper instanceof MapperInterface) {
+            return $this->mapper;
+        }
+        $container = FacadeFactory::getContainer();
+        if (!$container->has($this->mapper)) {
+            $container->add($this->mapper, new Mapper($this->getEntity()));
+        }
+        return $container->get($this->mapper);
+    }
+
+    /**
+     * @return \Blast\Orm\Relations\RelationInterface[]
+     */
+    public function getRelations()
+    {
+        return $this->relations;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTableName()
+    {
+        if (null === $this->tableName) {
+            throw new \LogicException('Unable to get table name from entity');
+        }
+        return $this->tableName;
     }
 
     /**
@@ -237,25 +241,21 @@ class Provider implements ProviderInterface
     }
 
     /**
-     * @param array $definition
-     * @param $reflection
-     * @param $entity
-     * @return array
+     * Convert object properties or object getter to array
+     *
+     * @param array $additionalData
+     * @return mixed
      */
-    protected function findMapper(array $definition, \ReflectionClass $reflection, $entity)
+    public function fromObjectToArray(array $additionalData = [])
     {
+        return (new ObjectToArrayHydrator($this->entity))->hydrate($additionalData);
+    }
 
-        if (isset($definition['mapper'])) {
-            return $definition['mapper'];
-        }
-        if ($reflection->hasMethod('mapper')) {
-            return $reflection->getMethod('mapper')->invokeArgs($entity, [$entity]);
-        }
-        if (FacadeFactory::getContainer()->has(MapperInterface::class)) {
-            return FacadeFactory::getContainer()->get(MapperInterface::class);
-        }
-
-        return new Mapper($this);
-
+    /**
+     * @return string
+     */
+    public function getPrimaryKeyName()
+    {
+        return $this->primaryKeyName;
     }
 }
