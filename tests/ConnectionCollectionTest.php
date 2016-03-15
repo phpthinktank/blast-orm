@@ -63,7 +63,7 @@ class ConnectionCollectionTest extends \PHPUnit_Framework_TestCase
     {
         ConnectionManager::getInstance()->add($this->dsn, __METHOD__);
         ConnectionManager::getInstance()->add($this->dsn, __METHOD__ . '2');
-        ConnectionManager::getInstance()->setDefaultConnection(__METHOD__ . '2');
+        ConnectionManager::getInstance()->swapActiveConnection(__METHOD__ . '2');
 
         $this->assertInternalType('array', ConnectionManager::getInstance()->getPrevious());
         $this->assertInstanceOf(Connection::class, ConnectionManager::getInstance()->get());
@@ -72,7 +72,7 @@ class ConnectionCollectionTest extends \PHPUnit_Framework_TestCase
     public function testExceptionWhenSetUnknownDefaultConnection()
     {
         $this->setExpectedException(DBALException::class);
-        ConnectionManager::getInstance()->setDefaultConnection(__METHOD__);
+        ConnectionManager::getInstance()->swapActiveConnection(__METHOD__);
     }
 
     public function testExceptionWhenGetUnknownConnection()

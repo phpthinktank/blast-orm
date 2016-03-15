@@ -20,6 +20,9 @@ class ConnectionManager implements ConnectionManagerInterface
      */
     protected $connections = [];
 
+    /**
+     * @var \Doctrine\DBAL\Connection[]
+     */
     protected $previousConnections = [];
 
     /**
@@ -27,9 +30,15 @@ class ConnectionManager implements ConnectionManagerInterface
      */
     protected $defaultConnection = null;
 
+    /**
+     * @var self
+     */
     private static $instance = null;
 
     /**
+     * Get connection manager instance to share
+     * connections between different instances.
+     *
      * @return \Blast\Orm\ConnectionManager
      */
     public static function getInstance(){
@@ -40,86 +49,10 @@ class ConnectionManager implements ConnectionManagerInterface
         return static::$instance;
     }
 
-    /**
-     * Close all connections on
-     */
-    public function __destruct()
-    {
-        $this->closeAll();
-    }
+
 
     /**
-     * disconnect all connections and remove all connections
-     */
-    public function closeAll()
-    {
-        $connections = $this->all();
-
-        foreach ($connections as $connection) {
-            if ($connection->isConnected()) {
-                $connection->close();
-            }
-        }
-
-        gc_collect_cycles();
-
-        $this->connections = [];
-    }
-
-    /**
-     * Get all connections
-     *
-     * @return \Doctrine\DBAL\Connection[]
-     */
-    public function all()
-    {
-        return $this->connections;
-    }
-
-    /**
-     *
-     * Params a related to configuration
-     *
-     * @see http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/configuration.html#getting-a-connection
-     *
-     * @param array|\Doctrine\DBAL\Connection|string $connection
-     * @param string $name
-     *
-     * @return $this
-     *
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    public function add($connection, $name = self::DEFAULT_CONNECTION)
-    {
-        if ($this->has($name)) {
-            throw new DBALException(sprintf('Connection with name %s already exists!', $name));
-        }
-
-        $connection = static::create($connection);
-
-        $this->connections[$name] = $connection;
-
-        //set first connection as active connection
-        if (count($this->connections) === 1) {
-            $this->setDefaultConnection($name);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Check if connections exists
-     *
-     * @param $name
-     * @return bool
-     */
-    public function has($name)
-    {
-        return isset($this->connections[$name]);
-    }
-
-    /**
-     * Determine connection from definition.
+     * Create a new connection from definition.
      *
      * If definition is a string, the manager tries to get definition from ioc container,
      * otherwise the manager assumes a valid dsn string and converts definition to an array.
@@ -159,14 +92,96 @@ class ConnectionManager implements ConnectionManagerInterface
     }
 
     /**
-     * Activate a connection as default connection
+     * Close all connections on
+     */
+    public function __destruct()
+    {
+        $this->closeAll();
+    }
+
+    /**
+     * Disconnect all connections and remove all
+     * connections. Collect garbage at least.
+     */
+    public function closeAll()
+    {
+        $connections = $this->all();
+
+        foreach ($connections as $connection) {
+            if ($connection->isConnected()) {
+                $connection->close();
+            }
+        }
+
+        $this->connections = [];
+        gc_collect_cycles();
+
+    }
+
+    /**
+     * Get all connections
+     *
+     * @return \Doctrine\DBAL\Connection[]
+     */
+    public function all()
+    {
+        return $this->connections;
+    }
+
+    /**
+     * Add a new connection to internal cache. Create connection
+     * with `Blast\Orm\ConnectionManager::create`
+     *
+     * @see http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/configuration.html#getting-a-connection
+     *
+     * @param array|\Doctrine\DBAL\Connection|string $connection
      * @param string $name
      *
      * @return $this
      *
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function setDefaultConnection($name)
+    public function add($connection, $name = self::DEFAULT_CONNECTION)
+    {
+        if ($this->has($name)) {
+            throw new DBALException(sprintf('Connection with name %s already exists!', $name));
+        }
+
+        $connection = static::create($connection);
+
+        $this->connections[$name] = $connection;
+
+        //set first connection as active connection
+        if (count($this->connections) === 1) {
+            $this->swapActiveConnection($name);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Check if connections exists
+     *
+     * @param $name
+     * @return bool
+     */
+    public function has($name)
+    {
+        return isset($this->connections[$name]);
+    }
+
+    /**
+     * Swap current connection with another connection
+     * by name and add previous connection to previous
+     * connection stack.
+     *
+     * @param string $name
+     *
+     * @return $this
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function swapActiveConnection($name)
     {
         if (!$this->has($name)) {
             throw new DBALException(sprintf('Connection with name %s not found!', $name));
