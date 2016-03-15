@@ -63,11 +63,6 @@ An example can be found in this [blog post](http://bit.ly/php-orm).
 
 ## Concept
 
-### Locator
-
-The locator deliver methods to access adapters, mappers and connections. For solving IoC concerns use LocatorFacade, to 
-have a swappable locator from container. 
-
 ### Entities
 
 Entity classes are a memory representation of a database entity. Entity classes are plain objects and don't need to 
@@ -77,25 +72,29 @@ It is recommended to use accessors (getters) and mutators (setters) for properti
 Entity classes could also be instances of [`stdClass`](http://php.net/manual/en/reserved.classes.php), 
 [`ArrayObject`](http://php.net/manual/de/class.arrayobject.php) or [`DataObject`](src/Data/DataObject.php)
  
+### Provider
+ 
+The provider is preparing and computing definitions of a single entity. The provider is a link between independent 
+entity and mapper or query.
+ 
 ### Mappers
 
-Each entity does have it's own mapper. Mappers mediate between dbal and entity and provide convenient CRUD 
-(Create, Read, Update, Delete).
+Each entity does have it's own mapper. A mapper is determined by the entity provider. Mappers mediate between dbal 
+and entity and provide convenient CRUD (Create, Read, Update, Delete).
 
 ### Query
 
 The query acts as accessor to the persistence layer. The query class is hydrating data on execution and transforms the
-result in a single entity class, collection of entity classes or as a raw data array.
+result into a single entity class or `\ArrayObject` as fallback, a collection of entity classes as `\SplStack` or as a 
+raw data array. Furthermore the query is able to receive hydration options to control the result. Create, delete and 
+update are always returning a numeric value!
 
 ### Repository
 
-The repository is mediating between persistence layer and abstract from persistence or data access through mapper or query.
+The repository is mediating between persistence layer and abstract from persistence or data access through mapper or query. 
+Blast orm is just delivering a `Blast\Orm\RepositoryInterface` for completion!
   
 ## Usage
-
-### Locator
-
-
 
 ### Connections
 
@@ -108,8 +107,6 @@ Create a new connection
 
 ```php
 <?php
-
-use Blast\Orm\LocatorFacade;
 
 $connection = ConnectionManager::create('mysql://root:root@localhost/defaultdb?charset=UTF-8');
 ```
@@ -172,14 +169,24 @@ $connections = $connections->__instance();
 
 The query object is is providing high level API methods of [doctrine 2 query builder](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/query-builder.html#security-safely-preventing-sql-injection).
 
-A query instance need to know the locator to determine entity provider and current connection. 
+The query is automatically determining current active connection from connection manager.
 
 ```php
 <?php
 
 use Blast\Orm\Query;
 
-$query = new Query($locator, $locator->getConnectionManager()->get());
+$query = new Query();
+```
+
+or create a new query with a custom connection
+
+```php
+<?php
+
+use Blast\Orm\Query;
+
+$query = new Query(ConnectionManager::create('mysql://root:root@localhost/acme'));
 ```
 
 or create a new query for an entity
@@ -189,7 +196,7 @@ or create a new query for an entity
 
 use Blast\Orm\Query;
 
-$query = new Query(Post::class);
+$query = new Query(null, Post::class);
 ```
 
 Custom connection for the query
@@ -337,22 +344,20 @@ are represented by static entity methods and / or properties.
 Use providers to access tables without creating a entity class. This is useful for accessing junction tables or 
 temporary tables.
 
-The provider needs to know the locator to access container and mapper.
-
 ```php
 <?php
 
 use Blast\Orm\Entity\Provider;
 
 // add an entity as class name
-$provider = new Provider($locator, Post::class);
+$provider = new Provider(Post::class);
 
 // add an entity as object
-$provider = new Provider($locator, Post::class);
+$provider = new Provider(Post::class);
 
 // add an entity as table name
 // entity object is an array object
-$provider = new Provider($locator, 'user_roles');
+$provider = new Provider('user_roles');
 ```
 
 Add definition to entity by public static property or method.
@@ -454,7 +459,7 @@ class Post
      */
     public static function relations(EntityWithRelation $entity,  Mapper $mapper){
         return [
-            new HasOne($mapper->getLocator(), $entity, 'otherTable')
+            new HasOne($entity, 'otherTable')
         ];
     }
 }
@@ -531,14 +536,14 @@ instance and need to execute manually.
 
 #### Create a new mapper for entity
 
-Create mapper with locator and entity
+Create mapper for entity
 
 ```php
 <?php
 
 use Blast\Orm\Mapper;
 
-$mapper = new Mapper($locator, $post);
+$mapper = new Mapper($post);
 
 ```
 
@@ -547,7 +552,7 @@ Create mapper from provider
 ```php
 <?php
 
-$provider = $locator->getProvider($post);
+$provider = new Provider($post);
 $mapper = $provider->getMapper();
 
 ```
@@ -613,7 +618,7 @@ class Post {
 
     public static function relation(Post $entity, Mapper $mapper){
         return [
-            HasMany($mapper->getLocator(), $entity, Comments::class)
+            HasMany($entity, Comments::class)
         ]
     }
 }
@@ -643,7 +648,7 @@ One user has one address.
 ```php
 <?php
 
-$relation = HasOne($locator, $user, Address::class, 'user_id');
+$relation = HasOne($user, Address::class, 'user_id');
 
 ```
 
@@ -662,7 +667,7 @@ One post has many comments
 ```php
 <?php
 
-$relation = HasOne($locator, $post, Comments::class, 'post_id');
+$relation = HasOne($post, Comments::class, 'post_id');
 
 ```
 
@@ -683,7 +688,7 @@ One post has one or many comments
 ```php
 <?php
 
-$relation = BelongsTo($locator, $comment, Post::class, 'post_id');
+$relation = BelongsTo($comment, Post::class, 'post_id');
 
 ```
 
@@ -708,7 +713,7 @@ One user has many roles, and one role has many users. Users primary key name is 
 ```php
 <?php
 
-$relation = ManyToMany($locator, $user, Role::class, 'pk', 'id', 'user_role', 'user_id', 'role_id');
+$relation = ManyToMany($user, Role::class, 'pk', 'id', 'user_role', 'user_id', 'role_id');
 
 ```
 
@@ -755,7 +760,7 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
     private function getProvider()
     {
         if ($this->provider === null) {
-            $this->provider = LocatorFacade::getProvider($this->getEntity());
+            $this->provider = new Provider($this->getEntity());
         }
         return $this->provider;
     }
@@ -791,15 +796,14 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
     {
 
         if (is_array($data)) {
-            $provider = LocatorFacade::getProvider($this->getEntity());
-            $provider->fromArrayToObject($data);
+            // get a new provider with data for valid isNew check
+            $provider = new Provider($this->getProvider()->fromArrayToObject($data));
         } else {
             $provider = $this->getProvider();
         }
 
-        $mapper = $this->getProvider()->getMapper();
-        $enw = $provider->isNew();
-        $query = $enw ? $mapper->create($data) : $mapper->update($data);
+        $mapper = $provider->getMapper();
+        $query = $provider->isNew() ? $mapper->create($data) : $mapper->update($data);
         return $query->execute();
     }
 
