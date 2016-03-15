@@ -4,6 +4,10 @@ All notable changes of the Blast orm 1.0 release series are documented in this f
 
 ## 0.5
 
+### Altered
+
+ - connection manager is now accessible as singleton via `Blast\Orm\ConnectionManager::getInstance()`
+
 ### Removed
 
  - `Blast\Orm\Facades`
