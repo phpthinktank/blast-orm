@@ -25,10 +25,11 @@ use stdClass;
  *
  * @package Blast\Db\Orm
  */
-class Mapper implements MapperInterface, EntityAwareInterface
+class Mapper implements MapperInterface, EntityAwareInterface, LocatorAwareInterface
 {
 
     use EntityAwareTrait;
+    use LocatorAwareTrait;
 
     /**
      * @var ProviderInterface
@@ -42,28 +43,33 @@ class Mapper implements MapperInterface, EntityAwareInterface
 
     /**
      * Disable direct access to mapper
+     * @param LocatorInterface $locator
      * @param array|\ArrayObject|stdClass|\ArrayObject|object|string $entity
      * @param \Doctrine\DBAL\Driver\Connection $connection
      */
-    public function __construct($entity, $connection = null)
+    public function __construct(LocatorInterface $locator, $entity, $connection = null)
     {
+        $this->connection = $connection;
+        $this->locator = $locator;
         if ($entity instanceof ProviderInterface) {
             $this->setEntity($entity->getEntity());
             $this->provider = $entity;
         } else {
             $this->setEntity($entity);
-            $this->provider = LocatorFacade::getProvider($this->getEntity());
+            $this->provider = $this->getLocator()->getProvider($this->getEntity());
         }
-        $this->connection = $connection;
     }
 
     /**
      * Get current connection
      *
-     * @return \Doctrine\DBAL\Driver\Connection|null
+     * @return \Doctrine\DBAL\Driver\Connection|\Doctrine\DBAL\Connection
      */
     public function getConnection()
     {
+        if(null === $this->connection){
+            $this->connection = $this->getLocator()->getConnectionManager()->get();
+        }
         return $this->connection;
     }
 
@@ -111,8 +117,8 @@ class Mapper implements MapperInterface, EntityAwareInterface
      */
     public function createQuery()
     {
-        $query = new Query($this->getEntity());
-        return null !== $this->connection ? $query->setConnection($this->connection) : $query;
+        $query = new Query($this->getLocator(), $this->getConnection(), $this->getEntity());
+        return $query;
     }
 
     /**
@@ -158,7 +164,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
      */
     public function save($entity)
     {
-        return LocatorFacade::getProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
+        return $this->getLocator()->getProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
     }
 
     /**
@@ -243,12 +249,12 @@ class Mapper implements MapperInterface, EntityAwareInterface
     private function prepareProvider($entity)
     {
         if (is_array($entity)) {
-            $provider = LocatorFacade::getProvider($this->getEntity());
+            $provider = $this->getLocator()->getProvider($this->getEntity());
 
             //reset entity in provider
             $provider->setEntity($provider->fromArrayToObject($entity, HydratorInterface::HYDRATE_ENTITY));
         } else {
-            $provider = LocatorFacade::getProvider($entity);
+            $provider = $this->getLocator()->getProvider($entity);
         }
         return $provider;
     }

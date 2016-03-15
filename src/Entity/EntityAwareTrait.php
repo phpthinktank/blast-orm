@@ -12,8 +12,6 @@
  */
 namespace Blast\Orm\Entity;
 
-use Blast\Orm\Facades\FacadeFactory;
-
 trait EntityAwareTrait
 {
     /**
@@ -35,10 +33,9 @@ trait EntityAwareTrait
      */
     public function setEntity($entity)
     {
-        if (is_string($entity)) {
-            $container = FacadeFactory::getContainer();
-            $entity = $container->has($entity) ? $container->get($entity) : (new \ReflectionClass($entity))->newInstance();
-        }
+//        if (is_string($entity)) {
+//            $entity = (new \ReflectionClass($entity))->newInstance();
+//        }
         $this->entity = $entity;
         return $this;
     }

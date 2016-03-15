@@ -74,9 +74,10 @@ use stdClass;
  *
  * @package Blast\Db\Orm
  */
-class Query implements EmitterAwareInterface, QueryInterface
+class Query implements EmitterAwareInterface, QueryInterface, LocatorAwareInterface
 {
 
+    use LocatorAwareTrait;
     use EmitterAwareTrait;
     use EntityAwareTrait;
 
@@ -92,12 +93,14 @@ class Query implements EmitterAwareInterface, QueryInterface
 
     /**
      * Statement constructor.
+     * @param $locator
+     * @param \Doctrine\DBAL\Connection $connection
      * @param array|stdClass|\ArrayObject|object|string $entity
-     *
-     * @throws \Doctrine\DBAL\DBALException
      */
-    public function __construct($entity = null)
+    public function __construct(LocatorInterface $locator, $connection, $entity = null)
     {
+        $this->locator = $locator;
+        $this->setConnection($connection);
         $this->setEntity($entity);
     }
 
@@ -111,8 +114,8 @@ class Query implements EmitterAwareInterface, QueryInterface
     public function execute($option = HydratorInterface::HYDRATE_AUTO)
     {
         //execute before events and proceed with builder from event
-        $provider = LocatorFacade::getProvider($this->getEntity());
-        $event = $this->beforeExecute($provider);
+        $provider = $this->getLocator()->getProvider($this->getEntity());
+        $event = $this->beforeExecute($provider->getEntity());
 
         if ($event->isCanceled()) {
             return false;
@@ -121,7 +124,7 @@ class Query implements EmitterAwareInterface, QueryInterface
         $builder = $event->getBuilder();
 
         //convert entity to adapter again
-        $provider = LocatorFacade::getProvider($builder->getEntity());
+        $provider = $this->getLocator()->getProvider($builder->getEntity());
 
         $connection = $this->getConnection();
         $isSelect = $builder->getType() === QueryBuilder::SELECT;
@@ -142,14 +145,14 @@ class Query implements EmitterAwareInterface, QueryInterface
             $isSelect ?
                 $statement->fetchAll() :
                 $statement,
-            $provider, $builder);
+            $provider->getEntity(), $builder);
 
         if ($event->isCanceled()) {
             return false;
         }
 
         $result = $event->getResult();
-        $data = (new ArrayToObjectHydrator($provider->getEntity()))->hydrate($result, $option);
+        $data = (new ArrayToObjectHydrator($provider))->hydrate($result, $option);
         gc_collect_cycles();
 
         return $data;
@@ -282,9 +285,6 @@ class Query implements EmitterAwareInterface, QueryInterface
      */
     public function getConnection()
     {
-        if (null === $this->connection) {
-            $this->connection = LocatorFacade::getConnectionManager()->get();
-        }
         return $this->connection;
     }
 

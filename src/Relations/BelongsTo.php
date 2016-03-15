@@ -14,14 +14,15 @@
 namespace Blast\Orm\Relations;
 
 
-use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\LocatorFacade;
+use Blast\Orm\LocatorAwareTrait;
 use Blast\Orm\Query;
 
 class BelongsTo implements RelationInterface
 {
+    use LocatorAwareTrait;
     use RelationTrait;
+
     /**
      * @var
      */
@@ -38,16 +39,17 @@ class BelongsTo implements RelationInterface
     /**
      * Local entity belongs to foreign entity by local key
      *
+     * @param $locator
      * @param $entity
      * @param $foreignEntity
      * @param null $localKey
      */
-    public function __construct($entity, $foreignEntity, $localKey = null)
+    public function __construct($locator, $entity, $foreignEntity, $localKey = null)
     {
-
         $this->entity = $entity;
         $this->foreignEntity = $foreignEntity;
         $this->localKey = $localKey;
+        $this->locator = $locator;
     }
 
     /**
@@ -60,12 +62,12 @@ class BelongsTo implements RelationInterface
 
     protected function init()
     {
-        $provider = LocatorFacade::getProvider($this->getEntity());
-        $foreignAdapter = LocatorFacade::getProvider($this->getForeignEntity());
+        $provider = $this->getLocator()->getProvider($this->getEntity());
+        $foreignProvider = $this->getLocator()->getProvider($this->getForeignEntity());
         $localKey = $this->getLocalKey();
 
         if ($localKey === null) {
-            $localKey = $foreignAdapter->getTableName() . '_' . $foreignAdapter->getPrimaryKeyName();
+            $localKey = $foreignProvider->getTableName() . '_' . $foreignProvider->getPrimaryKeyName();
         }
 
         $data = $provider->fromObjectToArray();
@@ -73,11 +75,13 @@ class BelongsTo implements RelationInterface
         //find primary key
         $primaryKey = $data[$localKey];
 
-        $mapper = $foreignAdapter->getMapper();
+        $mapper = $foreignProvider->getMapper();
 
         //if no primary key is available, return a select
         $this->query = $primaryKey === null ? $mapper->select() : $mapper->find($primaryKey);
-        $this->name = $foreignAdapter->getTableName();
+        $this->name = $foreignProvider->getTableName();
+
+        return $this;
     }
 
     /**

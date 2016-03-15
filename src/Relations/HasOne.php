@@ -28,8 +28,8 @@ class HasOne extends HasMany
 
     protected function init()
     {
-        parent::init();
-        $this->query->setMaxResults(1);
+        parent::init()->query->setMaxResults(1);
+        return $this;
     }
 
 }

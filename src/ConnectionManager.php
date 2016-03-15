@@ -8,7 +8,6 @@
 
 namespace Blast\Orm;
 
-use Blast\Orm\Facades\FacadeFactory;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\DriverManager;
@@ -127,26 +126,10 @@ class ConnectionManager implements ConnectionManagerInterface
             return $definition;
         }
 
-        $container = FacadeFactory::getContainer();
         // assume a valid service from IoC container
         // or assume a valid dsn and convert to connection array
         if (is_string($definition)) {
-            $definition = $container->has($definition) ?
-                $container->get($definition) :
-                ['url' => $definition];
-        }
-
-        if (is_array($definition)) {
-
-            // try to get wrapper class from container
-            $wrapperClass = \Doctrine\DBAL\Driver\Connection::class;
-            if (isset($definition['wrapperClass'])) {
-                $wrapperClass = is_string($definition['wrapperClass']) ? $definition['wrapperClass'] : $wrapperClass;
-            }
-
-            if ($container->has($wrapperClass)) {
-                $definition['wrapperClass'] = $container->get($wrapperClass);
-            }
+            $definition = ['url' => $definition];
         }
 
         if (!is_array($definition)) {

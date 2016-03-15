@@ -36,8 +36,7 @@ trait RelationTrait
      */
     public function getQuery()
     {
-        $this->init();
-        return $this->query;
+        return $this->init()->query;
     }
 
     /**
@@ -47,7 +46,7 @@ trait RelationTrait
      */
     protected function init()
     {
-
+        return $this;
     }
 
     /**
@@ -55,8 +54,8 @@ trait RelationTrait
      */
     public function getName()
     {
-        $this->init();
-        return $this->name;
+        ;
+        return $this->init()->name;
     }
 
 }

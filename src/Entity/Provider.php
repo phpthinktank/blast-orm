@@ -14,11 +14,11 @@
 namespace Blast\Orm\Entity;
 
 
-use Blast\Orm\Facades\FacadeFactory;
 use Blast\Orm\Hydrator\ArrayToObjectHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Hydrator\ObjectToArrayHydrator;
-use Blast\Orm\Mapper;
+use Blast\Orm\LocatorAwareTrait;
+use Blast\Orm\LocatorInterface;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Relations\RelationInterface;
 use Doctrine\DBAL\Schema\Column;
@@ -28,6 +28,7 @@ class Provider implements ProviderInterface
 {
 
     use EntityAwareTrait;
+    use LocatorAwareTrait;
 
     /**
      * @var Column[]
@@ -61,10 +62,12 @@ class Provider implements ProviderInterface
 
     /**
      * Provider constructor.
+     * @param LocatorInterface $locator
      * @param $tableName
      */
-    public function __construct($tableName)
+    public function __construct(LocatorInterface $locator, $tableName)
     {
+        $this->locator = $locator;
         $this->init($tableName);
         $this->define(is_array($tableName) ? $tableName : []);
     }
@@ -85,7 +88,7 @@ class Provider implements ProviderInterface
         }
 
         if (is_string($tableName)) {
-            $container = FacadeFactory::getContainer();
+            $container = $this->getLocator()->getContainer();
             if ($container->has($tableName)) {
                 $this->entity = $container->get($tableName);
             } elseif (class_exists($tableName)) {
@@ -157,13 +160,10 @@ class Provider implements ProviderInterface
             return $definition['mapper'];
         }
         if ($reflection->hasMethod('mapper')) {
-            return $reflection->getMethod('mapper')->invokeArgs($entity, [$entity]);
-        }
-        if (FacadeFactory::getContainer()->has(MapperInterface::class)) {
-            return FacadeFactory::getContainer()->get(MapperInterface::class);
+            return $reflection->getMethod('mapper')->invokeArgs($entity, [$this->getLocator(), $entity]);
         }
 
-        return new Mapper($this);
+        return $this->getLocator()->getMapper($this);
 
     }
 
@@ -191,11 +191,7 @@ class Provider implements ProviderInterface
         if ($this->mapper instanceof MapperInterface) {
             return $this->mapper;
         }
-        $container = FacadeFactory::getContainer();
-        if (!$container->has($this->mapper)) {
-            $container->add($this->mapper, new Mapper($this->getEntity()));
-        }
-        return $container->get($this->mapper);
+        return $this->getLocator()->getMapper($this);
     }
 
     /**
@@ -226,7 +222,7 @@ class Provider implements ProviderInterface
      */
     public function fromArrayToObject(array $data = [], $option = HydratorInterface::HYDRATE_AUTO)
     {
-        return (new ArrayToObjectHydrator($this->entity))->hydrate($data, $option);
+        return (new ArrayToObjectHydrator($this))->hydrate($data, $option);
     }
 
     /**
@@ -248,7 +244,7 @@ class Provider implements ProviderInterface
      */
     public function fromObjectToArray(array $additionalData = [])
     {
-        return (new ObjectToArrayHydrator($this->entity))->hydrate($additionalData);
+        return (new ObjectToArrayHydrator($this))->hydrate($additionalData);
     }
 
     /**

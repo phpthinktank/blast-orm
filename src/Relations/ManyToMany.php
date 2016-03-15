@@ -14,13 +14,13 @@
 namespace Blast\Orm\Relations;
 
 
-use Blast\Orm\Entity\Provider;
 use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\LocatorFacade;
+use Blast\Orm\LocatorAwareTrait;
 use Blast\Orm\Query;
 
 class ManyToMany implements RelationInterface
 {
+    use LocatorAwareTrait;
     use RelationTrait;
     /**
      * @var object|string
@@ -51,10 +51,12 @@ class ManyToMany implements RelationInterface
      */
     private $junctionForeignKey;
 
+
     /**
      * Many occurrences in local entity relate to many occurrences in foreign entity and vice versa.
      * The relations are linked by a junction table.
      *
+     * @param $locator
      * @param string|object $entity
      * @param string|object $foreignEntity
      * @param null|string $foreignKey Default field name is {foreign primary key name}
@@ -63,10 +65,11 @@ class ManyToMany implements RelationInterface
      * @param null|string $junctionLocalKey Default field name is {local table name}_{$localKey}
      * @param null|string $junctionForeignKey Default field name is {foreign table name}_{$foreignKey}
      */
-    public function __construct($entity, $foreignEntity, $foreignKey = null, $localKey = null,
+    public function __construct($locator, $entity, $foreignEntity, $foreignKey = null, $localKey = null,
                                 $junction = null, $junctionLocalKey = null, $junctionForeignKey = null)
     {
 
+        $this->locator = $locator;
         $this->entity = $entity;
         $this->foreignEntity = $foreignEntity;
         $this->foreignKey = $foreignKey;
@@ -94,8 +97,8 @@ class ManyToMany implements RelationInterface
 
     protected function init()
     {
-        $provider = LocatorFacade::getProvider($this->getEntity());
-        $foreignAdapter = LocatorFacade::getProvider($this->getForeignEntity());
+        $provider = $this->getLocator()->getProvider($this->getEntity());
+        $foreignAdapter = $this->getLocator()->getProvider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
         $junction = $this->getJunction();
         $junctionLocalKey = $this->getJunctionLocalKey();
@@ -125,11 +128,11 @@ class ManyToMany implements RelationInterface
             $junctionForeignKey = $foreignAdapter->getTableName() . '_' . $foreignKey;
         }
 
-        $query = new Query();
+        $query = new Query($this->getLocator(),$provider->getMapper()->getConnection());
 
         //get relations by through db object
         if (isset($data[$localKey])) {
-            $junctionAdapter = LocatorFacade::getProvider(is_string($junction) ? new Provider($junction) : $junction);
+            $junctionAdapter = $this->getLocator()->getProvider(is_string($junction) ? $this->getLocator()->getProvider($junction) : $junction);
             $results = $junctionAdapter->getMapper()
                 ->select([$junctionForeignKey])
                 ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
@@ -147,6 +150,8 @@ class ManyToMany implements RelationInterface
 
         $this->query = $foreignQuery;
         $this->name = $foreignAdapter->getTableName();
+
+        return $this;
     }
 
     /**

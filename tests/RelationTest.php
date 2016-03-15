@@ -14,10 +14,6 @@
 namespace Blast\Tests\Orm;
 
 
-use Blast\Orm\ConnectionManagerInterface;
-use Blast\Orm\ConnectionFacade;
-use Blast\Orm\Data\DataObject;
-use Blast\Orm\LocatorFacade;
 use Blast\Orm\QueryInterface;
 use Blast\Orm\Relations\BelongsTo;
 use Blast\Orm\Relations\HasMany;
@@ -27,79 +23,26 @@ use Blast\Tests\Orm\Stubs\Entities\Address;
 use Blast\Tests\Orm\Stubs\Entities\Post;
 use Blast\Tests\Orm\Stubs\Entities\Role;
 use Blast\Tests\Orm\Stubs\Entities\User;
-use Interop\Container\ContainerInterface;
 
-class RelationTest extends \PHPUnit_Framework_TestCase
+class RelationTest extends AbstractDbTestCase
 {
-    protected function setUp()
-    {
-        $connection = LocatorFacade::getConnectionManager()->add( [
-            'url' => 'sqlite:///:memory:',
-            'memory' => 'true'
-        ])->get();
-
-        $connection->exec('CREATE TABLE post (id int, user_pk int, title VARCHAR(255), content TEXT)');
-        $connection->exec('CREATE TABLE user (pk int, name VARCHAR(255))');
-        $connection->exec('CREATE TABLE address (id int, user_pk int, address TEXT)');
-        $connection->exec('CREATE TABLE user_role (user_pk int, role_id int)');
-        $connection->exec('CREATE TABLE role (id int, name VARCHAR(255))');
-        $connection->insert('post', [
-            'id' => 1,
-            'user_pk' => 1,
-            'title' => 'Hello World',
-            'content' => 'Some text',
-        ]);
-        $connection->insert('post', [
-            'id' => 2,
-            'user_pk' => 1,
-            'title' => 'Next thing',
-            'content' => 'More text to read'
-        ]);
-        $connection->insert('user', [
-            'pk' => 1,
-            'name' => 'Franz'
-        ]);
-        $connection->insert('user_role', [
-            'user_pk' => 1,
-            'role_id' => 1
-        ]);
-        $connection->insert('address', [
-            'id' => 1,
-            'user_pk' => 1,
-            'address' => 'street 42, 11111 city'
-        ]);
-        $connection->insert('role', [
-            'id' => 1,
-            'name' => 'Admin'
-        ]);
-    }
-
-    protected function tearDown()
-    {
-        $connection = LocatorFacade::getConnectionManager()->get(ConnectionManagerInterface::DEFAULT_CONNECTION);
-
-        $connection->exec('DROP TABLE post');
-        $connection->exec('DROP TABLE user');
-        $connection->exec('DROP TABLE address');
-        $connection->exec('DROP TABLE user_role');
-        $connection->exec('DROP TABLE role');
-
-        LocatorFacade::getConnectionManager()->closeAll();
-    }
 
     public function testBelongsTo()
     {
-        $post = LocatorFacade::getProvider(Post::class)->getMapper()->find(1)->execute();
-        $relation = new BelongsTo($post, User::class);
+        $post = $this->locator->getProvider(Post::class)->getMapper()->find(1)->execute();
+        $relation = new BelongsTo($this->locator, $post, User::class);
 
-        $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
+        $query = $relation->getQuery();
+        $sql = $query->getSQL();
+        $this->assertInstanceOf(QueryInterface::class, $query);
         $this->assertInstanceOf(User::class, $relation->execute());
 
     }
 
-    public function testHasMany(){
-        $user = LocatorFacade::getProvider(User::class)->getMapper()->find(1)->execute();
-        $relation = new HasMany($user, Post::class);
+    public function testHasMany()
+    {
+        $user = $this->locator->getProvider(User::class)->getMapper()->find(1)->execute();
+        $relation = new HasMany($this->locator, $user, Post::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
         $posts = $relation->execute();
         $this->assertInstanceOf(\SplStack::class, $posts);
@@ -107,10 +50,11 @@ class RelationTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    public function testHasOne(){
-        $user = LocatorFacade::getProvider(User::class)->getMapper()->find(1)->execute();
+    public function testHasOne()
+    {
+        $user = $this->locator->getProvider(User::class)->getMapper()->find(1)->execute();
 
-        $relation = new HasOne($user, Address::class);
+        $relation = new HasOne($this->locator, $user, Address::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
 
         $address = $relation->execute();
@@ -118,9 +62,10 @@ class RelationTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    public function testManyToMany(){
-        $user = LocatorFacade::getProvider(User::class)->getMapper()->find(1)->execute();
-        $relation = new ManyToMany($user, Role::class);
+    public function testManyToMany()
+    {
+        $user = $this->locator->getProvider(User::class)->getMapper()->find(1)->execute();
+        $relation = new ManyToMany($this->locator, $user, Role::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
 
         $result = $relation->execute();

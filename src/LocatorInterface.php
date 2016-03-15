@@ -17,6 +17,19 @@ use Blast\Orm\Entity\ProviderInterface;
 
 interface LocatorInterface
 {
+    /**
+     * Get di / ioc container
+     *
+     * @return \League\Container\Container
+     */
+    public function getContainer();
+
+    /**
+     * Get connection manager
+     *
+     * @return ConnectionManager
+     */
+    public function getConnectionManager();
 
     /**
      * Get adapter for entity
@@ -26,13 +39,6 @@ interface LocatorInterface
      * @return ProviderInterface
      */
     public function getProvider($entity);
-
-    /**
-     * Get connection manager
-     *
-     * @return ConnectionManager
-     */
-    public function getConnectionManager();
 
     /**
      * Get mapper for entity

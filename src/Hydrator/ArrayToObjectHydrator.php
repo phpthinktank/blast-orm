@@ -13,7 +13,7 @@
 namespace Blast\Orm\Hydrator;
 
 use Adamlc\LetterCase\LetterCase;
-use Blast\Orm\LocatorFacade;
+use Blast\Orm\Entity\ProviderInterface;
 use Doctrine\DBAL\Driver\Statement;
 
 class ArrayToObjectHydrator implements HydratorInterface
@@ -22,11 +22,11 @@ class ArrayToObjectHydrator implements HydratorInterface
     /**
      * @var
      */
-    private $entity;
+    private $provider;
 
-    public function __construct($entity)
+    public function __construct(ProviderInterface $provider)
     {
-        $this->entity = LocatorFacade::getProvider($entity)->getEntity();
+        $this->provider = $provider;
     }
 
     /**
@@ -111,7 +111,7 @@ class ArrayToObjectHydrator implements HydratorInterface
      */
     protected function hydrateEntity($data)
     {
-        $entity = clone $this->entity;
+        $entity = clone $this->provider->getEntity();
 
         if ($entity instanceof \ArrayObject) {
             $entity->exchangeArray($data);
@@ -129,7 +129,7 @@ class ArrayToObjectHydrator implements HydratorInterface
 
             $fieldName = $property->getName();
             if (isset($data[$fieldName])) {
-                $property->setValue($this->entity, $data[$fieldName]);
+                $property->setValue($entity, $data[$fieldName]);
             }
         }
 

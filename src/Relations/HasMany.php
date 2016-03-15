@@ -13,16 +13,16 @@
 
 namespace Blast\Orm\Relations;
 
-
-use Blast\Orm\Entity\EntityAdapterLoaderTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\LocatorFacade;
+use Blast\Orm\LocatorAwareTrait;
 use Blast\Orm\Query;
 
 class HasMany implements RelationInterface
 {
 
+    use LocatorAwareTrait;
     use RelationTrait;
+
     /**
      * @var
      */
@@ -39,13 +39,14 @@ class HasMany implements RelationInterface
     /**
      * Local entity relates to many entries of foreign entity by foreign key
      *
+     * @param $locator
      * @param $entity
      * @param $foreignEntity
      * @param null $foreignKey
      */
-    public function __construct($entity, $foreignEntity, $foreignKey = null)
+    public function __construct($locator, $entity, $foreignEntity, $foreignKey = null)
     {
-
+        $this->locator = $locator;
         $this->entity = $entity;
         $this->foreignEntity = $foreignEntity;
         $this->foreignKey = $foreignKey;
@@ -61,8 +62,8 @@ class HasMany implements RelationInterface
 
     protected function init()
     {
-        $provider = LocatorFacade::getProvider($this->getEntity());
-        $foreignProvider = LocatorFacade::getProvider($this->getForeignEntity());
+        $provider = $this->getLocator()->getProvider($this->getEntity());
+        $foreignProvider = $this->getLocator()->getProvider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
 
         $data = $provider->fromObjectToArray();
@@ -79,11 +80,12 @@ class HasMany implements RelationInterface
         //if no primary key is available, return a select
         $query = $mapper->select();
         if ($foreignKeyValue !== false) {
-            $query->where((new Query())->expr()->eq($foreignKey, $foreignKeyValue));
-
+            $query->where((new Query($this->getLocator(), $provider->getMapper()->getConnection()))->expr()->eq($foreignKey, $foreignKeyValue));
         }
         $this->query = $query;
         $this->name = $foreignProvider->getTableName();
+
+        return $this;
     }
 
     /**
