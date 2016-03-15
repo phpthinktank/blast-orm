@@ -200,23 +200,6 @@ class Mapper implements MapperInterface, EntityAwareInterface
     }
 
     /**
-     * @param $entity
-     * @return Provider
-     */
-    public function prepareProvider($entity)
-    {
-        if (is_array($entity)) {
-            $provider = LocatorFacade::getProvider($this->getEntity());
-
-            //reset entity in provider
-            $provider->setEntity($provider->fromArrayToObject($entity, HydratorInterface::HYDRATE_ENTITY));
-        } else {
-            $provider = LocatorFacade::getProvider($entity);
-        }
-        return $provider;
-    }
-
-    /**
      * Update query for existing Model or a collection of entities in storage
      *
      * @param array|\ArrayObject|\stdClass|object $entity
@@ -251,5 +234,22 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $query->where($query->expr()->eq($pkName, $data[$pkName]));
 
         return $query;
+    }
+
+    /**
+     * @param $entity
+     * @return Provider
+     */
+    private function prepareProvider($entity)
+    {
+        if (is_array($entity)) {
+            $provider = LocatorFacade::getProvider($this->getEntity());
+
+            //reset entity in provider
+            $provider->setEntity($provider->fromArrayToObject($entity, HydratorInterface::HYDRATE_ENTITY));
+        } else {
+            $provider = LocatorFacade::getProvider($entity);
+        }
+        return $provider;
     }
 }
