@@ -4,14 +4,10 @@ All notable changes of the Blast orm 1.0 release series are documented in this f
 
 ## 0.5
 
-### Altered
-
- - query, mapper, provider and relations need to know the locator instance by dependency
-
 ### Removed
 
- - `Blast\Orm\LocatorFacade`
  - `Blast\Orm\Facades`
+ - Locator and Container no longer dependencies for blast orm
 
 ## 0.4
 
