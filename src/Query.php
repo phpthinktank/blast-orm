@@ -97,7 +97,7 @@ class Query implements EmitterAwareInterface, QueryInterface
      * @param \Doctrine\DBAL\Connection $connection
      * @param array|stdClass|\ArrayObject|object|string $entity
      */
-    public function __construct($connection, $entity = null)
+    public function __construct($connection = null, $entity = null)
     {
         $this->setConnection($connection);
         $this->setEntity($entity);
@@ -284,6 +284,9 @@ class Query implements EmitterAwareInterface, QueryInterface
      */
     public function getConnection()
     {
+        if(null === $this->connection){
+            $this->connection = ConnectionManager::getInstance()->get();
+        }
         return $this->connection;
     }
 
@@ -291,7 +294,7 @@ class Query implements EmitterAwareInterface, QueryInterface
      * @param \Doctrine\DBAL\Connection|\Doctrine\DBAL\Driver\Connection $connection
      * @return $this
      */
-    public function setConnection(Connection $connection)
+    public function setConnection($connection)
     {
         $this->connection = $connection;
 
