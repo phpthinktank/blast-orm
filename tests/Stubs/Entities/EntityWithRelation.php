@@ -15,6 +15,7 @@ namespace Blast\Tests\Orm\Stubs\Entities;
 
 
 use Blast\Orm\Data\DataObject;
+use Blast\Orm\Mapper;
 use Blast\Orm\Relations\HasOne;
 
 /**
@@ -32,9 +33,9 @@ class EntityWithRelation extends \ArrayObject
         return 'testTable';
     }
 
-    public static function relations(EntityWithRelation $entity, $mapper){
+    public static function relations(EntityWithRelation $entity, Mapper $mapper){
         return [
-            new HasOne($entity, 'otherTable')
+            new HasOne($mapper->getLocator(), $entity, 'otherTable')
         ];
     }
 }

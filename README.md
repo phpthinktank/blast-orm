@@ -93,6 +93,10 @@ The repository is mediating between persistence layer and abstract from persiste
   
 ## Usage
 
+### Locator
+
+
+
 ### Connections
 
 Blast ORM is managing all connections with `\Blast\Orm\ConnectionManager`. You are able to create connections directly 
@@ -114,18 +118,7 @@ $connection = ConnectionManager::create('mysql://root:root@localhost/defaultdb?c
 
 ##### Connection manager
 
-The connection manager stores all connection in it's own cache by name.  
-
-It is recommended to use connection manager via facade to access connections on different points in your application.  
-
-```php
-<?php
-
-use Blast\Orm\LocatorFacade;
-
-$connections = LocatorFacade::getConnectionManager();
-
-```
+The connection manager stores all connection in it's own cache by name.
 
 In some cases you would like to use a new connection manager instance, e.g. in a separate container.
 
@@ -179,14 +172,14 @@ $connections = $connections->__instance();
 
 The query object is is providing high level API methods of [doctrine 2 query builder](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/query-builder.html#security-safely-preventing-sql-injection).
 
-Create a new query
+A query instance need to know the locator to determine entity provider and current connection. 
 
 ```php
 <?php
 
 use Blast\Orm\Query;
 
-$query = new Query();
+$query = new Query($locator, $locator->getConnectionManager()->get());
 ```
 
 or create a new query for an entity
@@ -344,20 +337,22 @@ are represented by static entity methods and / or properties.
 Use providers to access tables without creating a entity class. This is useful for accessing junction tables or 
 temporary tables.
 
+The provider needs to know the locator to access container and mapper.
+
 ```php
 <?php
 
 use Blast\Orm\Entity\Provider;
 
 // add an entity as class name
-$provider = new Provider(Post::class);
+$provider = new Provider($locator, Post::class);
 
 // add an entity as object
-$provider = new Provider(Post::class);
+$provider = new Provider($locator, Post::class);
 
 // add an entity as table name
 // entity object is an array object
-$provider = new Provider('user_roles');
+$provider = new Provider($locator, 'user_roles');
 ```
 
 Add definition to entity by public static property or method.
@@ -437,7 +432,7 @@ class Post
 
 ```
 
-#### Mapper
+#### Relations
 
 Return relations as `array` containing instance of `Blast\Orm\Relations\RelationInterface`.
 
@@ -457,9 +452,9 @@ class Post
      *
      * @return string
      */
-    public static function relations(EntityWithRelation $entity, $mapper){
+    public static function relations(EntityWithRelation $entity,  Mapper $mapper){
         return [
-            new HasOne($entity, 'otherTable')
+            new HasOne($mapper->getLocator(), $entity, 'otherTable')
         ];
     }
 }
@@ -536,24 +531,23 @@ instance and need to execute manually.
 
 #### Create a new mapper for entity
 
-Create mapper by instance
+Create mapper with locator and entity
 
 ```php
 <?php
 
 use Blast\Orm\Mapper;
 
-$mapper = new Mapper($post);
+$mapper = new Mapper($locator, $post);
 
 ```
 
-Create mapper from adapter
+Create mapper from provider
 
 ```php
 <?php
 
-//access via locator
-$provider = LocatorFacade::getAdapterManager()->get($post);
+$provider = $locator->getProvider($post);
 $mapper = $provider->getMapper();
 
 ```
@@ -591,7 +585,7 @@ Delete onw entry
 ```php
 <?php
 
-$repository->delete(1);
+$mapper->delete(1);
 ```
 
 Delete many entries
@@ -599,7 +593,7 @@ Delete many entries
 ```php
 <?php
 
-$repository->delete([1, 2]);
+$mapper->delete([1, 2]);
 ```
 
 ### Relations
@@ -613,11 +607,13 @@ Pass relations as `array` by computed static relation method in entity class
 ```php
 <?php
 
+use Blast\Orm\Mapper;
+
 class Post {
 
-    public static function relation(Post $entity){
+    public static function relation(Post $entity, Mapper $mapper){
         return [
-            HasMany($entity, Comments::class)
+            HasMany($mapper->getLocator(), $entity, Comments::class)
         ]
     }
 }
@@ -627,34 +623,6 @@ $postProvider = new Provider($post);
 
 $relations = $postProvider->getRelations();
 $comments = $relations['comment']->execute();
-
-```
-
-Even easier access by executing directly in custom method
-
-```php
-<?php
-
-class Post {
-    
-    /**
-     * @return Comments[]
-     */
-    public function getComments(){
-        $relation = HasMany($this, Comments::class);
-        
-        return $relation->execute();
-    }
-}
-
-```
-
-Access relation query and modify the result.
-
-```php
-<?php
-
-$comments = $relation->execute();
 
 ```
 
@@ -675,7 +643,7 @@ One user has one address.
 ```php
 <?php
 
-$relation = HasOne($user, Address::class, 'user_id');
+$relation = HasOne($locator, $user, Address::class, 'user_id');
 
 ```
 
@@ -694,7 +662,7 @@ One post has many comments
 ```php
 <?php
 
-$relation = HasOne($post, Comments::class, 'post_id');
+$relation = HasOne($locator, $post, Comments::class, 'post_id');
 
 ```
 
@@ -715,7 +683,7 @@ One post has one or many comments
 ```php
 <?php
 
-$relation = BelongsTo($comment, Post::class, 'post_id');
+$relation = BelongsTo($locator, $comment, Post::class, 'post_id');
 
 ```
 
@@ -740,7 +708,7 @@ One user has many roles, and one role has many users. Users primary key name is 
 ```php
 <?php
 
-$relation = ManyToMany($user, Role::class, 'pk', 'id', 'user_role', 'user_id', 'role_id');
+$relation = ManyToMany($locator, $user, Role::class, 'pk', 'id', 'user_role', 'user_id', 'role_id');
 
 ```
 
@@ -748,9 +716,7 @@ $relation = ManyToMany($user, Role::class, 'pk', 'id', 'user_role', 'user_id', '
 
 The repository abstracts methods for data persistence and access. All methods execute their queries directly. 
 
-Blast ORM integration for repositories are __optional__!
-
-#### Create repository
+Blast ORM provides a repository interface `\Blast\Orm\RepositoryInterface`.
 
 A repository knows it's entity. Therefore we need to pass the entity as class name or instance 
 
@@ -839,24 +805,6 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
 
 }
 
-```
-
-Create repository by abstract
-
-```php
-<?php
-
-use Blast\Orm\AbstractRepository;
-
-class PostRepository extends AbstractRepository {
-    
-    /**
-     * Init repository and bind related entity
-     */
-    public function __construct(){
-        $this->setEntity(Post::class);
-    }
-}
 ```
 
 Create repository instance
