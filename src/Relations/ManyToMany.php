@@ -14,13 +14,13 @@
 namespace Blast\Orm\Relations;
 
 
+use Blast\Orm\Entity\Provider;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\LocatorAwareTrait;
 use Blast\Orm\Query;
 
 class ManyToMany implements RelationInterface
 {
-    use LocatorAwareTrait;
     use RelationTrait;
     /**
      * @var object|string
@@ -56,7 +56,6 @@ class ManyToMany implements RelationInterface
      * Many occurrences in local entity relate to many occurrences in foreign entity and vice versa.
      * The relations are linked by a junction table.
      *
-     * @param $locator
      * @param string|object $entity
      * @param string|object $foreignEntity
      * @param null|string $foreignKey Default field name is {foreign primary key name}
@@ -65,11 +64,10 @@ class ManyToMany implements RelationInterface
      * @param null|string $junctionLocalKey Default field name is {local table name}_{$localKey}
      * @param null|string $junctionForeignKey Default field name is {foreign table name}_{$foreignKey}
      */
-    public function __construct($locator, $entity, $foreignEntity, $foreignKey = null, $localKey = null,
+    public function __construct($entity, $foreignEntity, $foreignKey = null, $localKey = null,
                                 $junction = null, $junctionLocalKey = null, $junctionForeignKey = null)
     {
 
-        $this->locator = $locator;
         $this->entity = $entity;
         $this->foreignEntity = $foreignEntity;
         $this->foreignKey = $foreignKey;
@@ -97,8 +95,8 @@ class ManyToMany implements RelationInterface
 
     protected function init()
     {
-        $provider = $this->getLocator()->getProvider($this->getEntity());
-        $foreignAdapter = $this->getLocator()->getProvider($this->getForeignEntity());
+        $provider = new Provider($this->getEntity());
+        $foreignProvider = new Provider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
         $junction = $this->getJunction();
         $junctionLocalKey = $this->getJunctionLocalKey();
@@ -110,12 +108,12 @@ class ManyToMany implements RelationInterface
 
         //determine foreign key
         if ($foreignKey === null) {
-            $foreignKey = $foreignAdapter->getPrimaryKeyName();
+            $foreignKey = $foreignProvider->getPrimaryKeyName();
         }
 
         //determine through
         if (!is_string($junction) || $junction === null) {
-            $junction = $provider->getTableName() . '_' . $foreignAdapter->getTableName();
+            $junction = $provider->getTableName() . '_' . $foreignProvider->getTableName();
         }
 
         //determine through local key
@@ -125,31 +123,31 @@ class ManyToMany implements RelationInterface
 
         //determine through foreign key
         if ($junctionForeignKey === null) {
-            $junctionForeignKey = $foreignAdapter->getTableName() . '_' . $foreignKey;
+            $junctionForeignKey = $foreignProvider->getTableName() . '_' . $foreignKey;
         }
 
-        $query = new Query($this->getLocator(),$provider->getMapper()->getConnection());
+        $query = new Query($provider->getMapper()->getConnection());
 
         //get relations by through db object
         if (isset($data[$localKey])) {
-            $junctionAdapter = $this->getLocator()->getProvider(is_string($junction) ? $this->getLocator()->getProvider($junction) : $junction);
-            $results = $junctionAdapter->getMapper()
+            $junctionProvider = is_string($junction) ? new Provider($junction) : $junction;
+            $results = $junctionProvider->getMapper()
                 ->select([$junctionForeignKey])
                 ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
                 ->execute(HydratorInterface::HYDRATE_RAW);
 
-            $foreignQuery = $foreignAdapter->getMapper()->select();
+            $foreignQuery = $foreignProvider->getMapper()->select();
 
             foreach ($results as $result) {
                 $foreignQuery->where($query->expr()->eq($foreignKey, $result[$junctionForeignKey]));
             }
 
         } else {
-            $foreignQuery = $foreignAdapter->getMapper()->select();
+            $foreignQuery = $foreignProvider->getMapper()->select();
         }
 
         $this->query = $foreignQuery;
-        $this->name = $foreignAdapter->getTableName();
+        $this->name = $foreignProvider->getTableName();
 
         return $this;
     }

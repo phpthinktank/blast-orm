@@ -13,14 +13,13 @@
 
 namespace Blast\Orm\Relations;
 
+use Blast\Orm\Entity\Provider;
 use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\LocatorAwareTrait;
 use Blast\Orm\Query;
 
 class HasMany implements RelationInterface
 {
 
-    use LocatorAwareTrait;
     use RelationTrait;
 
     /**
@@ -39,21 +38,19 @@ class HasMany implements RelationInterface
     /**
      * Local entity relates to many entries of foreign entity by foreign key
      *
-     * @param $locator
      * @param $entity
      * @param $foreignEntity
      * @param null $foreignKey
      */
-    public function __construct($locator, $entity, $foreignEntity, $foreignKey = null)
+    public function __construct($entity, $foreignEntity, $foreignKey = null)
     {
-        $this->locator = $locator;
         $this->entity = $entity;
         $this->foreignEntity = $foreignEntity;
         $this->foreignKey = $foreignKey;
     }
 
     /**
-     * @return \Blast\Orm\Data\\ArrayObject
+     * @return \\ArrayObject
      */
     public function execute()
     {
@@ -62,8 +59,8 @@ class HasMany implements RelationInterface
 
     protected function init()
     {
-        $provider = $this->getLocator()->getProvider($this->getEntity());
-        $foreignProvider = $this->getLocator()->getProvider($this->getForeignEntity());
+        $provider = new Provider($this->getEntity());
+        $foreignProvider = new Provider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
 
         $data = $provider->fromObjectToArray();
@@ -80,7 +77,7 @@ class HasMany implements RelationInterface
         //if no primary key is available, return a select
         $query = $mapper->select();
         if ($foreignKeyValue !== false) {
-            $query->where((new Query($this->getLocator(), $provider->getMapper()->getConnection()))->expr()->eq($foreignKey, $foreignKeyValue));
+            $query->where((new Query($provider->getMapper()->getConnection()))->expr()->eq($foreignKey, $foreignKeyValue));
         }
         $this->query = $query;
         $this->name = $foreignProvider->getTableName();

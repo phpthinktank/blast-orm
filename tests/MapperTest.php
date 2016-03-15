@@ -20,7 +20,7 @@ class MapperTest extends AbstractDbTestCase
      */
     public function testSelect()
     {
-        $mapper = new Mapper($this->locator, new Post());
+        $mapper = new Mapper(new Post());
 
         $query = $mapper->select();
         $result = $query->where('user_pk = 1')->execute();
@@ -34,7 +34,7 @@ class MapperTest extends AbstractDbTestCase
      */
     public function testFind()
     {
-        $mapper = new Mapper($this->locator, new Post);
+        $mapper = new Mapper(new Post);
 
         $result = $mapper->find(1)->execute();
 
@@ -46,7 +46,7 @@ class MapperTest extends AbstractDbTestCase
      */
     public function testCreate()
     {
-        $mapper = new Mapper($this->locator, new Post);
+        $mapper = new Mapper(new Post);
 
         $post = new Post();
         $post['id'] = 3;
@@ -64,7 +64,7 @@ class MapperTest extends AbstractDbTestCase
      */
     public function testCreateNothing()
     {
-        $mapper = new Mapper($this->locator, new Post);
+        $mapper = new Mapper(new Post);
 
         $post = new Post();
 
@@ -78,7 +78,7 @@ class MapperTest extends AbstractDbTestCase
      */
     public function testUpdate()
     {
-        $mapper = new Mapper($this->locator, new Post);
+        $mapper = new Mapper(new Post);
         $result = $mapper->find(1)->execute();
         $this->assertInstanceOf(Post::class, $result);
         $result['title'] = $result['title'] . ' Again!';
@@ -91,7 +91,7 @@ class MapperTest extends AbstractDbTestCase
      */
     public function testSaveANewEntry()
     {
-        $mapper = new Mapper($this->locator, new Post);
+        $mapper = new Mapper(new Post);
 
         $post = new Post();
         $post['user_pk'] = 1;
@@ -108,7 +108,7 @@ class MapperTest extends AbstractDbTestCase
      */
     public function testSaveExisting()
     {
-        $mapper = new Mapper($this->locator, new Post);
+        $mapper = new Mapper(new Post);
         $result = $mapper->find(1)->execute();
         $this->assertInstanceOf(Post::class, $result);
         $result['title'] = $result['title'] . ' Again!';
@@ -121,7 +121,7 @@ class MapperTest extends AbstractDbTestCase
      */
     public function testDelete()
     {
-        $mapper = new Mapper($this->locator, new Post);
+        $mapper = new Mapper(new Post);
         $result = $mapper->delete(1)->execute();
 
         $this->assertEquals($result, 1);
@@ -129,7 +129,7 @@ class MapperTest extends AbstractDbTestCase
 
     public function testPlainObjectImplementation()
     {
-        $mapper = new Mapper($this->locator, User::class);
+        $mapper = new Mapper(User::class);
         $user = $mapper->find(1)->execute();
 
         $this->assertInstanceOf(User::class, $user);

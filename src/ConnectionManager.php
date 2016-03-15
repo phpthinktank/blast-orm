@@ -27,6 +27,19 @@ class ConnectionManager implements ConnectionManagerInterface
      */
     protected $defaultConnection = null;
 
+    private static $instance = null;
+
+    /**
+     * @return \Blast\Orm\ConnectionManager
+     */
+    public static function getInstance(){
+        if(null === static::$instance){
+            static::$instance = new self;
+        }
+
+        return static::$instance;
+    }
+
     /**
      * Close all connections on
      */

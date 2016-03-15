@@ -14,13 +14,13 @@
 namespace Blast\Orm\Relations;
 
 
+use Blast\Orm\Entity\Provider;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\LocatorAwareTrait;
 use Blast\Orm\Query;
 
 class BelongsTo implements RelationInterface
 {
-    use LocatorAwareTrait;
     use RelationTrait;
 
     /**
@@ -44,12 +44,11 @@ class BelongsTo implements RelationInterface
      * @param $foreignEntity
      * @param null $localKey
      */
-    public function __construct($locator, $entity, $foreignEntity, $localKey = null)
+    public function __construct($entity, $foreignEntity, $localKey = null)
     {
         $this->entity = $entity;
         $this->foreignEntity = $foreignEntity;
         $this->localKey = $localKey;
-        $this->locator = $locator;
     }
 
     /**
@@ -62,8 +61,8 @@ class BelongsTo implements RelationInterface
 
     protected function init()
     {
-        $provider = $this->getLocator()->getProvider($this->getEntity());
-        $foreignProvider = $this->getLocator()->getProvider($this->getForeignEntity());
+        $provider = new Provider($this->getEntity());
+        $foreignProvider = new Provider($this->getForeignEntity());
         $localKey = $this->getLocalKey();
 
         if ($localKey === null) {

@@ -25,11 +25,10 @@ use stdClass;
  *
  * @package Blast\Db\Orm
  */
-class Mapper implements MapperInterface, EntityAwareInterface, LocatorAwareInterface
+class Mapper implements MapperInterface, EntityAwareInterface
 {
 
     use EntityAwareTrait;
-    use LocatorAwareTrait;
 
     /**
      * @var ProviderInterface
@@ -43,20 +42,19 @@ class Mapper implements MapperInterface, EntityAwareInterface, LocatorAwareInter
 
     /**
      * Disable direct access to mapper
-     * @param LocatorInterface $locator
+     *
      * @param array|\ArrayObject|stdClass|\ArrayObject|object|string $entity
      * @param \Doctrine\DBAL\Driver\Connection $connection
      */
-    public function __construct(LocatorInterface $locator, $entity, $connection = null)
+    public function __construct($entity, $connection = null)
     {
         $this->connection = $connection;
-        $this->locator = $locator;
         if ($entity instanceof ProviderInterface) {
             $this->setEntity($entity->getEntity());
             $this->provider = $entity;
         } else {
             $this->setEntity($entity);
-            $this->provider = $this->getLocator()->getProvider($this->getEntity());
+            $this->provider = new Provider($this->getEntity());
         }
     }
 
@@ -68,7 +66,7 @@ class Mapper implements MapperInterface, EntityAwareInterface, LocatorAwareInter
     public function getConnection()
     {
         if(null === $this->connection){
-            $this->connection = $this->getLocator()->getConnectionManager()->get();
+            $this->connection = ConnectionManager::getInstance()->get();
         }
         return $this->connection;
     }
@@ -117,7 +115,7 @@ class Mapper implements MapperInterface, EntityAwareInterface, LocatorAwareInter
      */
     public function createQuery()
     {
-        $query = new Query($this->getLocator(), $this->getConnection(), $this->getEntity());
+        $query = new Query($this->getConnection(), $this->getEntity());
         return $query;
     }
 
@@ -164,7 +162,7 @@ class Mapper implements MapperInterface, EntityAwareInterface, LocatorAwareInter
      */
     public function save($entity)
     {
-        return $this->getLocator()->getProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
+        return (new Provider($entity))->isNew() ? $this->create($entity) : $this->update($entity);
     }
 
     /**
@@ -249,12 +247,12 @@ class Mapper implements MapperInterface, EntityAwareInterface, LocatorAwareInter
     private function prepareProvider($entity)
     {
         if (is_array($entity)) {
-            $provider = $this->getLocator()->getProvider($this->getEntity());
+            $provider = new Provider($this->getEntity());
 
             //reset entity in provider
             $provider->setEntity($provider->fromArrayToObject($entity, HydratorInterface::HYDRATE_ENTITY));
         } else {
-            $provider = $this->getLocator()->getProvider($entity);
+            $provider = new Provider($entity);
         }
         return $provider;
     }

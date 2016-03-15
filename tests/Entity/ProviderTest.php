@@ -12,9 +12,8 @@
 
 namespace Blast\Tests\Orm\Entity;
 
+use Blast\Orm\ConnectionManager;
 use Blast\Orm\Entity\Provider;
-use Blast\Orm\Locator;
-use Blast\Orm\LocatorInterface;
 use Blast\Orm\Relations\HasOne;
 use Blast\Orm\Relations\RelationInterface;
 use Blast\Tests\Orm\Stubs\Entities\Post;
@@ -22,54 +21,43 @@ use Blast\Tests\Orm\Stubs\Entities\User;
 
 class ProviderTest extends \PHPUnit_Framework_TestCase
 {
-    /**
-     * @var LocatorInterface
-     */
-    public $locator;
-
     protected $dsn = [
         'url' => 'sqlite:///:memory:',
         'memory' => 'true'
     ];
 
-    protected function setUp()
-    {
-        $this->locator = new Locator();
-    }
-
     public function tearDown()
     {
-        $this->locator->getConnectionManager()->closeAll();
+        ConnectionManager::getInstance()->closeAll();
     }
 
     public function testProvideEntityByTableName()
     {
-        $provider = new Provider($this->locator, 'testTable');
+        $provider = new Provider('testTable');
         $this->assertEquals('testTable', $provider->getTableName());
     }
 
     public function testProvideEntityByClassName()
     {
-        $provider = new Provider($this->locator, Post::class);
+        $provider = new Provider(Post::class);
         $this->assertEquals('post', $provider->getTableName());
     }
 
     public function testProvideEntityByObject()
     {
-        $provider = new Provider($this->locator, new Post);
+        $provider = new Provider(new Post);
         $this->assertEquals('post', $provider->getTableName());
     }
 
     public function testProvideEntityByIoCContainer()
     {
-        $this->locator->getContainer()->add('post', Post::class);
-        $provider = new Provider($this->locator, 'post');
+        $provider = new Provider('post');
         $this->assertEquals('post', $provider->getTableName());
     }
 
     public function testProvideEntityByArray()
     {
-        $provider = new Provider($this->locator, [
+        $provider = new Provider([
             'tableName' => 'post'
         ]);
         $this->assertEquals('post', $provider->getTableName());
@@ -77,12 +65,12 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
 
     public function testProvideRelation()
     {
-        $provider = new Provider($this->locator, [
+        $provider = new Provider([
             'tableName' => 'post',
             'relations' => function ($entity, $mapper) {
                 $this->assertInternalType('object', $entity);
                 return [
-                    'other' => new HasOne($this->locator, $entity, 'otherTable')
+                    'other' => new HasOne($entity, 'otherTable')
                 ];
             },
         ]);
@@ -95,7 +83,7 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
 
     public function testProvidePrimaryKeyField()
     {
-        $this->assertEquals('id', (new Provider($this->locator, Post::class))->getPrimaryKeyName());
-        $this->assertEquals('pk', (new Provider($this->locator, User::class))->getPrimaryKeyName());
+        $this->assertEquals('id', (new Provider(Post::class))->getPrimaryKeyName());
+        $this->assertEquals('pk', (new Provider(User::class))->getPrimaryKeyName());
     }
 }

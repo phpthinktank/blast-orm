@@ -19,6 +19,7 @@ use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Hydrator\ObjectToArrayHydrator;
 use Blast\Orm\LocatorAwareTrait;
 use Blast\Orm\LocatorInterface;
+use Blast\Orm\Mapper;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Relations\RelationInterface;
 use Doctrine\DBAL\Schema\Column;
@@ -28,7 +29,6 @@ class Provider implements ProviderInterface
 {
 
     use EntityAwareTrait;
-    use LocatorAwareTrait;
 
     /**
      * @var Column[]
@@ -62,12 +62,11 @@ class Provider implements ProviderInterface
 
     /**
      * Provider constructor.
-     * @param LocatorInterface $locator
+     *
      * @param $tableName
      */
-    public function __construct(LocatorInterface $locator, $tableName)
+    public function __construct($tableName)
     {
-        $this->locator = $locator;
         $this->init($tableName);
         $this->define(is_array($tableName) ? $tableName : []);
     }
@@ -88,10 +87,7 @@ class Provider implements ProviderInterface
         }
 
         if (is_string($tableName)) {
-            $container = $this->getLocator()->getContainer();
-            if ($container->has($tableName)) {
-                $this->entity = $container->get($tableName);
-            } elseif (class_exists($tableName)) {
+            if (class_exists($tableName)) {
                 $this->entity = new $tableName;
             } else {
                 $this->entity = new \ArrayObject();
@@ -117,7 +113,7 @@ class Provider implements ProviderInterface
         $reflection = new \ReflectionObject($entity);
 
         //mapper is needed to for events, therefore we need to fetch mapper first
-        $this->mapper = $this->findMapper($definition, $reflection, $entity);
+        $this->findMapper($definition, $reflection, $entity);
 
         $defaultDefinition = get_object_vars($this);
         $definition = array_merge($defaultDefinition, $definition);
@@ -130,11 +126,11 @@ class Provider implements ProviderInterface
             if ($reflection->hasMethod($key)) {
                 $method = $reflection->getMethod($key);
                 if ($method->isPublic() && $method->isStatic()) {
-                    $value = $method->invokeArgs($entity, [$entity, $this->mapper]);
+                    $value = $method->invokeArgs($entity, [$entity, $this->getMapper()]);
                 }
             } else {
                 $value = is_callable($value) ?
-                    call_user_func_array($value, [$entity, $this->mapper]) :
+                    call_user_func_array($value, [$entity, $this->getMapper()]) :
                     $value;
             }
             $this->{$key} = $value;
@@ -157,13 +153,12 @@ class Provider implements ProviderInterface
     {
 
         if (isset($definition['mapper'])) {
-            return $definition['mapper'];
-        }
-        if ($reflection->hasMethod('mapper')) {
-            return $reflection->getMethod('mapper')->invokeArgs($entity, [$this->getLocator(), $entity]);
+            $this->mapper = $definition['mapper'];
+        }elseif ($reflection->hasMethod('mapper')) {
+            $this->mapper = $reflection->getMethod('mapper')->invokeArgs($entity, [$entity]);
         }
 
-        return $this->getLocator()->getMapper($this);
+        return $this;
 
     }
 
@@ -188,10 +183,10 @@ class Provider implements ProviderInterface
      */
     public function getMapper()
     {
-        if ($this->mapper instanceof MapperInterface) {
-            return $this->mapper;
+        if (!($this->mapper instanceof MapperInterface)){
+            $this->mapper = new Mapper($this);
         }
-        return $this->getLocator()->getMapper($this);
+        return $this->mapper;
     }
 
     /**

@@ -14,6 +14,7 @@
 namespace Blast\Tests\Orm;
 
 
+use Blast\Orm\Entity\Provider;
 use Blast\Orm\QueryInterface;
 use Blast\Orm\Relations\BelongsTo;
 use Blast\Orm\Relations\HasMany;
@@ -29,8 +30,9 @@ class RelationTest extends AbstractDbTestCase
 
     public function testBelongsTo()
     {
-        $post = $this->locator->getProvider(Post::class)->getMapper()->find(1)->execute();
-        $relation = new BelongsTo($this->locator, $post, User::class);
+        $provider = new Provider(Post::class);
+        $post = $provider->getMapper()->find(1)->execute();
+        $relation = new BelongsTo($post, User::class);
 
         $query = $relation->getQuery();
         $sql = $query->getSQL();
@@ -41,8 +43,9 @@ class RelationTest extends AbstractDbTestCase
 
     public function testHasMany()
     {
-        $user = $this->locator->getProvider(User::class)->getMapper()->find(1)->execute();
-        $relation = new HasMany($this->locator, $user, Post::class);
+        $provider = new Provider(User::class);
+        $user = $provider->getMapper()->find(1)->execute();
+        $relation = new HasMany($user, Post::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
         $posts = $relation->execute();
         $this->assertInstanceOf(\SplStack::class, $posts);
@@ -52,9 +55,10 @@ class RelationTest extends AbstractDbTestCase
 
     public function testHasOne()
     {
-        $user = $this->locator->getProvider(User::class)->getMapper()->find(1)->execute();
+        $provider = new Provider(User::class);
+        $user = $provider->getMapper()->find(1)->execute();
 
-        $relation = new HasOne($this->locator, $user, Address::class);
+        $relation = new HasOne($user, Address::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
 
         $address = $relation->execute();
@@ -64,8 +68,9 @@ class RelationTest extends AbstractDbTestCase
 
     public function testManyToMany()
     {
-        $user = $this->locator->getProvider(User::class)->getMapper()->find(1)->execute();
-        $relation = new ManyToMany($this->locator, $user, Role::class);
+        $provider = new Provider(User::class);
+        $user = $provider->getMapper()->find(1)->execute();
+        $relation = new ManyToMany($user, Role::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
 
         $result = $relation->execute();

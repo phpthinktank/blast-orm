@@ -14,21 +14,15 @@
 
 namespace Blast\Tests\Orm;
 
+use Blast\Orm\ConnectionManager;
 use Blast\Orm\ConnectionManagerInterface;
-use Blast\Orm\Locator;
-use Blast\Orm\LocatorInterface;
 
 abstract class AbstractDbTestCase extends \PHPUnit_Framework_TestCase
 {
-    /**
-     * @var LocatorInterface
-     */
-    public $locator;
-
     protected function setUp()
     {
-        $this->locator = new Locator();
-        $connection = $this->locator->getConnectionManager()->add( [
+        $manager = ConnectionManager::getInstance();
+        $connection = $manager->add([
             'url' => 'sqlite:///:memory:',
             'memory' => 'true'
         ])->get();
@@ -71,7 +65,8 @@ abstract class AbstractDbTestCase extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        $connection = $this->locator->getConnectionManager()->get(ConnectionManagerInterface::DEFAULT_CONNECTION);
+        $manager = ConnectionManager::getInstance();
+        $connection = $manager->get(ConnectionManagerInterface::DEFAULT_CONNECTION);
 
         $connection->exec('DROP TABLE post');
         $connection->exec('DROP TABLE user');
@@ -79,6 +74,6 @@ abstract class AbstractDbTestCase extends \PHPUnit_Framework_TestCase
         $connection->exec('DROP TABLE user_role');
         $connection->exec('DROP TABLE role');
 
-        $this->locator->getConnectionManager()->closeAll();
+        $manager->closeAll();
     }
 }
