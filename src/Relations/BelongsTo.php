@@ -14,13 +14,15 @@
 namespace Blast\Orm\Relations;
 
 
+use Blast\Orm\ConnectionAwareInterface;
+use Blast\Orm\ConnectionAwareTrait;
 use Blast\Orm\Entity\Provider;
 use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\LocatorAwareTrait;
 use Blast\Orm\Query;
 
-class BelongsTo implements RelationInterface
+class BelongsTo implements RelationInterface, ConnectionAwareInterface
 {
+    use ConnectionAwareTrait;
     use RelationTrait;
 
     /**
@@ -39,7 +41,6 @@ class BelongsTo implements RelationInterface
     /**
      * Local entity belongs to foreign entity by local key
      *
-     * @param $locator
      * @param $entity
      * @param $foreignEntity
      * @param null $localKey
@@ -74,7 +75,7 @@ class BelongsTo implements RelationInterface
         //find primary key
         $primaryKey = $data[$localKey];
 
-        $mapper = $foreignProvider->getMapper();
+        $mapper = $foreignProvider->getMapper()->setConnection($this->getConnection());
 
         //if no primary key is available, return a select
         $this->query = $primaryKey === null ? $mapper->select() : $mapper->find($primaryKey);

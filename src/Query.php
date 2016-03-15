@@ -75,9 +75,9 @@ use stdClass;
  *
  * @package Blast\Db\Orm
  */
-class Query implements EmitterAwareInterface, QueryInterface
+class Query implements EmitterAwareInterface, QueryInterface, ConnectionAwareInterface
 {
-
+    use ConnectionAwareTrait;
     use EmitterAwareTrait;
     use EntityAwareTrait;
 
@@ -85,11 +85,6 @@ class Query implements EmitterAwareInterface, QueryInterface
      * @var QueryBuilder
      */
     private $builder;
-
-    /**
-     * @var \Doctrine\DBAL\Connection
-     */
-    private $connection;
 
     /**
      * Statement constructor.
@@ -275,28 +270,6 @@ class Query implements EmitterAwareInterface, QueryInterface
     public function setBuilder(QueryBuilder $builder)
     {
         $this->builder = $builder;
-
-        return $this;
-    }
-
-    /**
-     * @return \Doctrine\DBAL\Connection
-     */
-    public function getConnection()
-    {
-        if(null === $this->connection){
-            $this->connection = ConnectionManager::getInstance()->get();
-        }
-        return $this->connection;
-    }
-
-    /**
-     * @param \Doctrine\DBAL\Connection|\Doctrine\DBAL\Driver\Connection $connection
-     * @return $this
-     */
-    public function setConnection($connection)
-    {
-        $this->connection = $connection;
 
         return $this;
     }

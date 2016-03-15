@@ -14,13 +14,15 @@
 namespace Blast\Orm\Relations;
 
 
+use Blast\Orm\ConnectionAwareInterface;
+use Blast\Orm\ConnectionAwareTrait;
 use Blast\Orm\Entity\Provider;
 use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\LocatorAwareTrait;
 use Blast\Orm\Query;
 
-class ManyToMany implements RelationInterface
+class ManyToMany implements RelationInterface, ConnectionAwareInterface
 {
+    use ConnectionAwareTrait;
     use RelationTrait;
     /**
      * @var object|string
@@ -128,22 +130,24 @@ class ManyToMany implements RelationInterface
 
         $query = new Query($provider->getMapper()->getConnection());
 
+        //prepare query for foreign table
+        $foreignQuery = $foreignProvider->getMapper()
+            ->setConnection($this->getConnection())
+            ->select();
+
         //get relations by through db object
         if (isset($data[$localKey])) {
             $junctionProvider = is_string($junction) ? new Provider($junction) : $junction;
             $results = $junctionProvider->getMapper()
+                ->setConnection($this->getConnection())
                 ->select([$junctionForeignKey])
                 ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
                 ->execute(HydratorInterface::HYDRATE_RAW);
 
-            $foreignQuery = $foreignProvider->getMapper()->select();
-
+            //set conditions on foreign query
             foreach ($results as $result) {
                 $foreignQuery->where($query->expr()->eq($foreignKey, $result[$junctionForeignKey]));
             }
-
-        } else {
-            $foreignQuery = $foreignProvider->getMapper()->select();
         }
 
         $this->query = $foreignQuery;

@@ -55,6 +55,7 @@ trait RelationTrait
     public function getName()
     {
         ;
+
         return $this->init()->name;
     }
 

@@ -13,13 +13,15 @@
 
 namespace Blast\Orm\Relations;
 
+use Blast\Orm\ConnectionAwareInterface;
+use Blast\Orm\ConnectionAwareTrait;
 use Blast\Orm\Entity\Provider;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
 
-class HasMany implements RelationInterface
+class HasMany implements RelationInterface, ConnectionAwareInterface
 {
-
+    use ConnectionAwareTrait;
     use RelationTrait;
 
     /**
@@ -70,14 +72,14 @@ class HasMany implements RelationInterface
             $foreignKey = $provider->getTableName() . '_' . $provider->getPrimaryKeyName();
         }
 
-        $mapper = $foreignProvider->getMapper();
+        $mapper = $foreignProvider->getMapper()->setConnection($this->getConnection());
 
         $foreignKeyValue = isset($data[$provider->getPrimaryKeyName()]) ? $data[$provider->getPrimaryKeyName()] : false;
 
         //if no primary key is available, return a select
         $query = $mapper->select();
         if ($foreignKeyValue !== false) {
-            $query->where((new Query($provider->getMapper()->getConnection()))->expr()->eq($foreignKey, $foreignKeyValue));
+            $query->where((new Query($this->getConnection()))->expr()->eq($foreignKey, $foreignKeyValue));
         }
         $this->query = $query;
         $this->name = $foreignProvider->getTableName();
