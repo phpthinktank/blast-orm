@@ -123,8 +123,7 @@ class Query implements EmitterAwareInterface, QueryInterface
         //convert entity to adapter again
         $provider = LocatorFacade::getProvider($builder->getEntity());
 
-        //@todo this should be more dynamic for passing other connections
-        $connection = LocatorFacade::getConnectionManager()->get();
+        $connection = $this->getConnection();
         $isSelect = $builder->getType() === QueryBuilder::SELECT;
 
         $sql = $this->getSQL();
@@ -290,7 +289,7 @@ class Query implements EmitterAwareInterface, QueryInterface
     }
 
     /**
-     * @param \Doctrine\DBAL\Connection $connection
+     * @param \Doctrine\DBAL\Connection|\Doctrine\DBAL\Driver\Connection $connection
      * @return $this
      */
     public function setConnection(Connection $connection)
