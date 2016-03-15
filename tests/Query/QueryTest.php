@@ -14,6 +14,7 @@
 namespace Blast\Tests\Orm\Query;
 
 
+use Blast\Orm\ConnectionManager;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
@@ -30,7 +31,7 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testResultCollection()
     {
-        $query = new Query($this->locator, $this->locator->getConnectionManager()->get());
+        $query = new Query(ConnectionManager::getInstance()->get());
         $result = $query->select()->from('post')->execute();
 
         $this->assertInstanceOf(\SplStack::class, $result);
@@ -43,7 +44,7 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testSingleResult()
     {
-        $query = new Query($this->locator, $this->locator->getConnectionManager()->get());
+        $query = new Query(ConnectionManager::getInstance()->get());
         $result = $query->select()->from('post')->where('id = 1')->execute();
 
         $this->assertInstanceOf(\ArrayObject::class, $result);
@@ -54,7 +55,7 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testForceSingleResult()
     {
-        $query = new Query($this->locator, $this->locator->getConnectionManager()->get());
+        $query = new Query(ConnectionManager::getInstance()->get());
         $result = $query->select()->from('post')->execute(HydratorInterface::HYDRATE_ENTITY);
 
         $this->assertInstanceOf(\ArrayObject::class, $result);
@@ -65,7 +66,7 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testForceResultCollection()
     {
-        $query = new Query($this->locator, $this->locator->getConnectionManager()->get());
+        $query = new Query(ConnectionManager::getInstance()->get());
         $result = $query->select()->from('post')->where('id = 1')->execute(HydratorInterface::HYDRATE_COLLECTION);
 
         $this->assertInstanceOf(\SplStack::class, $result);
@@ -77,7 +78,7 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testBeforeEvent()
     {
-        $query = new Query($this->locator, $this->locator->getConnectionManager()->get());
+        $query = new Query(ConnectionManager::getInstance()->get());
 
         //force entity to be a stdClass
         $query->getEmitter()->addListener('before.select', function (QueryBuilderEvent $event) {
@@ -96,7 +97,7 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testBeforeEventAndCancel()
     {
-        $query = new Query($this->locator, $this->locator->getConnectionManager()->get());
+        $query = new Query(ConnectionManager::getInstance()->get());
 
         //force entity to be a stdClass
         $query->getEmitter()->addListener('before.select', function (QueryBuilderEvent $event) {
@@ -115,7 +116,7 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testAfterEvent()
     {
-        $query = new Query($this->locator, $this->locator->getConnectionManager()->get());
+        $query = new Query(ConnectionManager::getInstance()->get());
 
         //add additional value to result set
         $query->getEmitter()->addListener('after.select', function (QueryResultEvent $event, Query $builder) {
@@ -140,7 +141,7 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testAfterEventAndCancel()
     {
-        $query = new Query($this->locator, $this->locator->getConnectionManager()->get());
+        $query = new Query(ConnectionManager::getInstance()->get());
 
         //force entity to be a stdClass
         $query->getEmitter()->addListener('after.select', function (QueryResultEvent $event) {
@@ -159,7 +160,7 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testQueryTypeName()
     {
-        $query = new Query($this->locator, $this->locator->getConnectionManager()->get());
+        $query = new Query(ConnectionManager::getInstance()->get());
         $this->assertEquals('select', $query->select()->getTypeName());
     }
 
@@ -168,7 +169,7 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testMagicCallQueryBuilderMethods()
     {
-        $query = new Query($this->locator, $this->locator->getConnectionManager()->get());
+        $query = new Query(ConnectionManager::getInstance()->get());
         $this->assertEquals($query->__call('getType'), $query->getBuilder()->getType());
         $this->assertEquals($query->getType(), $query->getBuilder()->getType());
     }
@@ -178,7 +179,7 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testEntityInstance()
     {
-        $query = new Query($this->locator, $this->locator->getConnectionManager()->get(), new \stdClass());
+        $query = new Query(ConnectionManager::getInstance()->get(), new \stdClass());
         $this->assertInstanceOf(\stdClass::class, $query->getEntity());
     }
 
@@ -187,7 +188,7 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testBuilderInstance()
     {
-        $query = new Query($this->locator, $this->locator->getConnectionManager()->get());
+        $query = new Query(ConnectionManager::getInstance()->get());
         $this->assertInstanceOf(QueryBuilder::class, $query->getBuilder());
     }
 
@@ -197,9 +198,9 @@ class QueryTest extends AbstractDbTestCase
      */
     public function testCustomBuilderInstance()
     {
-        $connection = $this->locator->getConnectionManager()->get();
+        $connection = ConnectionManager::getInstance()->get();
         $builder = $connection->createQueryBuilder();
-        $query = new Query($this->locator, $connection);
+        $query = new Query($connection);
         $query->setBuilder($connection->createQueryBuilder());
         $this->assertEquals($builder, $query->getBuilder());
     }

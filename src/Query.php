@@ -13,6 +13,7 @@
 namespace Blast\Orm;
 
 use Blast\Orm\Entity\EntityAwareTrait;
+use Blast\Orm\Entity\Provider;
 use Blast\Orm\Hydrator\ArrayToObjectHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
@@ -74,10 +75,9 @@ use stdClass;
  *
  * @package Blast\Db\Orm
  */
-class Query implements EmitterAwareInterface, QueryInterface, LocatorAwareInterface
+class Query implements EmitterAwareInterface, QueryInterface
 {
 
-    use LocatorAwareTrait;
     use EmitterAwareTrait;
     use EntityAwareTrait;
 
@@ -93,13 +93,12 @@ class Query implements EmitterAwareInterface, QueryInterface, LocatorAwareInterf
 
     /**
      * Statement constructor.
-     * @param $locator
+     *
      * @param \Doctrine\DBAL\Connection $connection
      * @param array|stdClass|\ArrayObject|object|string $entity
      */
-    public function __construct(LocatorInterface $locator, $connection, $entity = null)
+    public function __construct($connection, $entity = null)
     {
-        $this->locator = $locator;
         $this->setConnection($connection);
         $this->setEntity($entity);
     }
@@ -114,7 +113,7 @@ class Query implements EmitterAwareInterface, QueryInterface, LocatorAwareInterf
     public function execute($option = HydratorInterface::HYDRATE_AUTO)
     {
         //execute before events and proceed with builder from event
-        $provider = $this->getLocator()->getProvider($this->getEntity());
+        $provider = new Provider($this->getEntity());
         $event = $this->beforeExecute($provider->getEntity());
 
         if ($event->isCanceled()) {
@@ -124,7 +123,7 @@ class Query implements EmitterAwareInterface, QueryInterface, LocatorAwareInterf
         $builder = $event->getBuilder();
 
         //convert entity to adapter again
-        $provider = $this->getLocator()->getProvider($builder->getEntity());
+        $provider = new Provider($builder->getEntity());
 
         $connection = $this->getConnection();
         $isSelect = $builder->getType() === QueryBuilder::SELECT;
@@ -170,7 +169,7 @@ class Query implements EmitterAwareInterface, QueryInterface, LocatorAwareInterf
         $event = $this->getEmitter()->emit(new QueryBuilderEvent('before.' . $this->getTypeName(), $builder));
 
         if ($entity instanceof EmitterAwareInterface) {
-            $event = $entity->getEmitter()->emit($event, $builder);
+            $event = $entity->getEmitter()->emit($event);
         }
 
         return $event;
