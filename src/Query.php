@@ -127,9 +127,7 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
         $isSelect = $builder->getType() === QueryBuilder::SELECT;
 
         $sql = $this->getSQL();
-        if (true) {
 
-        }
         $statement = $isSelect ?
             //execute query and receive a statement
             $connection->executeQuery($sql, $this->getParameters(), $this->getParameterTypes()) :
