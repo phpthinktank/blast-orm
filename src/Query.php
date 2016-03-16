@@ -12,13 +12,14 @@
 
 namespace Blast\Orm;
 
+use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
-use Blast\Orm\Entity\Provider;
+use Blast\Orm\Entity\ProviderFactoryInterface;
+use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\ArrayToObjectHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
-use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\EmitterAwareInterface;
 use League\Event\EmitterAwareTrait;
@@ -75,11 +76,13 @@ use stdClass;
  *
  * @package Blast\Db\Orm
  */
-class Query implements EmitterAwareInterface, QueryInterface, ConnectionAwareInterface
+class Query implements ConnectionAwareInterface, EmitterAwareInterface,
+    EntityAwareInterface, ProviderFactoryInterface, QueryInterface
 {
     use ConnectionAwareTrait;
     use EmitterAwareTrait;
     use EntityAwareTrait;
+    use ProviderFactoryTrait;
 
     /**
      * @var QueryBuilder
@@ -108,7 +111,7 @@ class Query implements EmitterAwareInterface, QueryInterface, ConnectionAwareInt
     public function execute($option = HydratorInterface::HYDRATE_AUTO)
     {
         //execute before events and proceed with builder from event
-        $provider = new Provider($this->getEntity());
+        $provider = $this->createProvider($this->getEntity());
         $event = $this->beforeExecute($provider->getEntity());
 
         if ($event->isCanceled()) {
@@ -118,7 +121,7 @@ class Query implements EmitterAwareInterface, QueryInterface, ConnectionAwareInt
         $builder = $event->getBuilder();
 
         //convert entity to adapter again
-        $provider = new Provider($builder->getEntity());
+        $provider = $this->createProvider($builder->getEntity());
 
         $connection = $this->getConnection();
         $isSelect = $builder->getType() === QueryBuilder::SELECT;

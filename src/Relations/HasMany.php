@@ -16,12 +16,16 @@ namespace Blast\Orm\Relations;
 use Blast\Orm\ConnectionAwareInterface;
 use Blast\Orm\ConnectionAwareTrait;
 use Blast\Orm\Entity\Provider;
+use Blast\Orm\Entity\ProviderFactoryInterface;
+use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
 
-class HasMany implements RelationInterface, ConnectionAwareInterface
+class HasMany implements ConnectionAwareInterface, ProviderFactoryInterface, RelationInterface
 {
+
     use ConnectionAwareTrait;
+    use ProviderFactoryTrait;
     use RelationTrait;
 
     /**
@@ -61,8 +65,8 @@ class HasMany implements RelationInterface, ConnectionAwareInterface
 
     protected function init()
     {
-        $provider = new Provider($this->getEntity());
-        $foreignProvider = new Provider($this->getForeignEntity());
+        $provider = $this->createProvider($this->getEntity());
+        $foreignProvider = $this->createProvider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
 
         $data = $provider->fromObjectToArray();

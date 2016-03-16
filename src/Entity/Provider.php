@@ -17,17 +17,18 @@ namespace Blast\Orm\Entity;
 use Blast\Orm\Hydrator\ArrayToObjectHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Hydrator\ObjectToArrayHydrator;
-use Blast\Orm\LocatorAwareTrait;
-use Blast\Orm\LocatorInterface;
 use Blast\Orm\Mapper;
+use Blast\Orm\MapperFactoryInterface;
+use Blast\Orm\MapperFactoryTrait;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Relations\RelationInterface;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
 
-class Provider implements ProviderInterface
+class Provider implements MapperFactoryInterface, ProviderInterface
 {
 
+    use MapperFactoryTrait;
     use EntityAwareTrait;
 
     /**
@@ -184,7 +185,7 @@ class Provider implements ProviderInterface
     public function getMapper()
     {
         if (!($this->mapper instanceof MapperInterface)){
-            $this->mapper = new Mapper($this);
+            $this->mapper = $this->createMapper($this);
         }
         return $this->mapper;
     }

@@ -17,12 +17,15 @@ namespace Blast\Orm\Relations;
 use Blast\Orm\ConnectionAwareInterface;
 use Blast\Orm\ConnectionAwareTrait;
 use Blast\Orm\Entity\Provider;
+use Blast\Orm\Entity\ProviderFactoryInterface;
+use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
 
-class ManyToMany implements RelationInterface, ConnectionAwareInterface
+class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, RelationInterface
 {
     use ConnectionAwareTrait;
+    use ProviderFactoryTrait;
     use RelationTrait;
     /**
      * @var object|string
@@ -97,8 +100,8 @@ class ManyToMany implements RelationInterface, ConnectionAwareInterface
 
     protected function init()
     {
-        $provider = new Provider($this->getEntity());
-        $foreignProvider = new Provider($this->getForeignEntity());
+        $provider = $this->createProvider($this->getEntity());
+        $foreignProvider = $this->createProvider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
         $junction = $this->getJunction();
         $junctionLocalKey = $this->getJunctionLocalKey();
@@ -137,7 +140,7 @@ class ManyToMany implements RelationInterface, ConnectionAwareInterface
 
         //get relations by through db object
         if (isset($data[$localKey])) {
-            $junctionProvider = is_string($junction) ? new Provider($junction) : $junction;
+            $junctionProvider = is_string($junction) ? $this->createProvider($junction) : $junction;
             $results = $junctionProvider->getMapper()
                 ->setConnection($this->getConnection())
                 ->select([$junctionForeignKey])

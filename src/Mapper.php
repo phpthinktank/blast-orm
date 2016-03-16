@@ -12,6 +12,8 @@ use ArrayObject;
 use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Entity\Provider;
+use Blast\Orm\Entity\ProviderFactoryInterface;
+use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Entity\ProviderInterface;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
@@ -29,11 +31,12 @@ use stdClass;
  *
  * @package Blast\Orm
  */
-class Mapper implements MapperInterface, EntityAwareInterface, ConnectionAwareInterface
+class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperInterface, ProviderFactoryInterface
 {
 
     use ConnectionAwareTrait;
     use EntityAwareTrait;
+    use ProviderFactoryTrait;
 
     /**
      * @var ProviderInterface
@@ -54,7 +57,7 @@ class Mapper implements MapperInterface, EntityAwareInterface, ConnectionAwareIn
             $this->provider = $entity;
         } else {
             $this->setEntity($entity);
-            $this->provider = new Provider($this->getEntity());
+            $this->provider = $this->createProvider($this->getEntity());
         }
     }
 
@@ -142,7 +145,7 @@ class Mapper implements MapperInterface, EntityAwareInterface, ConnectionAwareIn
      */
     public function save($entity)
     {
-        return (new Provider($entity))->isNew() ? $this->create($entity) : $this->update($entity);
+        return $this->createProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
     }
 
     /**
@@ -309,12 +312,12 @@ class Mapper implements MapperInterface, EntityAwareInterface, ConnectionAwareIn
     private function prepareProvider($entity)
     {
         if (is_array($entity)) {
-            $provider = new Provider($this->getEntity());
+            $provider = $this->createProvider($this->getEntity());
 
             //reset entity in provider
             $provider->setEntity($provider->fromArrayToObject($entity, HydratorInterface::HYDRATE_ENTITY));
         } else {
-            $provider = new Provider($entity);
+            $provider = $this->createProvider($entity);
         }
 
         return $provider;
