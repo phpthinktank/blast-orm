@@ -20,6 +20,7 @@ use Blast\Orm\Entity\ProviderFactoryInterface;
 use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
+use Doctrine\Common\Inflector\Inflector;
 
 class HasMany implements ConnectionAwareInterface, ProviderFactoryInterface, RelationInterface
 {
@@ -73,7 +74,7 @@ class HasMany implements ConnectionAwareInterface, ProviderFactoryInterface, Rel
 
         //find primary key
         if ($foreignKey === null) {
-            $foreignKey = $provider->getTableName() . '_' . $provider->getPrimaryKeyName();
+            $foreignKey = Inflector::singularize($provider->getTableName()) . '_' . $provider->getPrimaryKeyName();
         }
 
         $mapper = $foreignProvider->getMapper()->setConnection($this->getConnection());

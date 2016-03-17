@@ -20,6 +20,7 @@ use Blast\Orm\Entity\ProviderFactoryInterface;
 use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
+use Doctrine\Common\Inflector\Inflector;
 
 class BelongsTo implements ConnectionAwareInterface, RelationInterface, ProviderFactoryInterface
 {
@@ -69,7 +70,7 @@ class BelongsTo implements ConnectionAwareInterface, RelationInterface, Provider
         $localKey = $this->getLocalKey();
 
         if ($localKey === null) {
-            $localKey = $foreignProvider->getTableName() . '_' . $foreignProvider->getPrimaryKeyName();
+            $localKey = Inflector::singularize($foreignProvider->getTableName()) . '_' . $foreignProvider->getPrimaryKeyName();
         }
 
         $data = $provider->fetchData();

@@ -36,6 +36,7 @@ trait ConnectionAwareTrait
 
     /**
      * @param \Doctrine\DBAL\Driver\Connection|null $connection
+     *
      * @return $this
      */
     public function setConnection($connection)

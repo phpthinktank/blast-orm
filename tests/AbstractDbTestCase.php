@@ -29,7 +29,7 @@ abstract class AbstractDbTestCase extends \PHPUnit_Framework_TestCase
 
         $connection->exec('CREATE TABLE post (id int, user_pk int, title VARCHAR(255), content TEXT)');
         $connection->exec('CREATE TABLE users (pk int, name VARCHAR(255))');
-        $connection->exec('CREATE TABLE address (id int, user_pk int, address TEXT)');
+        $connection->exec('CREATE TABLE addresses (id int, user_pk int, address TEXT)');
         $connection->exec('CREATE TABLE user_role (user_pk int, role_id int)');
         $connection->exec('CREATE TABLE roles (id int, name VARCHAR(255))');
         $connection->insert('post', [
@@ -52,7 +52,7 @@ abstract class AbstractDbTestCase extends \PHPUnit_Framework_TestCase
             'user_pk' => 1,
             'role_id' => 1
         ]);
-        $connection->insert('address', [
+        $connection->insert('addresses', [
             'id' => 1,
             'user_pk' => 1,
             'address' => 'street 42, 11111 city'
@@ -70,7 +70,7 @@ abstract class AbstractDbTestCase extends \PHPUnit_Framework_TestCase
 
         $connection->exec('DROP TABLE post');
         $connection->exec('DROP TABLE users');
-        $connection->exec('DROP TABLE address');
+        $connection->exec('DROP TABLE addresses');
         $connection->exec('DROP TABLE user_role');
         $connection->exec('DROP TABLE roles');
 

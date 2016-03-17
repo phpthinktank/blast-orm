@@ -124,12 +124,12 @@ class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, 
 
         //determine through local key
         if ($junctionLocalKey === null) {
-            $junctionLocalKey = $provider->getTableName() . '_' . $localKey;
+            $junctionLocalKey = Inflector::singularize($provider->getTableName()) . '_' . $localKey;
         }
 
         //determine through foreign key
         if ($junctionForeignKey === null) {
-            $junctionForeignKey = $foreignProvider->getTableName() . '_' . $foreignKey;
+            $junctionForeignKey = Inflector::singularize($foreignProvider->getTableName()) . '_' . $foreignKey;
         }
 
         $query = new Query($provider->getMapper()->getConnection());
@@ -142,8 +142,9 @@ class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, 
         //get relations by through db object
         if (isset($data[$localKey])) {
             $junctionProvider = is_string($junction) ? $this->createProvider($junction) : $junction;
-            $results = $junctionProvider->getMapper()
-                ->setConnection($this->getConnection())
+            $junctionMapper = $junctionProvider->getMapper();
+            $junctionMapper->setConnection($this->getConnection());
+            $results = $junctionMapper
                 ->select([$junctionForeignKey])
                 ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
                 ->execute(HydratorInterface::HYDRATE_RAW);

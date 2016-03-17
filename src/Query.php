@@ -33,7 +33,7 @@ use stdClass;
  * @method int getState()
  * @method string getSQL()
  * @method Query setParameter($key, $value, $type = null)
- * @method Query setParameters(array $params, array $types = array())
+ * @method Query setParameters(array $params, array $types = [])
  * @method array getParameters()
  * @method mixed getParameter($key)
  * @method array getParameterTypes()
@@ -172,30 +172,6 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
     }
 
     /**
-     * Get query type name
-     * @return string
-     * @throws \Exception
-     */
-    public function getTypeName()
-    {
-        switch ($this->getType()) {
-            case QueryBuilder::SELECT:
-                return 'select';
-            case QueryBuilder::INSERT:
-                return 'insert';
-            case QueryBuilder::UPDATE:
-                return 'update';
-            case QueryBuilder::DELETE:
-                return 'delete';
-            // @codeCoverageIgnoreStart
-            default:
-                //this could only happen if query will be extended and a custom getType is return invalid type
-                throw new \Exception('Unknown query type ' . $this->getType());
-        }
-        // @codeCoverageIgnoreEnd
-    }
-
-    /**
      * Emit events after query handling and if entity is able to emit events execute entity events
      *
      * @param mixed $result Raw result
@@ -249,6 +225,7 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
     public function __call($name, array $arguments = [])
     {
         $result = call_user_func_array([$this->getBuilder(), $name], $arguments);
+
         return $result instanceof QueryBuilder ? $this : $result;
     }
 
@@ -260,6 +237,7 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
         if (null === $this->builder) {
             $this->builder = $this->getConnection()->createQueryBuilder();
         }
+
         return $this->builder;
     }
 
@@ -273,6 +251,30 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
         $this->builder = $builder;
 
         return $this;
+    }
+
+    /**
+     * Get query type name
+     * @return string
+     * @throws \Exception
+     */
+    public function getTypeName()
+    {
+        switch ($this->getType()) {
+            case QueryBuilder::SELECT:
+                return 'select';
+            case QueryBuilder::INSERT:
+                return 'insert';
+            case QueryBuilder::UPDATE:
+                return 'update';
+            case QueryBuilder::DELETE:
+                return 'delete';
+            // @codeCoverageIgnoreStart
+            default:
+                //this could only happen if query will be extended and a custom getType is return invalid type
+                throw new \Exception('Unknown query type ' . $this->getType());
+        }
+        // @codeCoverageIgnoreEnd
     }
 
 }
