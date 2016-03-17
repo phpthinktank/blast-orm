@@ -61,6 +61,13 @@ The following versions of PHP are supported by this version.
 
 An example can be found in this [blog post](http://bit.ly/php-orm).
 
+## Features
+
+ - Entities as POPO (Plain-old PHP objects)
+ - Auto-Suggesting entity definition and custom definition
+ - Hydration from data to entity and vice versa
+ - Entity aware query builder
+
 ## Concept
 
 ### Entities
@@ -74,7 +81,7 @@ Entity classes could also be instances of [`stdClass`](http://php.net/manual/en/
  
 ### Provider
  
-The provider is preparing and computing definitions of a single entity. The provider is a link between independent 
+The provider suggests and provides entity definitions and two-way-hydration and entity itself. The provider is a link between independent 
 entity and mapper or query.
  
 ### Mappers
