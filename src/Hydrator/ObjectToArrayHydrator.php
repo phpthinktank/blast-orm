@@ -14,6 +14,7 @@ namespace Blast\Orm\Hydrator;
 
 use Adamlc\LetterCase\LetterCase;
 use Blast\Orm\Entity\ProviderInterface;
+use Doctrine\Common\Inflector\Inflector;
 
 class ObjectToArrayHydrator implements HydratorInterface
 {
@@ -77,7 +78,7 @@ class ObjectToArrayHydrator implements HydratorInterface
                 continue;
             }
 
-            $fieldName = (new LetterCase())->snake(substr($method->getName(), 3));
+            $fieldName = Inflector::tableize(substr($method->getName(), 3));
             $value = $method->invoke($entity);
 
             if (isset($data[$fieldName]) && null === $value) {

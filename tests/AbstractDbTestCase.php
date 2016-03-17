@@ -28,10 +28,10 @@ abstract class AbstractDbTestCase extends \PHPUnit_Framework_TestCase
         ])->get();
 
         $connection->exec('CREATE TABLE post (id int, user_pk int, title VARCHAR(255), content TEXT)');
-        $connection->exec('CREATE TABLE user (pk int, name VARCHAR(255))');
+        $connection->exec('CREATE TABLE users (pk int, name VARCHAR(255))');
         $connection->exec('CREATE TABLE address (id int, user_pk int, address TEXT)');
         $connection->exec('CREATE TABLE user_role (user_pk int, role_id int)');
-        $connection->exec('CREATE TABLE role (id int, name VARCHAR(255))');
+        $connection->exec('CREATE TABLE roles (id int, name VARCHAR(255))');
         $connection->insert('post', [
             'id' => 1,
             'user_pk' => 1,
@@ -44,7 +44,7 @@ abstract class AbstractDbTestCase extends \PHPUnit_Framework_TestCase
             'title' => 'Next thing',
             'content' => 'More text to read'
         ]);
-        $connection->insert('user', [
+        $connection->insert('users', [
             'pk' => 1,
             'name' => 'Franz'
         ]);
@@ -57,7 +57,7 @@ abstract class AbstractDbTestCase extends \PHPUnit_Framework_TestCase
             'user_pk' => 1,
             'address' => 'street 42, 11111 city'
         ]);
-        $connection->insert('role', [
+        $connection->insert('roles', [
             'id' => 1,
             'name' => 'Admin'
         ]);
@@ -69,10 +69,10 @@ abstract class AbstractDbTestCase extends \PHPUnit_Framework_TestCase
         $connection = $manager->get(ConnectionManagerInterface::DEFAULT_CONNECTION);
 
         $connection->exec('DROP TABLE post');
-        $connection->exec('DROP TABLE user');
+        $connection->exec('DROP TABLE users');
         $connection->exec('DROP TABLE address');
         $connection->exec('DROP TABLE user_role');
-        $connection->exec('DROP TABLE role');
+        $connection->exec('DROP TABLE roles');
 
         $manager->closeAll();
     }

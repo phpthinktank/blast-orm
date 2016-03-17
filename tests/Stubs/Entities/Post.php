@@ -29,7 +29,7 @@ class Post extends \ArrayObject
      *
      * @return string
      */
-    public static function table()
+    public static function tablename()
     {
         return 'post';
     }

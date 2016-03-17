@@ -25,41 +25,17 @@ use Blast\Orm\Relations\RelationInterface;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
 
-class Provider implements MapperFactoryInterface, ProviderInterface
+class Provider implements ProviderInterface
 {
 
-    use MapperFactoryTrait;
     use EntityAwareTrait;
 
     /**
-     * @var Column[]
+     * Entity definition
+     *
+     * @var DefinitionInterface
      */
-    private $fields = [];
-
-    /**
-     * @var Index[]
-     */
-    private $indexes = [];
-
-    /**
-     * @var string|MapperInterface
-     */
-    private $mapper = MapperInterface::class;
-
-    /**
-     * @var string
-     */
-    private $primaryKeyName = self::DEFAULT_PRIMARY_KEY_NAME;
-
-    /**
-     * @var string
-     */
-    private $tableName = null;
-
-    /**
-     * @var RelationInterface[]
-     */
-    private $relations = [];
+    private $definition;
 
     /**
      * Provider constructor.
@@ -68,99 +44,19 @@ class Provider implements MapperFactoryInterface, ProviderInterface
      */
     public function __construct($tableName)
     {
-        $this->init($tableName);
-        $this->define(is_array($tableName) ? $tableName : []);
+        $transformer = new Transformer();
+        $transformer->transform($tableName);
+
+        $this->entity = $transformer->getEntity();
+        $this->definition = $transformer->getDefinition();
     }
 
     /**
-     * Initialize provider
-     *
-     * @param $tableName
-     *
-     * @return $this
+     * @return DefinitionInterface
      */
-    protected function init($tableName)
+    public function getDefinition()
     {
-
-        if (is_object($tableName)) {
-            $this->entity = $tableName;
-            return $this;
-        }
-
-        if (is_string($tableName)) {
-            if (class_exists($tableName)) {
-                $this->entity = new $tableName;
-            } else {
-                $this->entity = new \ArrayObject();
-                $this->tableName = $tableName;
-            }
-
-            return $this;
-        }
-
-        $this->entity = new \ArrayObject();
-        $this->tableName = $tableName;
-
-        return $this;
-    }
-
-    /**
-     * @param array $definition
-     * @return $this
-     */
-    protected function define(array $definition = [])
-    {
-        $entity = $this->getEntity();
-        $reflection = new \ReflectionObject($entity);
-
-        //mapper is needed to for events, therefore we need to fetch mapper first
-        $this->findMapper($definition, $reflection, $entity);
-
-        $defaultDefinition = get_object_vars($this);
-        $definition = array_merge($defaultDefinition, $definition);
-
-
-        foreach ($definition as $key => $value) {
-            if ('mapper' === $key) {
-                continue;
-            }
-            if ($reflection->hasMethod($key)) {
-                $method = $reflection->getMethod($key);
-                if ($method->isPublic() && $method->isStatic()) {
-                    $value = $method->invokeArgs($entity, [$entity, $this->getMapper()]);
-                }
-            } else {
-                $value = is_callable($value) ?
-                    call_user_func_array($value, [$entity, $this->getMapper()]) :
-                    $value;
-            }
-            $this->{$key} = $value;
-        }
-
-        if (null === $this->tableName && $reflection->getName() !== \ArrayObject::class) {
-            $this->tableName = ltrim(strtolower(preg_replace('/[A-Z]/', '_$0', $reflection->getShortName())), '_');
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param array $definition
-     * @param $reflection
-     * @param $entity
-     * @return array
-     */
-    protected function findMapper(array $definition, \ReflectionClass $reflection, $entity)
-    {
-
-        if (isset($definition['mapper'])) {
-            $this->mapper = $definition['mapper'];
-        }elseif ($reflection->hasMethod('mapper')) {
-            $this->mapper = $reflection->getMethod('mapper')->invokeArgs($entity, [$entity]);
-        }
-
-        return $this;
-
+        return $this->definition;
     }
 
     /**
@@ -168,7 +64,7 @@ class Provider implements MapperFactoryInterface, ProviderInterface
      */
     public function getFields()
     {
-        return $this->fields;
+        return $this->getDefinition()->getFields();
     }
 
     /**
@@ -176,7 +72,7 @@ class Provider implements MapperFactoryInterface, ProviderInterface
      */
     public function getIndexes()
     {
-        return $this->indexes;
+        return $this->getDefinition()->getIndexes();
     }
 
     /**
@@ -184,10 +80,7 @@ class Provider implements MapperFactoryInterface, ProviderInterface
      */
     public function getMapper()
     {
-        if (!($this->mapper instanceof MapperInterface)){
-            $this->mapper = $this->createMapper($this);
-        }
-        return $this->mapper;
+        return $this->getDefinition()->getMapper();
     }
 
     /**
@@ -195,7 +88,7 @@ class Provider implements MapperFactoryInterface, ProviderInterface
      */
     public function getRelations()
     {
-        return $this->relations;
+        return $this->getDefinition()->getRelations();
     }
 
     /**
@@ -203,22 +96,38 @@ class Provider implements MapperFactoryInterface, ProviderInterface
      */
     public function getTableName()
     {
-        if (null === $this->tableName) {
-            throw new \LogicException('Unable to get table name from entity');
-        }
-        return $this->tableName;
+        return $this->getDefinition()->getTableName();
     }
 
     /**
-     * Convert array to object properties or object setter
+     * @return string
+     */
+    public function getPrimaryKeyName()
+    {
+        return $this->getDefinition()->getPrimaryKeyName();
+    }
+
+    /**
+     * Convert data array to entity with data
      *
      * @param array $data
      * @param string $option
-     * @return mixed
+     * @return object
      */
-    public function fromArrayToObject(array $data = [], $option = HydratorInterface::HYDRATE_AUTO)
+    public function withData(array $data = [], $option = HydratorInterface::HYDRATE_AUTO)
     {
         return (new ArrayToObjectHydrator($this))->hydrate($data, $option);
+    }
+
+    /**
+     * Convert object properties or object getter to data array
+     *
+     * @param array $additionalData
+     * @return object
+     */
+    public function fetchData(array $additionalData = [])
+    {
+        return (new ObjectToArrayHydrator($this))->hydrate($additionalData);
     }
 
     /**
@@ -228,26 +137,7 @@ class Provider implements MapperFactoryInterface, ProviderInterface
      */
     public function isNew()
     {
-        $data = $this->fromObjectToArray();
+        $data = $this->fetchData();
         return isset($data[$this->getPrimaryKeyName()]) ? empty($data[$this->getPrimaryKeyName()]) : true;
-    }
-
-    /**
-     * Convert object properties or object getter to array
-     *
-     * @param array $additionalData
-     * @return mixed
-     */
-    public function fromObjectToArray(array $additionalData = [])
-    {
-        return (new ObjectToArrayHydrator($this))->hydrate($additionalData);
-    }
-
-    /**
-     * @return string
-     */
-    public function getPrimaryKeyName()
-    {
-        return $this->primaryKeyName;
     }
 }

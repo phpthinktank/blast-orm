@@ -57,7 +57,6 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
             $this->provider = $entity;
         } else {
             $this->setEntity($entity);
-            $this->provider = $this->createProvider($this->getEntity());
         }
     }
 
@@ -107,6 +106,9 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
      */
     public function getProvider()
     {
+        if(null === $this->provider){
+            $this->provider = $this->createProvider($this->getEntity());
+        }
         return $this->provider;
     }
 
@@ -169,7 +171,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         $query->insert($provider->getTableName());
 
         //pass data without relations
-        $data = $provider->fromObjectToArray();
+        $data = $provider->fetchData();
 
         //cancel if $data has no entries
         if (count($data) < 1) {
@@ -209,7 +211,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         $query->update($provider->getTableName());
 
         //pass data without relations
-        $data = $provider->fromObjectToArray();
+        $data = $provider->fetchData();
 
         foreach ($data as $key => $value) {
             if ($value instanceof RelationInterface) {
@@ -315,7 +317,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
             $provider = $this->createProvider($this->getEntity());
 
             //reset entity in provider
-            $provider->setEntity($provider->fromArrayToObject($entity, HydratorInterface::HYDRATE_ENTITY));
+            $provider->setEntity($provider->withData($entity, HydratorInterface::HYDRATE_ENTITY));
         } else {
             $provider = $this->createProvider($entity);
         }

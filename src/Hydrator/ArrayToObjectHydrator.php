@@ -14,6 +14,7 @@ namespace Blast\Orm\Hydrator;
 
 use Adamlc\LetterCase\LetterCase;
 use Blast\Orm\Entity\ProviderInterface;
+use Doctrine\Common\Inflector\Inflector;
 use Doctrine\DBAL\Driver\Statement;
 
 class ArrayToObjectHydrator implements HydratorInterface
@@ -147,7 +148,7 @@ class ArrayToObjectHydrator implements HydratorInterface
                 continue;
             }
 
-            $fieldName = (new LetterCase())->snake(str_replace('set', '', $method->getName()));
+            $fieldName = Inflector::tableize(str_replace('set', '', $method->getName()));
 
             if (isset($data[$fieldName])) {
                 $method->invokeArgs($entity, [$data[$fieldName]]);

@@ -19,8 +19,8 @@
   ],
   "require": {
     "php": ">=5.5.0",
-    "adamlc/lettercase": "~0.1",
     "doctrine/dbal": "~2.5.1",
+    "doctrine/inflector": "~1.1.0",
     "league/event": "~2.0"
   },
   "require-dev": {

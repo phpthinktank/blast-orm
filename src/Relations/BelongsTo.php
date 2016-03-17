@@ -72,7 +72,7 @@ class BelongsTo implements ConnectionAwareInterface, RelationInterface, Provider
             $localKey = $foreignProvider->getTableName() . '_' . $foreignProvider->getPrimaryKeyName();
         }
 
-        $data = $provider->fromObjectToArray();
+        $data = $provider->fetchData();
 
         //find primary key
         $primaryKey = $data[$localKey];

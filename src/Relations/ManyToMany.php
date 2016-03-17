@@ -21,6 +21,7 @@ use Blast\Orm\Entity\ProviderFactoryInterface;
 use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
+use Doctrine\Common\Util\Inflector;
 
 class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, RelationInterface
 {
@@ -107,7 +108,7 @@ class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, 
         $junctionLocalKey = $this->getJunctionLocalKey();
         $junctionForeignKey = $this->getJunctionForeignKey();
 
-        $data = $provider->fromObjectToArray();
+        $data = $provider->fetchData();
 
         $localKey = $provider->getPrimaryKeyName();
 
@@ -118,7 +119,7 @@ class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, 
 
         //determine through
         if (!is_string($junction) || $junction === null) {
-            $junction = $provider->getTableName() . '_' . $foreignProvider->getTableName();
+            $junction = Inflector::singularize($provider->getTableName()) . '_' . Inflector::singularize($foreignProvider->getTableName());
         }
 
         //determine through local key
