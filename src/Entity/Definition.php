@@ -52,16 +52,21 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
     }
 
     /**
+     * Add additional configuration. Configuration will be merged into
+     *
      * @param array $configuration
      * @return Definition
      */
     public function setConfiguration(array $configuration)
     {
-        $this->configuration = array_merge($this->configuration, $configuration);
+        $this->mergeConfiguration($configuration);
+
         return $this;
     }
 
     /**
+     * Get the entity object.
+     *
      * @return \ArrayObject|object
      */
     public function getEntity()
@@ -74,6 +79,8 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
     }
 
     /**
+     * Get the custom entity collection
+     *
      * @return \SplStack|object
      */
     public function getEntityCollection()
@@ -86,21 +93,22 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
     }
 
     /**
-     * Loads event emitter. If entity has events and no emitter exists, a new emitter
+     * Load event emitter. If entity has events and
+     * no emitter exists, create a new emitter.
      *
      * @return \ArrayObject|object
      */
     public function getEmitter()
     {
-        if(null === $this->emitter){
+        if (null === $this->emitter) {
             if (!empty($this->configuration['events'])) {
                 $entity = $this->getEntity();
-                if($entity instanceof EmitterAwareInterface){
+                if ($entity instanceof EmitterAwareInterface) {
                     $emitter = $this->createEventEmitter($this->configuration['events'], $entity->getEmitter());
-                }else{
+                } else {
                     $emitter = $this->createEventEmitter($this->configuration['events']);
                 }
-            }else{
+            } else {
                 $emitter = $this->createEventEmitter();
             }
 
@@ -110,6 +118,8 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
     }
 
     /**
+     * Get fields
+     *
      * @return \Doctrine\DBAL\Schema\Column[]
      */
     public function getFields()
@@ -118,6 +128,8 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
     }
 
     /**
+     * Get indexes
+     *
      * @return \Doctrine\DBAL\Schema\Index[]
      */
     public function getIndexes()
@@ -126,7 +138,7 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
     }
 
     /**
-     * Name of primary key
+     * Get name of primary key
      *
      * @return string
      */
@@ -136,7 +148,7 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
     }
 
     /**
-     * Table name
+     * Get table name
      *
      * @return string
      */
@@ -152,17 +164,58 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
      */
     public function getMapper()
     {
-        if(!($this->configuration['mapper'] instanceof MapperInterface)){
+        if (!($this->configuration['mapper'] instanceof MapperInterface)) {
             $this->configuration['mapper'] = $this->createMapper($this->getEntity());
         }
         return $this->configuration['mapper'];
     }
 
     /**
+     * Get an array of relations
+     *
      * @return RelationInterface[]
      */
     public function getRelations()
     {
         return $this->configuration['relations'];
+    }
+
+    /**
+     * Merge partial configuration into definition configuration. Normalize partial
+     * configuration keys before add them to configuration. Add custom configuration
+     * after adding known configuration.
+     *
+     * @param array $configuration
+     *
+     * @return $this
+     */
+    private function mergeConfiguration(array $configuration)
+    {
+        $originalConfiguration = $configuration;
+
+        // normalize keys to lower case
+        foreach ($configuration as $key => $value) {
+            $configuration[strtolower($key)] = $value;
+        }
+
+        // add definition configuration by it's real key
+        $configKeys = array_keys($this->configuration);
+        foreach ($configKeys as $key) {
+            $normalizedKey = strtolower($key);
+            if (isset($configuration[$normalizedKey])) {
+                $this->configuration[$key] = $configuration[$normalizedKey];
+                unset($configuration[$normalizedKey]);
+            }
+        }
+
+        // add custom configuration by it's original key
+        foreach ($originalConfiguration as $key => $value) {
+            $normalizedKey = strtolower($key);
+            if (isset($configuration[$normalizedKey])) {
+                $this->configuration[$key] = $originalConfiguration[$key];
+            }
+        }
+
+        return $this;
     }
 }
