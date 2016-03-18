@@ -36,7 +36,8 @@ class PostWithUserRelation extends \ArrayObject
 
     public static function relations(PostWithUserRelation $entity, Mapper $mapper){
         return [
-            $mapper->belongsTo($entity, User::class)
+            $mapper->belongsTo($entity, User::class),
+            'user_relation' => $mapper->belongsTo($entity, User::class),
         ];
     }
 }
