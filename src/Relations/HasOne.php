@@ -26,10 +26,14 @@ class HasOne extends HasMany
         return $this->getQuery()->execute(HydratorInterface::HYDRATE_ENTITY);
     }
 
-    protected function init()
+    /**
+     * Get relation query
+     *
+     * @return \Blast\Orm\Query
+     */
+    public function getQuery()
     {
-        parent::init()->query->setMaxResults(1);
-        return $this;
+        return parent::getQuery()->setMaxResults(1);
     }
 
 }

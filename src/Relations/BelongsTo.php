@@ -63,8 +63,16 @@ class BelongsTo implements ConnectionAwareInterface, RelationInterface, Provider
         return $this->getQuery()->execute(HydratorInterface::HYDRATE_AUTO);
     }
 
-    protected function init()
+    /**
+     * Get relation query
+     *
+     * @return \Blast\Orm\Query
+     */
+    public function getQuery()
     {
+        if(null !== $this->query){
+            return $this->query;
+        }
         $provider = $this->createProvider($this->getEntity());
         $foreignProvider = $this->createProvider($this->getForeignEntity());
         $localKey = $this->getLocalKey();
@@ -82,9 +90,8 @@ class BelongsTo implements ConnectionAwareInterface, RelationInterface, Provider
 
         //if no primary key is available, return a select
         $this->query = $primaryKey === null ? $mapper->select() : $mapper->find($primaryKey);
-        $this->name = $foreignProvider->getTableName();
 
-        return $this;
+        return $this->query;
     }
 
     /**

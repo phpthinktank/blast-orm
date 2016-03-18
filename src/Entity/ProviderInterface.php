@@ -15,10 +15,11 @@ namespace Blast\Orm\Entity;
 
 
 use Blast\Orm\MapperAwareInterface;
+use Blast\Orm\Relations\RelationsAwareInterface;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
 
-interface ProviderInterface extends MapperAwareInterface, EntityAwareInterface
+interface ProviderInterface extends MapperAwareInterface, EntityAwareInterface, RelationsAwareInterface
 {
 
     const DEFAULT_PRIMARY_KEY_NAME = 'id';

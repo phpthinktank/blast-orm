@@ -112,7 +112,7 @@ class Provider implements ProviderInterface
      *
      * @param array $data
      * @param string $option
-     * @return object
+     * @return object|\ArrayObject
      */
     public function withData(array $data = [], $option = HydratorInterface::HYDRATE_AUTO)
     {

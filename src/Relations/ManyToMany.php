@@ -16,7 +16,6 @@ namespace Blast\Orm\Relations;
 
 use Blast\Orm\ConnectionAwareInterface;
 use Blast\Orm\ConnectionAwareTrait;
-use Blast\Orm\Entity\Provider;
 use Blast\Orm\Entity\ProviderFactoryInterface;
 use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
@@ -99,8 +98,16 @@ class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, 
         return $this->getQuery()->execute(HydratorInterface::HYDRATE_COLLECTION);
     }
 
-    protected function init()
+    /**
+     * Get relation query
+     *
+     * @return \Blast\Orm\Query
+     */
+    public function getQuery()
     {
+        if (null !== $this->query) {
+            return $this->query;
+        }
         $provider = $this->createProvider($this->getEntity());
         $foreignProvider = $this->createProvider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
@@ -156,9 +163,8 @@ class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, 
         }
 
         $this->query = $foreignQuery;
-        $this->name = $foreignProvider->getTableName();
 
-        return $this;
+        return $this->query;
     }
 
     /**

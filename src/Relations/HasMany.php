@@ -64,8 +64,16 @@ class HasMany implements ConnectionAwareInterface, ProviderFactoryInterface, Rel
         return $this->getQuery()->execute(HydratorInterface::HYDRATE_COLLECTION);
     }
 
-    protected function init()
+    /**
+     * Get relation query
+     *
+     * @return \Blast\Orm\Query
+     */
+    public function getQuery()
     {
+        if(null !== $this->query){
+            return $this->query;
+        }
         $provider = $this->createProvider($this->getEntity());
         $foreignProvider = $this->createProvider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
@@ -87,9 +95,8 @@ class HasMany implements ConnectionAwareInterface, ProviderFactoryInterface, Rel
             $query->where((new Query($this->getConnection()))->expr()->eq($foreignKey, $foreignKeyValue));
         }
         $this->query = $query;
-        $this->name = $foreignProvider->getTableName();
 
-        return $this;
+        return $this->query;
     }
 
     /**

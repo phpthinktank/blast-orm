@@ -14,6 +14,7 @@
 namespace Blast\Orm\Relations;
 
 
+use Blast\Orm\Entity\ProviderFactoryInterface;
 use Blast\Orm\Query;
 
 trait RelationTrait
@@ -34,29 +35,31 @@ trait RelationTrait
      *
      * @return Query
      */
-    public function getQuery()
-    {
-        return $this->init()->query;
-    }
+    abstract public function getQuery();
 
     /**
-     * Placeholder init function
+     * Get local entity
      *
-     * @codeCoverageIgnore
+     * @return mixed
      */
-    protected function init()
-    {
-        return $this;
-    }
+    abstract protected function getEntity();
+
+    /**
+     * Get foreign entity
+     *
+     * @return mixed
+     */
+    abstract protected function getForeignEntity();
 
     /**
      * @return string
      */
     public function getName()
     {
-        ;
-
-        return $this->init()->name;
+        if($this instanceof ProviderFactoryInterface){
+            $this->name = $this->createProvider($this->getForeignEntity())->getTableName();
+        }
+        return $this->name;
     }
 
 }
