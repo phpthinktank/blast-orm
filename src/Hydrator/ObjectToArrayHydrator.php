@@ -19,7 +19,7 @@ use Doctrine\Common\Inflector\Inflector;
 class ObjectToArrayHydrator implements HydratorInterface
 {
     /**
-     * @var
+     * @var \Blast\Orm\Entity\ProviderInterface
      */
     private $provider;
 
