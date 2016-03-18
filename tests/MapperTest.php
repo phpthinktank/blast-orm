@@ -134,4 +134,20 @@ class MapperTest extends AbstractDbTestCase
 
         $this->assertInstanceOf(User::class, $user);
     }
+
+    public function testObjectWithRelation(){
+        $mapper = new Mapper(PostWithUserRelation::class);
+        $result = $mapper->find(1)->execute();
+
+        $provider = new Provider($result);
+        $relations = [];
+
+        foreach($provider->getRelations() as $relation){
+            $relations[$relation->getName()] = $relation->execute();
+        }
+
+        $history = $mapper->getTransactionHistory()->toArray();
+
+        $this->assertEquals($result, 1);
+    }
 }
