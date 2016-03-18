@@ -22,12 +22,8 @@ use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
 use Doctrine\Common\Inflector\Inflector;
 
-class HasMany implements ConnectionAwareInterface, ProviderFactoryInterface, RelationInterface
+class HasMany extends AbstractRelation
 {
-
-    use ConnectionAwareTrait;
-    use ProviderFactoryTrait;
-    use RelationTrait;
 
     /**
      * @var
@@ -77,7 +73,7 @@ class HasMany implements ConnectionAwareInterface, ProviderFactoryInterface, Rel
             $foreignKey = Inflector::singularize($provider->getTableName()) . '_' . $provider->getPrimaryKeyName();
         }
 
-        $mapper = $foreignProvider->getMapper()->setConnection($this->getConnection());
+        $mapper = $foreignProvider->getMapper()->setConnection($this->getConnection())->setTransactionHistory($this->getTransactionHistory());
 
         $foreignKeyValue = isset($data[$provider->getPrimaryKeyName()]) ? $data[$provider->getPrimaryKeyName()] : false;
 

@@ -44,18 +44,13 @@ trait RelationTrait
      *
      * @codeCoverageIgnore
      */
-    protected function init()
-    {
-        return $this;
-    }
+    abstract protected function init();
 
     /**
      * @return string
      */
     public function getName()
     {
-        ;
-
         return $this->init()->name;
     }
 

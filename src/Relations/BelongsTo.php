@@ -14,19 +14,12 @@
 namespace Blast\Orm\Relations;
 
 
-use Blast\Orm\ConnectionAwareInterface;
-use Blast\Orm\ConnectionAwareTrait;
-use Blast\Orm\Entity\ProviderFactoryInterface;
-use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
 use Doctrine\Common\Inflector\Inflector;
 
-class BelongsTo implements ConnectionAwareInterface, RelationInterface, ProviderFactoryInterface
+class BelongsTo extends AbstractRelation
 {
-    use ConnectionAwareTrait;
-    use ProviderFactoryTrait;
-    use RelationTrait;
 
     /**
      * @var
@@ -78,7 +71,7 @@ class BelongsTo implements ConnectionAwareInterface, RelationInterface, Provider
         //find primary key
         $primaryKey = $data[$localKey];
 
-        $mapper = $foreignProvider->getMapper()->setConnection($this->getConnection());
+        $mapper = $foreignProvider->getMapper()->setConnection($this->getConnection())->setTransactionHistory($this->getTransactionHistory());
 
         //if no primary key is available, return a select
         $this->query = $primaryKey === null ? $mapper->select() : $mapper->find($primaryKey);

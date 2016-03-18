@@ -77,17 +77,24 @@ use stdClass;
  * @package Blast\Db\Orm
  */
 class Query implements ConnectionAwareInterface, EmitterAwareInterface,
-    EntityAwareInterface, ProviderFactoryInterface, QueryInterface
+    EntityAwareInterface, ProviderFactoryInterface, QueryInterface,
+    TransactionHistoryAwareInterface
 {
     use ConnectionAwareTrait;
     use EmitterAwareTrait;
     use EntityAwareTrait;
     use ProviderFactoryTrait;
+    use TransactionHistoryAwareTrait;
 
     /**
      * @var QueryBuilder
      */
     private $builder;
+
+    /**
+     * @var string
+     */
+    private $entityPrimaryKey;
 
     /**
      * Statement constructor.
@@ -128,6 +135,10 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
 
         $sql = $this->getSQL();
 
+        if(true){
+
+        }
+
         $statement = $isSelect ?
             //execute query and receive a statement
             $connection->executeQuery($sql, $this->getParameters(), $this->getParameterTypes()) :
@@ -148,6 +159,7 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
 
         $result = $event->getResult();
         $data = (new ArrayToObjectHydrator($provider))->hydrate($result, $option);
+        $this->getTransactionHistory()->store($this->getEntityPrimaryKey(), $provider->getEntity(), $this->getType(), TransactionHistoryInterface::COMPLETE, $data);
         gc_collect_cycles();
 
         return $data;
@@ -167,6 +179,8 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
         if ($entity instanceof EmitterAwareInterface) {
             $event = $entity->getEmitter()->emit($event);
         }
+
+        $this->getTransactionHistory()->store($this->getEntityPrimaryKey(), $entity, $this->getType(), TransactionHistoryInterface::PROCESS);
 
         return $event;
     }
@@ -275,6 +289,27 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
                 throw new \Exception('Unknown query type ' . $this->getType());
         }
         // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @return string
+     */
+    public function getEntityPrimaryKey()
+    {
+        if(null === $this->entityPrimaryKey){
+            $this->entityPrimaryKey = $this->getTransactionHistory()->uniqueId();
+        }
+        return $this->entityPrimaryKey;
+    }
+
+    /**
+     * @param string $entityPrimaryKey
+     * @return Query
+     */
+    public function setEntityPrimaryKey($entityPrimaryKey)
+    {
+        $this->entityPrimaryKey = $entityPrimaryKey;
+        return $this;
     }
 
 }

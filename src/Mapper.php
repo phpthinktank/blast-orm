@@ -22,6 +22,7 @@ use Blast\Orm\Relations\HasMany;
 use Blast\Orm\Relations\HasOne;
 use Blast\Orm\Relations\ManyToMany;
 use Blast\Orm\Relations\RelationInterface;
+use Doctrine\DBAL\Query\QueryBuilder;
 use stdClass;
 
 /**
@@ -31,12 +32,13 @@ use stdClass;
  *
  * @package Blast\Orm
  */
-class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperInterface, ProviderFactoryInterface
+class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperInterface, ProviderFactoryInterface, TransactionHistoryAwareInterface
 {
 
     use ConnectionAwareTrait;
     use EntityAwareTrait;
     use ProviderFactoryTrait;
+    use TransactionHistoryAwareTrait;
 
     /**
      * @var ProviderInterface
@@ -83,9 +85,13 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
      */
     public function select($selects = ['*'])
     {
+        $provider = $this->getProvider();
         $query = $this->createQuery();
+        $id = $this->getTransactionHistory()->store($this->getTransactionHistory()->uniqueId(), $provider->getEntity(), QueryBuilder::SELECT);
+        $query->setEntityPrimaryKey($id);
         $query->select($selects);
-        $query->from($this->getProvider()->getTableName());
+        $query->from($provider->getTableName());
+
 
         return $query;
     }
@@ -97,6 +103,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
     public function createQuery()
     {
         $query = new Query($this->getConnection(), $this->getEntity());
+        $query->setTransactionHistory($this->getTransactionHistory());
 
         return $query;
     }
@@ -129,6 +136,8 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         //prepare statement
         $pkName = $provider->getPrimaryKeyName();
         $query = $this->createQuery();
+        $id = $this->getTransactionHistory()->store($this->getTransactionHistory()->uniqueId(), $provider->getEntity(), QueryBuilder::SELECT);
+        $query->setEntityPrimaryKey($id);
         $query->delete($provider->getTableName());
 
         //add entities by pk to delete
@@ -168,7 +177,10 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
 
         //prepare statement
         $query = $this->createQuery();
+        $id = $this->getTransactionHistory()->store($this->getTransactionHistory()->uniqueId(), $provider->getEntity(), QueryBuilder::SELECT);
+        $query->setEntityPrimaryKey($id);
         $query->insert($provider->getTableName());
+
 
         //pass data without relations
         $data = $provider->fetchData();
@@ -208,6 +220,8 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
 
         //prepare statement
         $query = $this->createQuery();
+        $id = $this->getTransactionHistory()->store($this->getTransactionHistory()->uniqueId(), $provider->getEntity(), QueryBuilder::SELECT);
+        $query->setEntityPrimaryKey($id);
         $query->update($provider->getTableName());
 
         //pass data without relations
@@ -335,6 +349,10 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
     {
         if ($relation instanceof ConnectionAwareInterface) {
             $relation->setConnection($this->getConnection());
+        }
+
+        if ($relation instanceof TransactionHistoryAwareInterface) {
+            $relation->setTransactionHistory($this->getTransactionHistory());
         }
 
         return $relation;

@@ -23,11 +23,8 @@ use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
 use Doctrine\Common\Util\Inflector;
 
-class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, RelationInterface
+class ManyToMany extends AbstractRelation
 {
-    use ConnectionAwareTrait;
-    use ProviderFactoryTrait;
-    use RelationTrait;
     /**
      * @var object|string
      */
@@ -143,6 +140,7 @@ class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, 
         if (isset($data[$localKey])) {
             $junctionProvider = is_string($junction) ? $this->createProvider($junction) : $junction;
             $junctionMapper = $junctionProvider->getMapper();
+            $junctionMapper->setTransactionHistory($this->getTransactionHistory());
             $junctionMapper->setConnection($this->getConnection());
             $results = $junctionMapper
                 ->select([$junctionForeignKey])

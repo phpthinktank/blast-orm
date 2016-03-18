@@ -35,7 +35,6 @@ class RelationTest extends AbstractDbTestCase
         $relation = new BelongsTo($post, User::class);
 
         $query = $relation->getQuery();
-        $sql = $query->getSQL();
         $this->assertInstanceOf(QueryInterface::class, $query);
         $this->assertInstanceOf(User::class, $relation->execute());
 

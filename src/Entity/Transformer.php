@@ -58,6 +58,7 @@ class Transformer implements TransformerInterface, EntityAwareInterface
             $this->definition = $this->transformEntityToDefinition($this->getEntity());
         }
         if (is_object($configuration)) {
+            $hash = spl_object_hash($configuration);
             $this->setEntity($configuration);
             $this->definition = $this->transformEntityToDefinition($this->getEntity());
         }

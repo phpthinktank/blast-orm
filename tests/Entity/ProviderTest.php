@@ -18,6 +18,7 @@ use Blast\Orm\Entity\Provider;
 use Blast\Orm\Relations\HasOne;
 use Blast\Orm\Relations\RelationInterface;
 use Blast\Tests\Orm\Stubs\Entities\Post;
+use Blast\Tests\Orm\Stubs\Entities\PostWithUserRelation;
 use Blast\Tests\Orm\Stubs\Entities\Role;
 use Blast\Tests\Orm\Stubs\Entities\User;
 
@@ -42,6 +43,12 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
     public function testProvideEntityByClassName()
     {
         $provider = new Provider(Post::class);
+        $this->assertEquals('post', $provider->getTableName());
+    }
+
+    public function testProvideEntityByClassNameAndGetTable()
+    {
+        $provider = new Provider(PostWithUserRelation::class);
         $this->assertEquals('post', $provider->getTableName());
     }
 

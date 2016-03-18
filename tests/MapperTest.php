@@ -8,8 +8,11 @@
 
 namespace Blast\Tests\Orm;
 
+use Blast\Orm\Entity\Provider;
+use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Mapper;
 use Blast\Tests\Orm\Stubs\Entities\Post;
+use Blast\Tests\Orm\Stubs\Entities\PostWithUserRelation;
 use Blast\Tests\Orm\Stubs\Entities\User;
 
 class MapperTest extends AbstractDbTestCase
@@ -133,5 +136,21 @@ class MapperTest extends AbstractDbTestCase
         $user = $mapper->find(1)->execute();
 
         $this->assertInstanceOf(User::class, $user);
+    }
+
+    public function testObjectWithRelation(){
+        $mapper = new Mapper(PostWithUserRelation::class);
+        $result = $mapper->find(1)->execute();
+
+        $provider = new Provider($result);
+        $relations = [];
+
+        foreach($provider->getRelations() as $relation){
+            $relations[$relation->getName()] = $relation->execute();
+        }
+
+        $history = $mapper->getTransactionHistory()->toArray();
+
+        $this->assertEquals($result, 1);
     }
 }
