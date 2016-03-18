@@ -36,6 +36,11 @@ class Transformer implements TransformerInterface, EntityAwareInterface
      */
     public function transform($configuration)
     {
+        if($configuration instanceof DefinitionInterface){
+            $this->definition = $configuration;
+            $this->setEntity($this->getDefinition()->getEntity());
+            return $this;
+        }
         if(null === $configuration){
             $configuration = \ArrayObject::class;
         }

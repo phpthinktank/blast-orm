@@ -13,10 +13,12 @@
 namespace Blast\Tests\Orm\Entity;
 
 use Blast\Orm\ConnectionManager;
+use Blast\Orm\Entity\Definition;
 use Blast\Orm\Entity\Provider;
 use Blast\Orm\Relations\HasOne;
 use Blast\Orm\Relations\RelationInterface;
 use Blast\Tests\Orm\Stubs\Entities\Post;
+use Blast\Tests\Orm\Stubs\Entities\Role;
 use Blast\Tests\Orm\Stubs\Entities\User;
 
 class ProviderTest extends \PHPUnit_Framework_TestCase
@@ -86,4 +88,21 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('id', (new Provider(Post::class))->getPrimaryKeyName());
         $this->assertEquals('pk', (new Provider(User::class))->getPrimaryKeyName());
     }
+
+    public function testAddDefinition()
+    {
+        $definition = new Definition();
+        $definition->setConfiguration([
+            'entity' => Role::class,
+            'tableName' => 'my_role'
+        ]);
+
+        $provider = new Provider($definition);
+
+        $this->assertEquals('my_role', $provider->getTableName());
+        $this->assertInstanceOf(Role::class, $provider->getEntity());
+        $this->assertInstanceOf(\SplStack::class, $provider->getDefinition()->getEntityCollection());
+    }
+
+
 }
