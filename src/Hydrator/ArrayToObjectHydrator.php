@@ -21,7 +21,7 @@ class ArrayToObjectHydrator implements HydratorInterface
 {
 
     /**
-     * @var
+     * @var \Blast\Orm\Entity\ProviderInterface
      */
     private $provider;
 
@@ -113,6 +113,18 @@ class ArrayToObjectHydrator implements HydratorInterface
     protected function hydrateEntity($data)
     {
         $entity = clone $this->provider->getEntity();
+
+        //add relations
+        foreach($this->provider->getRelations() as $name => $relation){
+            if(is_numeric($name)){
+                $name = $relation->getName();
+            }
+            // disallow overwriting existing data
+            if(isset($data[$name])){
+                continue;
+            }
+            $data[$name] = $relation;
+        }
 
         if ($entity instanceof \ArrayObject) {
             $entity->exchangeArray($data);
