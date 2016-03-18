@@ -138,17 +138,18 @@ class ArrayToObjectHydrator implements HydratorInterface
             //remove get name
             $valid = substr($method->getName(), 0, 3);
             $key = substr($method->getName(), 3);
+
             if (
                 $method->isStatic() ||
-                $valid ||
-                0 !== strlen($key) ||
-                $arrayReflection->hasMethod($method->getName()) ||
+                $valid !== 'set' ||
+                0 === strlen($key) ||
+                ($entity instanceof \ArrayObject && $arrayReflection->hasMethod($method->getName())) ||
                 0 === $method->getNumberOfParameters()
             ) {
                 continue;
             }
 
-            $fieldName = Inflector::tableize(str_replace('set', '', $method->getName()));
+            $fieldName = Inflector::tableize($key);
 
             if (isset($data[$fieldName])) {
                 $method->invokeArgs($entity, [$data[$fieldName]]);
