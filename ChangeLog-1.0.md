@@ -22,6 +22,7 @@ All notable changes of the Blast orm 1.0 release series are documented in this f
  - `\Blast\Orm\Hydrator\ArrayToObjectHydrator` hydrates relations as well as data.
  - Get pluralized table names when table name was suggested from entity shortname
  - `Blast\Orm\Entity\Provider` uses definition and transformer for preparing entities
+ - update abstract repository with new provider and mapper
 
 ### Removed
 
