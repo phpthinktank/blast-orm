@@ -341,6 +341,21 @@ class Post
 
 ```
 
+#### Definition
+
+In addition to auto-suggest definition from provider transformer, it is 
+also possible to use definition instead of entity.
+
+```php
+<?php
+
+class Post
+{
+
+}
+
+```
+
 #### Provider
 
 Providers are used to determine the entity definition and hydrate data to entity and vice versa. You could pass an 
@@ -370,7 +385,7 @@ $provider = new Provider('user_roles');
 
 Add definition to entity by public static property or method.
 
-#### Table name 
+##### Table name 
 
 Return table name as `string`
 
@@ -394,7 +409,7 @@ class Post
 
 ```
 
-#### Primary key name
+##### Primary key name
  
 Return primary key name as `string`
  
@@ -419,7 +434,7 @@ class Post
 
 ```
 
-#### Mapper
+##### Mapper
 
 Return mapper class name as `string` or a instance of `Blast\Orm\MapperInterface`
 
@@ -445,7 +460,7 @@ class Post
 
 ```
 
-#### Relations
+##### Relations
 
 Return relations as `array` containing instance of `Blast\Orm\Relations\RelationInterface`.
 
@@ -474,7 +489,7 @@ class Post
 
 ```
 
-#### Access definition from provider
+##### Access definition from provider
 
 Adapters grant access to data and definition, even if your entity class does not have definitions at all.
 
