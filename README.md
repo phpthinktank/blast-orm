@@ -743,7 +743,7 @@ use Blast\Orm\MapperFactoryTrait;
 use Blast\Orm\RepositoryInterface;
 use Blast\Orm\Hydrator\HydratorInterface;
 
-class PostRepository implements implements MapperFactoryInterface, RepositoryInterface
+class PostRepository implements MapperFactoryInterface, RepositoryInterface
 {
     
     use MapperFactoryTrait;
