@@ -18,17 +18,22 @@ use Blast\Orm\Hydrator\HydratorInterface;
 
 class HasOne extends HasMany
 {
-    protected function init()
+    /**
+     * @return \ArrayObject|object
+     */
+    public function execute()
     {
-        parent::init();
-        $this->query->setMaxResults(1);
+        return $this->getQuery()->execute(HydratorInterface::HYDRATE_ENTITY);
     }
 
     /**
-     * @return \Blast\Orm\Entity\Entity|object
+     * Get relation query
+     *
+     * @return \Blast\Orm\Query
      */
-    public function execute(){
-        return $this->getQuery()->execute(HydratorInterface::HYDRATE_ENTITY);
+    public function getQuery()
+    {
+        return parent::getQuery()->setMaxResults(1);
     }
 
 }

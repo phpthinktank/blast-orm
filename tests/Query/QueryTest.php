@@ -14,54 +14,17 @@
 namespace Blast\Tests\Orm\Query;
 
 
-use Blast\Orm\ConnectionManagerInterface;
+use Blast\Orm\ConnectionManager;
 use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\LocatorFacade;
 use Blast\Orm\Query;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
-use Blast\Orm\Entity\Entity;
+use Blast\Tests\Orm\AbstractDbTestCase;
 use Doctrine\DBAL\Query\QueryBuilder;
 use stdClass;
 
-class QueryTest extends \PHPUnit_Framework_TestCase
+class QueryTest extends AbstractDbTestCase
 {
-
-    protected function setUp()
-    {
-        $connection = LocatorFacade::getConnectionManager()->add( [
-            'url' => 'sqlite:///:memory:',
-            'memory' => 'true'
-        ])->get();
-
-        $connection->exec('CREATE TABLE post (id int, user_id int, title VARCHAR(255), content TEXT)');
-        $connection->exec('CREATE TABLE user (id int, name VARCHAR(255))');
-        $connection->insert('post', [
-            'id' => 1,
-            'user_id' => 1,
-            'title' => 'Hello World',
-            'content' => 'Some text',
-        ]);
-        $connection->insert('post', [
-            'id' => 2,
-            'user_id' => 1,
-            'title' => 'Next thing',
-            'content' => 'More text to read'
-        ]);
-        $connection->insert('user', [
-            'id' => 1,
-            'name' => 'Franz'
-        ]);
-    }
-
-    protected function tearDown()
-    {
-        $connection = LocatorFacade::getConnectionManager()->get(ConnectionManagerInterface::DEFAULT_CONNECTION);
-        $connection->exec('DROP TABLE post');
-        $connection->exec('DROP TABLE user');
-
-        LocatorFacade::getConnectionManager()->closeAll();
-    }
 
     /**
      * Assert that result is a DataObject and contains a list of Result objects
@@ -159,7 +122,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $query->getEmitter()->addListener('after.select', function (QueryResultEvent $event, Query $builder) {
             $result = $event->getResult();
 
-            foreach($result as $key => $value){
+            foreach ($result as $key => $value) {
                 $result[$key]['contentSize'] = strlen($value['content']);
             }
 
@@ -216,7 +179,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
      */
     public function testEntityInstance()
     {
-        $query = new Query(new \stdClass());
+        $query = new Query(null, new \stdClass());
         $this->assertInstanceOf(\stdClass::class, $query->getEntity());
     }
 
@@ -235,8 +198,10 @@ class QueryTest extends \PHPUnit_Framework_TestCase
      */
     public function testCustomBuilderInstance()
     {
-        $builder = LocatorFacade::getConnectionManager()->get()->createQueryBuilder();
-        $query = new Query(null, $builder);
+        $connection = ConnectionManager::getInstance()->get();
+        $builder = $connection->createQueryBuilder();
+        $query = new Query($connection);
+        $query->setBuilder($connection->createQueryBuilder());
         $this->assertEquals($builder, $query->getBuilder());
     }
 }

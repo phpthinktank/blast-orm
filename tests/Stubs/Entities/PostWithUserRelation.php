@@ -15,26 +15,29 @@ namespace Blast\Tests\Orm\Stubs\Entities;
 
 
 use Blast\Orm\Data\DataObject;
+use Blast\Orm\Mapper;
 use Blast\Orm\Relations\HasOne;
+use Doctrine\Common\Inflector\Inflector;
 
 /**
  * @codeCoverageIgnore
  */
-class EntityWithRelation extends \ArrayObject
+class PostWithUserRelation extends \ArrayObject
 {
     /**
      * Get table for model
      *
      * @return string
      */
-    public static function table()
+    public static function tableName()
     {
-        return 'testTable';
+        return 'post';
     }
 
-    public static function relations(EntityWithRelation $entity, $mapper){
+    public static function relations(PostWithUserRelation $entity, Mapper $mapper){
         return [
-            new HasOne($entity, 'otherTable')
+            $mapper->belongsTo($entity, User::class),
+            'user_relation' => $mapper->belongsTo($entity, User::class),
         ];
     }
 }

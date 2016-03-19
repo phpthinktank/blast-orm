@@ -13,20 +13,21 @@
 namespace Blast\Orm\Hydrator;
 
 use Adamlc\LetterCase\LetterCase;
-use Blast\Orm\LocatorFacade;
+use Blast\Orm\Entity\ProviderInterface;
+use Doctrine\Common\Inflector\Inflector;
 use Doctrine\DBAL\Driver\Statement;
 
 class ArrayToObjectHydrator implements HydratorInterface
 {
 
     /**
-     * @var
+     * @var \Blast\Orm\Entity\ProviderInterface
      */
-    private $entity;
+    private $provider;
 
-    public function __construct($entity)
+    public function __construct(ProviderInterface $provider)
     {
-        $this->entity = LocatorFacade::getProvider($entity)->getEntity();
+        $this->provider = $provider;
     }
 
     /**
@@ -51,76 +52,6 @@ class ArrayToObjectHydrator implements HydratorInterface
         }
 
         throw new \LogicException('Unknown option ' . $option);
-    }
-
-    /**
-     * Hydrates data to an entity
-     *
-     * @param $data
-     * @return array|\ArrayObject|object|\stdClass
-     */
-    protected function hydrateEntity($data)
-    {
-        $entity = clone $this->entity;
-
-        if ($entity instanceof \ArrayObject) {
-            $entity->exchangeArray($data);
-        }
-
-        $reflection = new \ReflectionObject($entity);
-        $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
-        $methods = $reflection->getMethods(\ReflectionMethod::IS_PUBLIC);
-        $arrayReflection = new \ReflectionClass(\ArrayObject::class);
-
-        foreach ($properties as $property) {
-            if ($property->isStatic() || isset($data[$property->getName()])) {
-                continue;
-            }
-
-            $fieldName = $property->getName();
-            if (isset($data[$fieldName])) {
-                $property->setValue($this->entity, $data[$fieldName]);
-            }
-        }
-
-        foreach ($methods as $method) {
-            //remove get name
-            $valid = substr($method->getName(), 0, 3);
-            $key = substr($method->getName(), 3);
-            if (
-                $method->isStatic() ||
-                $valid ||
-                0 !== strlen($key) ||
-                $arrayReflection->hasMethod($method->getName()) ||
-                0 === $method->getNumberOfParameters()
-            ) {
-                continue;
-            }
-
-            $fieldName = (new LetterCase())->snake(str_replace('set', '', $method->getName()));
-
-            if (isset($data[$fieldName])) {
-                $method->invokeArgs($entity, [$data[$fieldName]]);
-            }
-        }
-
-        return $entity;
-    }
-
-    /**
-     * @param $data
-     * @return array
-     */
-    protected function hydrateCollection($data)
-    {
-        $stack = new \SplStack();
-        foreach ($data as $key => $value) {
-            $stack->push($this->hydrateEntity($value));
-        }
-
-        $stack->rewind();
-
-        return $stack;
     }
 
     /**
@@ -151,9 +82,92 @@ class ArrayToObjectHydrator implements HydratorInterface
      */
     public function isCollectable($data)
     {
-        if(!is_array($data)){
+        if (!is_array($data)) {
             return false;
         }
         return is_array(reset($data));
+    }
+
+    /**
+     * @param $data
+     * @return array
+     */
+    protected function hydrateCollection($data)
+    {
+        $stack = new \SplStack();
+        foreach ($data as $key => $value) {
+            $stack->push($this->hydrateEntity($value));
+        }
+
+        $stack->rewind();
+
+        return $stack;
+    }
+
+    /**
+     * Hydrates data to an entity
+     *
+     * @param $data
+     * @return array|\ArrayObject|object|\stdClass
+     */
+    protected function hydrateEntity($data)
+    {
+        $entity = clone $this->provider->getEntity();
+
+        //add relations
+        foreach($this->provider->getRelations() as $name => $relation){
+            if(is_numeric($name)){
+                $name = $relation->getName();
+            }
+            // disallow overwriting existing data
+            if(isset($data[$name])){
+                continue;
+            }
+            $data[$name] = $relation;
+        }
+
+        if ($entity instanceof \ArrayObject) {
+            $entity->exchangeArray($data);
+        }
+
+        $reflection = new \ReflectionObject($entity);
+        $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+        $methods = $reflection->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $arrayReflection = new \ReflectionClass(\ArrayObject::class);
+
+        foreach ($properties as $property) {
+            if ($property->isStatic() || isset($data[$property->getName()])) {
+                continue;
+            }
+
+            $fieldName = $property->getName();
+            if (isset($data[$fieldName])) {
+                $property->setValue($entity, $data[$fieldName]);
+            }
+        }
+
+        foreach ($methods as $method) {
+            //remove get name
+            $valid = substr($method->getName(), 0, 3);
+            $key = substr($method->getName(), 3);
+
+            if (
+                $method->isStatic() ||
+                $valid !== 'set' ||
+                0 === strlen($key) ||
+                ($entity instanceof \ArrayObject && $arrayReflection->hasMethod($method->getName())) ||
+                0 === $method->getNumberOfParameters()
+            ) {
+                continue;
+            }
+
+            $fieldName = Inflector::tableize($key);
+
+            if (isset($data[$fieldName])) {
+                $method->invokeArgs($entity, [$data[$fieldName]]);
+            }
+        }
+
+        return $entity;
     }
 }

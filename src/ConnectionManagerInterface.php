@@ -8,7 +8,11 @@
 
 namespace Blast\Orm;
 
-
+/**
+ * Provide access and caching of connections.
+ *
+ * @package Blast\Orm
+ */
 interface ConnectionManagerInterface
 {
     const DEFAULT_CONNECTION = 'default';
@@ -29,7 +33,7 @@ interface ConnectionManagerInterface
      * Activate a connection as default connection
      * @param string $name
      */
-    public function setDefaultConnection($name);
+    public function swapActiveConnection($name);
 
     /**
      * @param $name

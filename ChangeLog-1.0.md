@@ -2,7 +2,34 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
-## 0.4.0
+## 0.5
+
+### Fixes
+
+ - Fix bug where plain object don't get data from hydrator
+ - Fix bug throwing exception when attaching relation without name
+
+### Added
+ 
+ - `Blast\Orm\Entity\Transformer` converts any configuration into definition and entity
+ - `Blast\Orm\Entity\Definition` is holding entity definitions.
+
+### Altered
+
+ - connection manager is now accessible as singleton via `Blast\Orm\ConnectionManager::getInstance()`
+ - Relations don't need to initialize to get relation name
+ - Relation internals refactored
+ - `\Blast\Orm\Hydrator\ArrayToObjectHydrator` hydrates relations as well as data.
+ - Get pluralized table names when table name was suggested from entity shortname
+ - `Blast\Orm\Entity\Provider` uses definition and transformer for preparing entities
+ - update abstract repository with new provider and mapper
+
+### Removed
+
+ - `Blast\Orm\Facades`
+ - Locator and Container no longer dependencies for blast orm
+
+## 0.4
 
 ### Added
 

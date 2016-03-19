@@ -13,15 +13,19 @@
 
 namespace Blast\Orm\Relations;
 
-use Blast\Orm\Entity\AdapterInterface;
-use Blast\Orm\Entity\EntityAdapterLoaderTrait;
-use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\Entity\Provider;
-use Blast\Orm\LocatorFacade;
-use Blast\Orm\Query;
 
-class ManyToMany implements RelationInterface
+use Blast\Orm\ConnectionAwareInterface;
+use Blast\Orm\ConnectionAwareTrait;
+use Blast\Orm\Entity\ProviderFactoryInterface;
+use Blast\Orm\Entity\ProviderFactoryTrait;
+use Blast\Orm\Hydrator\HydratorInterface;
+use Blast\Orm\Query;
+use Doctrine\Common\Util\Inflector;
+
+class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, RelationInterface
 {
+    use ConnectionAwareTrait;
+    use ProviderFactoryTrait;
     use RelationTrait;
     /**
      * @var object|string
@@ -52,17 +56,18 @@ class ManyToMany implements RelationInterface
      */
     private $junctionForeignKey;
 
+
     /**
      * Many occurrences in local entity relate to many occurrences in foreign entity and vice versa.
      * The relations are linked by a junction table.
      *
      * @param string|object $entity
      * @param string|object $foreignEntity
-     * @param null|string $foreignKey          Default field name is {foreign primary key name}
-     * @param null|string $localKey            Default field name is {local primary key name}
-     * @param null|string|object $junction     Default table name is {local entity table name}_{foreign entity table name}
-     * @param null|string $junctionLocalKey    Default field name is {local table name}_{$localKey}
-     * @param null|string $junctionForeignKey  Default field name is {foreign table name}_{$foreignKey}
+     * @param null|string $foreignKey Default field name is {foreign primary key name}
+     * @param null|string $localKey Default field name is {local primary key name}
+     * @param null|string|object $junction Default table name is {local entity table name}_{foreign entity table name}
+     * @param null|string $junctionLocalKey Default field name is {local table name}_{$localKey}
+     * @param null|string $junctionForeignKey Default field name is {foreign table name}_{$foreignKey}
      */
     public function __construct($entity, $foreignEntity, $foreignKey = null, $localKey = null,
                                 $junction = null, $junctionLocalKey = null, $junctionForeignKey = null)
@@ -75,6 +80,91 @@ class ManyToMany implements RelationInterface
         $this->junction = $junction;
         $this->junctionLocalKey = $junctionLocalKey;
         $this->junctionForeignKey = $junctionForeignKey;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getLocalKey()
+    {
+        return $this->localKey;
+    }
+
+    /**
+     * @return \SplStack
+     */
+    public function execute()
+    {
+        return $this->getQuery()->execute(HydratorInterface::HYDRATE_COLLECTION);
+    }
+
+    /**
+     * Get relation query
+     *
+     * @return \Blast\Orm\Query
+     */
+    public function getQuery()
+    {
+        if (null !== $this->query) {
+            return $this->query;
+        }
+        $provider = $this->createProvider($this->getEntity());
+        $foreignProvider = $this->createProvider($this->getForeignEntity());
+        $foreignKey = $this->getForeignKey();
+        $junction = $this->getJunction();
+        $junctionLocalKey = $this->getJunctionLocalKey();
+        $junctionForeignKey = $this->getJunctionForeignKey();
+
+        $data = $provider->fetchData();
+
+        $localKey = $provider->getPrimaryKeyName();
+
+        //determine foreign key
+        if ($foreignKey === null) {
+            $foreignKey = $foreignProvider->getPrimaryKeyName();
+        }
+
+        //determine through
+        if (!is_string($junction) || $junction === null) {
+            $junction = Inflector::singularize($provider->getTableName()) . '_' . Inflector::singularize($foreignProvider->getTableName());
+        }
+
+        //determine through local key
+        if ($junctionLocalKey === null) {
+            $junctionLocalKey = Inflector::singularize($provider->getTableName()) . '_' . $localKey;
+        }
+
+        //determine through foreign key
+        if ($junctionForeignKey === null) {
+            $junctionForeignKey = Inflector::singularize($foreignProvider->getTableName()) . '_' . $foreignKey;
+        }
+
+        $query = new Query($provider->getMapper()->getConnection());
+
+        //prepare query for foreign table
+        $foreignQuery = $foreignProvider->getMapper()
+            ->setConnection($this->getConnection())
+            ->select();
+
+        //get relations by through db object
+        if (isset($data[$localKey])) {
+            $junctionProvider = is_string($junction) ? $this->createProvider($junction) : $junction;
+            $junctionMapper = $junctionProvider->getMapper();
+            $junctionMapper->setConnection($this->getConnection());
+            $results = $junctionMapper
+                ->select([$junctionForeignKey])
+                ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
+                ->execute(HydratorInterface::HYDRATE_RAW);
+
+            //set conditions on foreign query
+            foreach ($results as $result) {
+                $foreignQuery->where($query->expr()->eq($foreignKey, $result[$junctionForeignKey]));
+            }
+        }
+
+        $this->query = $foreignQuery;
+
+        return $this->query;
     }
 
     /**
@@ -102,14 +192,6 @@ class ManyToMany implements RelationInterface
     }
 
     /**
-     * @return null|string
-     */
-    public function getLocalKey()
-    {
-        return $this->localKey;
-    }
-
-    /**
      * @return null|object|string
      */
     public function getJunction()
@@ -131,68 +213,5 @@ class ManyToMany implements RelationInterface
     public function getJunctionForeignKey()
     {
         return $this->junctionForeignKey;
-    }
-
-    protected function init(){
-        $provider = LocatorFacade::getProvider($this->getEntity());
-        $foreignAdapter = LocatorFacade::getProvider($this->getForeignEntity());
-        $foreignKey = $this->getForeignKey();
-        $junction = $this->getJunction();
-        $junctionLocalKey = $this->getJunctionLocalKey();
-        $junctionForeignKey = $this->getJunctionForeignKey();
-
-        $data = $provider->fromObjectToArray();
-
-        $localKey = $provider->getPrimaryKeyName();
-
-        //determine foreign key
-        if ($foreignKey === null) {
-            $foreignKey = $foreignAdapter->getPrimaryKeyName();
-        }
-
-        //determine through
-        if (!is_string($junction) || $junction === null) {
-            $junction = $provider->getTableName() . '_' . $foreignAdapter->getTableName();
-        }
-
-        //determine through local key
-        if($junctionLocalKey === null){
-            $junctionLocalKey = $provider->getTableName() . '_' . $localKey;
-        }
-
-        //determine through foreign key
-        if($junctionForeignKey === null){
-            $junctionForeignKey = $foreignAdapter->getTableName() . '_' . $foreignKey;
-        }
-
-        $query = new Query();
-
-        //get relations by through db object
-        if(isset($data[$localKey])){
-            $junctionAdapter = LocatorFacade::getProvider(is_string($junction) ? new Provider($junction) : $junction);
-            $results = $junctionAdapter->getMapper()
-                ->select([$junctionForeignKey])
-                ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))
-                ->execute(HydratorInterface::HYDRATE_RAW);
-
-            $foreignQuery = $foreignAdapter->getMapper()->select();
-
-            foreach ($results as $result) {
-                $foreignQuery->where($query->expr()->eq($foreignKey, $result[$junctionForeignKey]));
-            }
-
-        }else{
-            $foreignQuery = $foreignAdapter->getMapper()->select();
-        }
-
-        $this->query = $foreignQuery;
-        $this->name = $foreignAdapter->getTableName();
-    }
-
-    /**
-     * @return \SplStack
-     */
-    public function execute(){
-        return $this->getQuery()->execute(HydratorInterface::HYDRATE_COLLECTION);
     }
 }

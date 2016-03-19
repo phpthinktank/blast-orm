@@ -8,11 +8,9 @@
 
 namespace Blast\Orm;
 
-use Blast\Orm\Facades\FacadeFactory;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\DriverManager;
-use Doctrine\DBAL\Exception\InvalidArgumentException;
 
 class ConnectionManager implements ConnectionManagerInterface
 {
@@ -22,6 +20,9 @@ class ConnectionManager implements ConnectionManagerInterface
      */
     protected $connections = [];
 
+    /**
+     * @var \Doctrine\DBAL\Connection[]
+     */
     protected $previousConnections = [];
 
     /**
@@ -30,21 +31,64 @@ class ConnectionManager implements ConnectionManagerInterface
     protected $defaultConnection = null;
 
     /**
-     * disconnect all connections and remove all connections
+     * @var self
      */
-    public function closeAll()
-    {
-        $connections = $this->all();
+    private static $instance = null;
 
-        foreach ($connections as $connection) {
-            if ($connection->isConnected()) {
-                $connection->close();
-            }
+    /**
+     * Get connection manager instance to share
+     * connections between different instances.
+     *
+     * @return \Blast\Orm\ConnectionManager
+     */
+    public static function getInstance(){
+        if(null === static::$instance){
+            static::$instance = new self;
         }
 
-        gc_collect_cycles();
+        return static::$instance;
+    }
 
-        $this->connections = [];
+
+
+    /**
+     * Create a new connection from definition.
+     *
+     * If definition is a string, the manager tries to get definition from ioc container,
+     * otherwise the manager assumes a valid dsn string and converts definition to an array.
+     *
+     * If definition is a string manager is determining wrapper class and tries to get wrapper
+     * class from container.
+     *
+     * @param $definition
+     * @return Connection
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function create($definition)
+    {
+        // create connection from definition
+        if ($definition instanceof Connection) {
+            return $definition;
+        }
+
+        // assume a valid service from IoC container
+        // or assume a valid dsn and convert to connection array
+        if (is_string($definition)) {
+            $definition = ['url' => $definition];
+        }
+
+        if (!is_array($definition)) {
+            throw new DBALException('Unable to determine parameter array from definition');
+        }
+
+        $connection = DriverManager::getConnection($definition);
+
+        if (!($connection instanceof Connection)) {
+            throw new \RuntimeException(sprintf('Connection needs to be an instance of %s', Connection::class));
+        }
+
+        return $connection;
     }
 
     /**
@@ -56,8 +100,37 @@ class ConnectionManager implements ConnectionManagerInterface
     }
 
     /**
+     * Disconnect all connections and remove all
+     * connections. Collect garbage at least.
+     */
+    public function closeAll()
+    {
+        $connections = $this->all();
+
+        foreach ($connections as $connection) {
+            if ($connection->isConnected()) {
+                $connection->close();
+            }
+        }
+
+        $this->connections = [];
+        gc_collect_cycles();
+
+    }
+
+    /**
+     * Get all connections
      *
-     * Params a related to configuration
+     * @return \Doctrine\DBAL\Connection[]
+     */
+    public function all()
+    {
+        return $this->connections;
+    }
+
+    /**
+     * Add a new connection to internal cache. Create connection
+     * with `Blast\Orm\ConnectionManager::create`
      *
      * @see http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/configuration.html#getting-a-connection
      *
@@ -80,21 +153,35 @@ class ConnectionManager implements ConnectionManagerInterface
 
         //set first connection as active connection
         if (count($this->connections) === 1) {
-            $this->setDefaultConnection($name);
+            $this->swapActiveConnection($name);
         }
 
         return $this;
     }
 
     /**
-     * Activate a connection as default connection
+     * Check if connections exists
+     *
+     * @param $name
+     * @return bool
+     */
+    public function has($name)
+    {
+        return isset($this->connections[$name]);
+    }
+
+    /**
+     * Swap current connection with another connection
+     * by name and add previous connection to previous
+     * connection stack.
+     *
      * @param string $name
      *
      * @return $this
      *
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function setDefaultConnection($name)
+    public function swapActiveConnection($name)
     {
         if (!$this->has($name)) {
             throw new DBALException(sprintf('Connection with name %s not found!', $name));
@@ -106,14 +193,6 @@ class ConnectionManager implements ConnectionManagerInterface
         $this->defaultConnection = $this->get($name);
 
         return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getPrevious()
-    {
-        return $this->previousConnections;
     }
 
     /**
@@ -138,79 +217,10 @@ class ConnectionManager implements ConnectionManagerInterface
     }
 
     /**
-     * Check if connections exists
-     *
-     * @param $name
-     * @return bool
+     * @return array
      */
-    public function has($name)
+    public function getPrevious()
     {
-        return isset($this->connections[$name]);
-    }
-
-    /**
-     * Get all connections
-     *
-     * @return \Doctrine\DBAL\Connection[]
-     */
-    public function all()
-    {
-        return $this->connections;
-    }
-
-    /**
-     * Determine connection from definition.
-     *
-     * If definition is a string, the manager tries to get definition from ioc container,
-     * otherwise the manager assumes a valid dsn string and converts definition to an array.
-     *
-     * If definition is a string manager is determining wrapper class and tries to get wrapper
-     * class from container.
-     *
-     * @param $definition
-     * @return Connection
-     *
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    public static function create($definition)
-    {
-        // create connection from definition
-        if($definition instanceof Connection){
-            return $definition;
-        }
-
-        $container = FacadeFactory::getContainer();
-        // assume a valid service from IoC container
-        // or assume a valid dsn and convert to connection array
-        if (is_string($definition)) {
-            $definition = $container->has($definition) ?
-                $container->get($definition) :
-                ['url' => $definition];
-        }
-
-        if (is_array($definition)) {
-
-            // try to get wrapper class from container
-            $wrapperClass = \Doctrine\DBAL\Driver\Connection::class;
-            if (isset($definition['wrapperClass'])) {
-                $wrapperClass = is_string($definition['wrapperClass']) ? $definition['wrapperClass'] : $wrapperClass;
-            }
-
-            if ($container->has($wrapperClass)) {
-                $definition['wrapperClass'] = $container->get($wrapperClass);
-            }
-        }
-
-        if(!is_array($definition)){
-            throw new DBALException('Unable to determine parameter array from definition');
-        }
-
-        $connection = DriverManager::getConnection($definition);
-
-        if (!($connection instanceof Connection)) {
-            throw new \RuntimeException(sprintf('Connection needs to be an instance of %s', Connection::class));
-        }
-
-        return $connection;
+        return $this->previousConnections;
     }
 }

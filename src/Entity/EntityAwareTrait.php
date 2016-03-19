@@ -12,14 +12,13 @@
  */
 namespace Blast\Orm\Entity;
 
-use Blast\Orm\Facades\FacadeFactory;
-
 trait EntityAwareTrait
 {
     /**
      * @var array|\stdClass|\ArrayObject|object
      */
     private $entity;
+
     /**
      * @return array|\stdClass|\ArrayObject|object
      */
@@ -27,16 +26,16 @@ trait EntityAwareTrait
     {
         return $this->entity;
     }
+
     /**
      * @param array|\ArrayObject|\stdClass|object|string $entity
      * @return $this
      */
     public function setEntity($entity)
     {
-        if (is_string($entity)) {
-            $container = FacadeFactory::getContainer();
-            $entity = $container->has($entity) ? $container->get($entity) : (new \ReflectionClass($entity))->newInstance();
-        }
+//        if (is_string($entity)) {
+//            $entity = (new \ReflectionClass($entity))->newInstance();
+//        }
         $this->entity = $entity;
         return $this;
     }

@@ -13,18 +13,19 @@
 namespace Blast\Orm\Hydrator;
 
 use Adamlc\LetterCase\LetterCase;
-use Blast\Orm\LocatorFacade;
+use Blast\Orm\Entity\ProviderInterface;
+use Doctrine\Common\Inflector\Inflector;
 
 class ObjectToArrayHydrator implements HydratorInterface
 {
     /**
-     * @var
+     * @var \Blast\Orm\Entity\ProviderInterface
      */
-    private $entity;
+    private $provider;
 
-    public function __construct($entity)
+    public function __construct(ProviderInterface $provider)
     {
-        $this->entity = LocatorFacade::getProvider($entity)->getEntity();
+        $this->provider = $provider;
     }
 
     /**
@@ -35,12 +36,13 @@ class ObjectToArrayHydrator implements HydratorInterface
     public function hydrate($data = [], $option = self::HYDRATE_AUTO)
     {
 
-        if ($this->entity instanceof \ArrayObject) {
-            $arrayCopy = $this->entity->getArrayCopy();
+        $entity = clone $this->provider->getEntity();
+        if ($entity instanceof \ArrayObject) {
+            $arrayCopy = $entity->getArrayCopy();
             $data = array_merge($data, $arrayCopy);
         }
 
-        $reflection = new \ReflectionObject($this->entity);
+        $reflection = new \ReflectionObject($entity);
         $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
         $methods = $reflection->getMethods(\ReflectionMethod::IS_PUBLIC);
         $arrayReflection = new \ReflectionClass(\ArrayObject::class);
@@ -50,9 +52,9 @@ class ObjectToArrayHydrator implements HydratorInterface
                 continue;
             }
 
-            $value = $property->getValue($this->entity);
+            $value = $property->getValue($entity);
 
-            if(isset($data[$property->getName()]) && null === $value){
+            if (isset($data[$property->getName()]) && null === $value) {
                 continue;
             }
 
@@ -61,7 +63,7 @@ class ObjectToArrayHydrator implements HydratorInterface
 
         foreach ($methods as $name => $method) {
             if (
-                $arrayReflection->hasMethod($method->getName())
+            $arrayReflection->hasMethod($method->getName())
             ) {
                 continue;
             }
@@ -76,10 +78,10 @@ class ObjectToArrayHydrator implements HydratorInterface
                 continue;
             }
 
-            $fieldName = (new LetterCase())->snake(substr($method->getName(), 3));
-            $value = $method->invoke($this->entity);
+            $fieldName = Inflector::tableize(substr($method->getName(), 3));
+            $value = $method->invoke($entity);
 
-            if(isset($data[$fieldName]) && null === $value){
+            if (isset($data[$fieldName]) && null === $value) {
                 continue;
             }
 
@@ -89,3 +91,4 @@ class ObjectToArrayHydrator implements HydratorInterface
         return $data;
     }
 }
+

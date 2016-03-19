@@ -57,12 +57,18 @@ The following versions of PHP are supported by this version.
 * PHP 7.0
 * HHVM
 
+## Example
+
+An example can be found in this [blog post](http://bit.ly/php-orm).
+
+## Features
+
+ - Entities as POPO (Plain-old PHP objects)
+ - Auto-Suggesting entity definition and custom definition
+ - Hydration from data to entity and vice versa
+ - Entity aware query builder
+
 ## Concept
-
-### Locator
-
-The locator deliver methods to access adapters, mappers and connections. For solving IoC concerns use LocatorFacade, to 
-have a swappable locator from container. 
 
 ### Entities
 
@@ -73,19 +79,28 @@ It is recommended to use accessors (getters) and mutators (setters) for properti
 Entity classes could also be instances of [`stdClass`](http://php.net/manual/en/reserved.classes.php), 
 [`ArrayObject`](http://php.net/manual/de/class.arrayobject.php) or [`DataObject`](src/Data/DataObject.php)
  
+### Provider
+ 
+The provider suggests and provides entity definitions and two-way-hydration and entity itself. The provider is a link between independent 
+entity and mapper or query.
+ 
 ### Mappers
 
-Each entity does have it's own mapper. Mappers mediate between dbal and entity and provide convenient CRUD 
-(Create, Read, Update, Delete).
+Each entity does have it's own mapper. A mapper is determined by the entity provider. Mappers mediate between dbal 
+and entity and provide convenient CRUD (Create, Read, Update, Delete). In addition to CRUD, the mapper is also delivering 
+convenient methods to to work with relations.
 
 ### Query
 
 The query acts as accessor to the persistence layer. The query class is hydrating data on execution and transforms the
-result in a single entity class, collection of entity classes or as a raw data array.
+result into a single entity class or `\ArrayObject` as fallback, a collection of entity classes as `\SplStack` or as a 
+raw data array. Furthermore the query is able to receive hydration options to control the result. Create, delete and 
+update are always returning a numeric value!
 
 ### Repository
 
-The repository is mediating between persistence layer and abstract from persistence or data access through mapper or query.
+The repository is mediating between persistence layer and abstract from persistence or data access through mapper or query. 
+Blast orm is just delivering a `Blast\Orm\RepositoryInterface` for completion!
   
 ## Usage
 
@@ -101,8 +116,6 @@ Create a new connection
 ```php
 <?php
 
-use Blast\Orm\LocatorFacade;
-
 $connection = ConnectionManager::create('mysql://root:root@localhost/defaultdb?charset=UTF-8');
 ```
 
@@ -110,18 +123,7 @@ $connection = ConnectionManager::create('mysql://root:root@localhost/defaultdb?c
 
 ##### Connection manager
 
-The connection manager stores all connection in it's own cache by name.  
-
-It is recommended to use connection manager via facade to access connections on different points in your application.  
-
-```php
-<?php
-
-use Blast\Orm\LocatorFacade;
-
-$connections = LocatorFacade::getConnectionManager();
-
-```
+The connection manager stores all connection in it's own cache by name.
 
 In some cases you would like to use a new connection manager instance, e.g. in a separate container.
 
@@ -175,7 +177,7 @@ $connections = $connections->__instance();
 
 The query object is is providing high level API methods of [doctrine 2 query builder](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/query-builder.html#security-safely-preventing-sql-injection).
 
-Create a new query
+The query is automatically determining current active connection from connection manager.
 
 ```php
 <?php
@@ -185,6 +187,16 @@ use Blast\Orm\Query;
 $query = new Query();
 ```
 
+or create a new query with a custom connection
+
+```php
+<?php
+
+use Blast\Orm\Query;
+
+$query = new Query(ConnectionManager::create('mysql://root:root@localhost/acme'));
+```
+
 or create a new query for an entity
 
 ```php
@@ -192,7 +204,7 @@ or create a new query for an entity
 
 use Blast\Orm\Query;
 
-$query = new Query(Post::class);
+$query = new Query(null, Post::class);
 ```
 
 Custom connection for the query
@@ -433,7 +445,7 @@ class Post
 
 ```
 
-#### Mapper
+#### Relations
 
 Return relations as `array` containing instance of `Blast\Orm\Relations\RelationInterface`.
 
@@ -453,7 +465,7 @@ class Post
      *
      * @return string
      */
-    public static function relations(EntityWithRelation $entity, $mapper){
+    public static function relations(EntityWithRelation $entity,  Mapper $mapper){
         return [
             new HasOne($entity, 'otherTable')
         ];
@@ -532,7 +544,7 @@ instance and need to execute manually.
 
 #### Create a new mapper for entity
 
-Create mapper by instance
+Create mapper for entity
 
 ```php
 <?php
@@ -543,13 +555,12 @@ $mapper = new Mapper($post);
 
 ```
 
-Create mapper from adapter
+Create mapper from provider
 
 ```php
 <?php
 
-//access via locator
-$provider = LocatorFacade::getAdapterManager()->get($post);
+$provider = new Provider($post);
 $mapper = $provider->getMapper();
 
 ```
@@ -587,7 +598,7 @@ Delete onw entry
 ```php
 <?php
 
-$repository->delete(1);
+$mapper->delete(1);
 ```
 
 Delete many entries
@@ -595,7 +606,7 @@ Delete many entries
 ```php
 <?php
 
-$repository->delete([1, 2]);
+$mapper->delete([1, 2]);
 ```
 
 ### Relations
@@ -609,9 +620,11 @@ Pass relations as `array` by computed static relation method in entity class
 ```php
 <?php
 
+use Blast\Orm\Mapper;
+
 class Post {
 
-    public static function relation(Post $entity){
+    public static function relation(Post $entity, Mapper $mapper){
         return [
             HasMany($entity, Comments::class)
         ]
@@ -623,34 +636,6 @@ $postProvider = new Provider($post);
 
 $relations = $postProvider->getRelations();
 $comments = $relations['comment']->execute();
-
-```
-
-Even easier access by executing directly in custom method
-
-```php
-<?php
-
-class Post {
-    
-    /**
-     * @return Comments[]
-     */
-    public function getComments(){
-        $relation = HasMany($this, Comments::class);
-        
-        return $relation->execute();
-    }
-}
-
-```
-
-Access relation query and modify the result.
-
-```php
-<?php
-
-$comments = $relation->execute();
 
 ```
 
@@ -744,9 +729,7 @@ $relation = ManyToMany($user, Role::class, 'pk', 'id', 'user_role', 'user_id', '
 
 The repository abstracts methods for data persistence and access. All methods execute their queries directly. 
 
-Blast ORM integration for repositories are __optional__!
-
-#### Create repository
+Blast ORM provides a repository interface `\Blast\Orm\RepositoryInterface`.
 
 A repository knows it's entity. Therefore we need to pass the entity as class name or instance 
 
@@ -755,39 +738,21 @@ Create from interface
 ```php
 <?php
 
+use Blast\Orm\MapperFactoryInterface;
+use Blast\Orm\MapperFactoryTrait;
 use Blast\Orm\RepositoryInterface;
-use Blast\Orm\Entity\EntityAwareInterface;
-use Blast\Orm\Entity\EntityAwareTrait;
-use Blast\Orm\Entity\Provider;
 use Blast\Orm\Hydrator\HydratorInterface;
 
-class PostRepository implements EntityAwareInterface, RepositoryInterface
+class PostRepository implements implements MapperFactoryInterface, RepositoryInterface
 {
-    use EntityAwareTrait;
+    
+    use MapperFactoryTrait;
     
     /**
-     * Init repository and bind related entity
+     * Get repository entity
      */
-    public function __construct(){
-        $this->setEntity(Post::class);
-    }
-
-    /**
-     * @var \Blast\Orm\Entity\ProviderInterface
-     */
-    protected $provider = null;
-
-    /**
-     * Get adapter for entity
-     *
-     * @return Provider
-     */
-    private function getProvider()
-    {
-        if ($this->provider === null) {
-            $this->provider = LocatorFacade::getProvider($this->getEntity());
-        }
-        return $this->provider;
+    public function getEntity(){
+        return Post::class;
     }
 
     /**
@@ -797,7 +762,7 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
      */
     public function all()
     {
-        return $this->getProvider()->getMapper()->select()->execute(HydratorInterface::HYDRATE_COLLECTION);
+        return $this->createMapper($this->getEntity())->select()->execute(HydratorInterface::HYDRATE_COLLECTION);
     }
 
     /**
@@ -808,7 +773,7 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
      */
     public function find($primaryKey)
     {
-        return $this->getProvider()->getMapper()->find($primaryKey)->execute(HydratorInterface::HYDRATE_ENTITY);
+        return $this->createMapper($this->getEntity())->find($primaryKey)->execute(HydratorInterface::HYDRATE_ENTITY);
     }
 
     /**
@@ -819,18 +784,7 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
      */
     public function save($data)
     {
-
-        if (is_array($data)) {
-            $provider = LocatorFacade::getProvider($this->getEntity());
-            $provider->fromArrayToObject($data);
-        } else {
-            $provider = $this->getProvider();
-        }
-
-        $mapper = $this->getProvider()->getMapper();
-        $enw = $provider->isNew();
-        $query = $enw ? $mapper->create($data) : $mapper->update($data);
-        return $query->execute();
+        return $this->createMapper($data)->save($data)->execute();
     }
 
 }

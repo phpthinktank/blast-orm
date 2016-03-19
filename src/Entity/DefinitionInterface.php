@@ -6,31 +6,41 @@
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
  *
- * Date: 07.03.2016
- * Time: 12:03
+ * Date: 17.03.2016
+ * Time: 08:08
  *
  */
 
 namespace Blast\Orm\Entity;
 
-
 use Blast\Orm\MapperAwareInterface;
 use Blast\Orm\Relations\RelationsAwareInterface;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Index;
+use League\Event\EmitterAwareInterface;
 
-interface ProviderInterface extends MapperAwareInterface, EntityAwareInterface, RelationsAwareInterface
+/**
+ * All entity definition relating to schema definition
+ *
+ * @package Blast\Orm\Entity
+ */
+interface DefinitionInterface extends EmitterAwareInterface, MapperAwareInterface, RelationsAwareInterface
 {
-
-    const DEFAULT_PRIMARY_KEY_NAME = 'id';
+    /**
+     * @return \ArrayObject|object
+     */
+    public function getEntity();
 
     /**
-     * @return Column[]
+     * @return \SplStack|object
+     */
+    public function getEntityCollection();
+
+    /**
+     * @return \Doctrine\DBAL\Schema\Column[]
      */
     public function getFields();
 
     /**
-     * @return Index[]
+     * @return \Doctrine\DBAL\Schema\Index[]
      */
     public function getIndexes();
 
@@ -47,5 +57,4 @@ interface ProviderInterface extends MapperAwareInterface, EntityAwareInterface, 
      * @return string
      */
     public function getTableName();
-
 }

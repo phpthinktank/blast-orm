@@ -14,14 +14,20 @@
 namespace Blast\Orm\Relations;
 
 
-use Blast\Orm\Entity\EntityAdapterLoaderTrait;
+use Blast\Orm\ConnectionAwareInterface;
+use Blast\Orm\ConnectionAwareTrait;
+use Blast\Orm\Entity\ProviderFactoryInterface;
+use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\LocatorFacade;
 use Blast\Orm\Query;
+use Doctrine\Common\Inflector\Inflector;
 
-class BelongsTo implements RelationInterface
+class BelongsTo implements ConnectionAwareInterface, RelationInterface, ProviderFactoryInterface
 {
+    use ConnectionAwareTrait;
+    use ProviderFactoryTrait;
     use RelationTrait;
+
     /**
      * @var
      */
@@ -44,10 +50,48 @@ class BelongsTo implements RelationInterface
      */
     public function __construct($entity, $foreignEntity, $localKey = null)
     {
-
         $this->entity = $entity;
         $this->foreignEntity = $foreignEntity;
         $this->localKey = $localKey;
+    }
+
+    /**
+     * @return array|\ArrayObject|object|bool
+     */
+    public function execute()
+    {
+        return $this->getQuery()->execute(HydratorInterface::HYDRATE_AUTO);
+    }
+
+    /**
+     * Get relation query
+     *
+     * @return \Blast\Orm\Query
+     */
+    public function getQuery()
+    {
+        if(null !== $this->query){
+            return $this->query;
+        }
+        $provider = $this->createProvider($this->getEntity());
+        $foreignProvider = $this->createProvider($this->getForeignEntity());
+        $localKey = $this->getLocalKey();
+
+        if ($localKey === null) {
+            $localKey = Inflector::singularize($foreignProvider->getTableName()) . '_' . $foreignProvider->getPrimaryKeyName();
+        }
+
+        $data = $provider->fetchData();
+
+        //find primary key
+        $primaryKey = $data[$localKey];
+
+        $mapper = $foreignProvider->getMapper()->setConnection($this->getConnection());
+
+        //if no primary key is available, return a select
+        $this->query = $primaryKey === null ? $mapper->select() : $mapper->find($primaryKey);
+
+        return $this->query;
     }
 
     /**
@@ -72,36 +116,6 @@ class BelongsTo implements RelationInterface
     public function getLocalKey()
     {
         return $this->localKey;
-    }
-
-    protected function init()
-    {
-        $provider = LocatorFacade::getProvider($this->getEntity());
-        $foreignAdapter = LocatorFacade::getProvider($this->getForeignEntity());
-        $localKey = $this->getLocalKey();
-
-        if ($localKey === null) {
-            $localKey = $foreignAdapter->getTableName() . '_' . $foreignAdapter->getPrimaryKeyName();
-        }
-
-        $data = $provider->fromObjectToArray();
-
-        //find primary key
-        $primaryKey = $data[$localKey];
-
-        $mapper = $foreignAdapter->getMapper();
-
-        //if no primary key is available, return a select
-        $this->query = $primaryKey === null ? $mapper->select() : $mapper->find($primaryKey);
-        $this->name = $foreignAdapter->getTableName();
-    }
-
-    /**
-     * @return array|\ArrayObject|object|bool
-     */
-    public function execute()
-    {
-        return $this->getQuery()->execute(HydratorInterface::HYDRATE_AUTO);
     }
 
 }

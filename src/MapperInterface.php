@@ -8,6 +8,12 @@
 
 namespace Blast\Orm;
 
+/**
+ * Each entity does have it's own mapper. A mapper is determined by the entity provider. Mappers mediate between dbal
+ * and entity and provide convenient CRUD (Create, Read, Update, Delete).
+ *
+ * @package Blast\Orm
+ */
 interface MapperInterface
 {
 

@@ -12,12 +12,14 @@
 
 namespace Blast\Orm;
 
+use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
+use Blast\Orm\Entity\ProviderFactoryInterface;
+use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\ArrayToObjectHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
-use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use League\Event\EmitterAwareInterface;
 use League\Event\EmitterAwareTrait;
@@ -31,7 +33,7 @@ use stdClass;
  * @method int getState()
  * @method string getSQL()
  * @method Query setParameter($key, $value, $type = null)
- * @method Query setParameters(array $params, array $types = array())
+ * @method Query setParameters(array $params, array $types = [])
  * @method array getParameters()
  * @method mixed getParameter($key)
  * @method array getParameterTypes()
@@ -74,11 +76,13 @@ use stdClass;
  *
  * @package Blast\Db\Orm
  */
-class Query implements EmitterAwareInterface, QueryInterface
+class Query implements ConnectionAwareInterface, EmitterAwareInterface,
+    EntityAwareInterface, ProviderFactoryInterface, QueryInterface
 {
-
+    use ConnectionAwareTrait;
     use EmitterAwareTrait;
     use EntityAwareTrait;
+    use ProviderFactoryTrait;
 
     /**
      * @var QueryBuilder
@@ -86,64 +90,15 @@ class Query implements EmitterAwareInterface, QueryInterface
     private $builder;
 
     /**
-     * @var \Doctrine\DBAL\Connection
-     */
-    private $connection;
-
-    /**
      * Statement constructor.
-     * @param array|stdClass|\ArrayObject|object|string $entity
      *
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    public function __construct($entity = null)
-    {
-        $this->setEntity($entity);
-    }
-
-    /**
-     * @return \Doctrine\DBAL\Query\QueryBuilder
-     */
-    public function getBuilder()
-    {
-        if(null === $this->builder){
-            $this->builder = $this->getConnection()->createQueryBuilder();
-        }
-        return $this->builder;
-    }
-
-    /**
-     * @param \Doctrine\DBAL\Query\QueryBuilder $builder
-     *
-     * @return $this
-     */
-    public function setBuilder(QueryBuilder $builder)
-    {
-        $this->builder = $builder;
-
-        return $this;
-    }
-
-    /**
-     * @return \Doctrine\DBAL\Connection
-     */
-    public function getConnection()
-    {
-        if(null === $this->connection){
-            $this->connection = LocatorFacade::getConnectionManager()->get();
-        }
-        return $this->connection;
-    }
-
-    /**
      * @param \Doctrine\DBAL\Connection $connection
-     * @return $this
+     * @param array|stdClass|\ArrayObject|object|string $entity
      */
-    public function setConnection(Connection $connection)
+    public function __construct($connection = null, $entity = null)
     {
-        $this->connection = $connection;
-
-        return $this;
+        $this->setConnection($connection);
+        $this->setEntity($entity);
     }
 
     /**
@@ -156,8 +111,8 @@ class Query implements EmitterAwareInterface, QueryInterface
     public function execute($option = HydratorInterface::HYDRATE_AUTO)
     {
         //execute before events and proceed with builder from event
-        $provider = LocatorFacade::getProvider($this->getEntity());
-        $event = $this->beforeExecute($provider);
+        $provider = $this->createProvider($this->getEntity());
+        $event = $this->beforeExecute($provider->getEntity());
 
         if ($event->isCanceled()) {
             return false;
@@ -166,16 +121,13 @@ class Query implements EmitterAwareInterface, QueryInterface
         $builder = $event->getBuilder();
 
         //convert entity to adapter again
-        $provider = LocatorFacade::getProvider($builder->getEntity());
+        $provider = $this->createProvider($builder->getEntity());
 
-        //@todo this should be more dynamic for passing other connections
-        $connection = LocatorFacade::getConnectionManager()->get();
+        $connection = $this->getConnection();
         $isSelect = $builder->getType() === QueryBuilder::SELECT;
 
         $sql = $this->getSQL();
-        if(true){
 
-        }
         $statement = $isSelect ?
             //execute query and receive a statement
             $connection->executeQuery($sql, $this->getParameters(), $this->getParameterTypes()) :
@@ -188,54 +140,17 @@ class Query implements EmitterAwareInterface, QueryInterface
             $isSelect ?
                 $statement->fetchAll() :
                 $statement,
-            $provider, $builder);
+            $provider->getEntity(), $builder);
 
         if ($event->isCanceled()) {
             return false;
         }
 
         $result = $event->getResult();
-        $data = (new ArrayToObjectHydrator($provider->getEntity()))->hydrate($result, $option);
+        $data = (new ArrayToObjectHydrator($provider))->hydrate($result, $option);
         gc_collect_cycles();
 
         return $data;
-    }
-
-    /**
-     * Get query type name
-     * @return string
-     * @throws \Exception
-     */
-    public function getTypeName()
-    {
-        switch ($this->getType()) {
-            case QueryBuilder::SELECT:
-                return 'select';
-            case QueryBuilder::INSERT:
-                return 'insert';
-            case QueryBuilder::UPDATE:
-                return 'update';
-            case QueryBuilder::DELETE:
-                return 'delete';
-            // @codeCoverageIgnoreStart
-            default:
-                //this could only happen if query will be extended and a custom getType is return invalid type
-                throw new \Exception('Unknown query type ' . $this->getType());
-        }
-        // @codeCoverageIgnoreEnd
-    }
-
-    /**
-     * Magic call of \Doctrine\DBAL\Query\QueryBuilder methods
-     *
-     * @param string|callable $name
-     * @param array $arguments
-     * @return mixed
-     */
-    public function __call($name, array $arguments = [])
-    {
-        $result = call_user_func_array([$this->getBuilder(), $name], $arguments);
-        return $result instanceof QueryBuilder ? $this : $result;
     }
 
     /**
@@ -250,7 +165,7 @@ class Query implements EmitterAwareInterface, QueryInterface
         $event = $this->getEmitter()->emit(new QueryBuilderEvent('before.' . $this->getTypeName(), $builder));
 
         if ($entity instanceof EmitterAwareInterface) {
-            $event = $entity->getEmitter()->emit($event, $builder);
+            $event = $entity->getEmitter()->emit($event);
         }
 
         return $event;
@@ -276,12 +191,6 @@ class Query implements EmitterAwareInterface, QueryInterface
         return $event;
     }
 
-    /*
-     * --------------------------------------------------------------------------
-     *              IMPROVED QUERY BUILDER METHODS
-     * --------------------------------------------------------------------------
-     */
-
     /**
      * Specifies an item that is to be returned in the query result.
      * Replaces any previously specified selections, if any.
@@ -304,6 +213,68 @@ class Query implements EmitterAwareInterface, QueryInterface
         }
 
         return $this->__call(__FUNCTION__, [$select]);
+    }
+
+    /**
+     * Magic call of \Doctrine\DBAL\Query\QueryBuilder methods
+     *
+     * @param string|callable $name
+     * @param array $arguments
+     * @return mixed
+     */
+    public function __call($name, array $arguments = [])
+    {
+        $result = call_user_func_array([$this->getBuilder(), $name], $arguments);
+
+        return $result instanceof QueryBuilder ? $this : $result;
+    }
+
+    /**
+     * @return \Doctrine\DBAL\Query\QueryBuilder
+     */
+    public function getBuilder()
+    {
+        if (null === $this->builder) {
+            $this->builder = $this->getConnection()->createQueryBuilder();
+        }
+
+        return $this->builder;
+    }
+
+    /**
+     * @param \Doctrine\DBAL\Query\QueryBuilder $builder
+     *
+     * @return $this
+     */
+    public function setBuilder(QueryBuilder $builder)
+    {
+        $this->builder = $builder;
+
+        return $this;
+    }
+
+    /**
+     * Get query type name
+     * @return string
+     * @throws \Exception
+     */
+    public function getTypeName()
+    {
+        switch ($this->getType()) {
+            case QueryBuilder::SELECT:
+                return 'select';
+            case QueryBuilder::INSERT:
+                return 'insert';
+            case QueryBuilder::UPDATE:
+                return 'update';
+            case QueryBuilder::DELETE:
+                return 'delete';
+            // @codeCoverageIgnoreStart
+            default:
+                //this could only happen if query will be extended and a custom getType is return invalid type
+                throw new \Exception('Unknown query type ' . $this->getType());
+        }
+        // @codeCoverageIgnoreEnd
     }
 
 }

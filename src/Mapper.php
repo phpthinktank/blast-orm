@@ -12,24 +12,31 @@ use ArrayObject;
 use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Entity\Provider;
+use Blast\Orm\Entity\ProviderFactoryInterface;
+use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Entity\ProviderInterface;
 use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\Hydrator\ObjectToArrayHydrator;
 use Blast\Orm\Query;
+use Blast\Orm\Relations\BelongsTo;
+use Blast\Orm\Relations\HasMany;
+use Blast\Orm\Relations\HasOne;
+use Blast\Orm\Relations\ManyToMany;
 use Blast\Orm\Relations\RelationInterface;
 use stdClass;
 
 /**
- * Class Mapper
+ * Each entity does have it's own mapper. A mapper is determined by the entity provider. Mappers mediate between dbal
+ * and entity and provide convenient CRUD (Create, Read, Update, Delete). In addition to CRUD, the mapper is also delivering
+ * convenient methods to to work with relations.
  *
- * Mapping results to entities
- *
- * @package Blast\Db\Orm
+ * @package Blast\Orm
  */
-class Mapper implements MapperInterface, EntityAwareInterface
+class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperInterface, ProviderFactoryInterface
 {
 
+    use ConnectionAwareTrait;
     use EntityAwareTrait;
+    use ProviderFactoryTrait;
 
     /**
      * @var ProviderInterface
@@ -37,61 +44,20 @@ class Mapper implements MapperInterface, EntityAwareInterface
     private $provider;
 
     /**
-     * @var \Doctrine\DBAL\Driver\Connection|null
-     */
-    private $connection;
-
-    /**
      * Disable direct access to mapper
+     *
      * @param array|\ArrayObject|stdClass|\ArrayObject|object|string $entity
      * @param \Doctrine\DBAL\Driver\Connection $connection
      */
     public function __construct($entity, $connection = null)
     {
+        $this->connection = $connection;
         if ($entity instanceof ProviderInterface) {
             $this->setEntity($entity->getEntity());
             $this->provider = $entity;
         } else {
             $this->setEntity($entity);
-            $this->provider = LocatorFacade::getProvider($this->getEntity());
         }
-        $this->connection = $connection;
-    }
-
-    /**
-     * Create a new Query instance
-     * @return Query
-     */
-    public function createQuery()
-    {
-        $query = new Query($this->getEntity());
-        return null !== $this->connection ? $query->setConnection($this->connection) : $query;
-    }
-
-    /**
-     * Get current connection
-     *
-     * @return \Doctrine\DBAL\Driver\Connection|null
-     */
-    public function getConnection()
-    {
-        return $this->connection;
-    }
-
-    /**
-     * @param \Doctrine\DBAL\Driver\Connection|null $connection
-     */
-    public function setConnection($connection)
-    {
-        $this->connection = $connection;
-    }
-
-    /**
-     * @return ProviderInterface
-     */
-    public function getProvider()
-    {
-        return $this->provider;
     }
 
     /**
@@ -125,6 +91,66 @@ class Mapper implements MapperInterface, EntityAwareInterface
     }
 
     /**
+     * Create a new Query instance
+     * @return Query
+     */
+    public function createQuery()
+    {
+        $query = new Query($this->getConnection(), $this->getEntity());
+
+        return $query;
+    }
+
+    /**
+     * @return ProviderInterface
+     */
+    public function getProvider()
+    {
+        if(null === $this->provider){
+            $this->provider = $this->createProvider($this->getEntity());
+        }
+        return $this->provider;
+    }
+
+    /**
+     * Prepare delete query for attached entity by identifiers
+     *
+     * @param array|int|string $identifiers
+     * @return query
+     */
+    public function delete($identifiers)
+    {
+        if (!is_array($identifiers)) {
+            $identifiers = [$identifiers];
+        }
+
+        $provider = $this->getProvider();
+
+        //prepare statement
+        $pkName = $provider->getPrimaryKeyName();
+        $query = $this->createQuery();
+        $query->delete($provider->getTableName());
+
+        //add entities by pk to delete
+        foreach ($identifiers as $identifier) {
+            $query->orWhere($query->expr()->eq($pkName, $query->createPositionalParameter($identifier)));
+        }
+
+        return $query;
+    }
+
+    /**
+     * Create or update an entity
+     *
+     * @param \ArrayObject|\SplStack|\stdClass|object $entity
+     * @return Query
+     */
+    public function save($entity)
+    {
+        return $this->createProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
+    }
+
+    /**
      * Create query for new entity.
      *
      * @param array|\ArrayObject|\stdClass|object $entity
@@ -145,7 +171,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $query->insert($provider->getTableName());
 
         //pass data without relations
-        $data = $provider->fromObjectToArray();
+        $data = $provider->fetchData();
 
         //cancel if $data has no entries
         if (count($data) < 1) {
@@ -185,7 +211,7 @@ class Mapper implements MapperInterface, EntityAwareInterface
         $query->update($provider->getTableName());
 
         //pass data without relations
-        $data = $provider->fromObjectToArray();
+        $data = $provider->fetchData();
 
         foreach ($data as $key => $value) {
             if ($value instanceof RelationInterface) {
@@ -200,57 +226,117 @@ class Mapper implements MapperInterface, EntityAwareInterface
     }
 
     /**
-     * Prepare delete query for attached entity by identifiers
+     * BelongsTo is the inverse of a HasOne or a HasMany relation.
      *
-     * @param array|int|string $identifiers
-     * @return query
-     */
-    public function delete($identifiers)
-    {
-        if (!is_array($identifiers)) {
-            $identifiers = [$identifiers];
-        }
-
-        $provider = $this->getProvider();
-
-        //prepare statement
-        $pkName = $provider->getPrimaryKeyName();
-        $query = $this->createQuery();
-        $query->delete($provider->getTableName());
-
-        //add entities by pk to delete
-        foreach ($identifiers as $identifier) {
-            $query->orWhere($query->expr()->eq($pkName, $query->createPositionalParameter($identifier)));
-        }
-
-        return $query;
-    }
-
-    /**
-     * Create or update an entity
+     * One entity is associated with one related entity by a field which
+     * associates with primary key in related entity.
      *
-     * @param \ArrayObject|\SplStack|\stdClass|object $entity
+     * @param $entity
+     * @param $foreignEntity
+     * @param null $localKey
+     *
      * @return Query
      */
-    public function save($entity)
+    public function belongsTo($entity, $foreignEntity, $localKey = null)
     {
-        return LocatorFacade::getProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
+        return $this->prepareRelation(new BelongsTo($entity, $foreignEntity, $localKey));
     }
 
     /**
+     * One entity is associated with one related entity by a field which
+     * associates with primary key in current entity.
+     *
+     * @param $entity
+     * @param $foreignEntity
+     * @param null|string $foreignKey
+     *
+     * @return Query
+     */
+    public function hasOne($entity, $foreignEntity, $foreignKey = null)
+    {
+        return $this->prepareRelation(new HasOne($entity, $foreignEntity, $foreignKey));
+    }
+
+    /**
+     * One entity is associated with many related entities
+     * by a field which associates with primary key in current entity.
+     *
+     * @param $entity
+     * @param $foreignEntity
+     * @param null $foreignKey
+     *
+     * @return Query
+     */
+    public function hasMany($entity, $foreignEntity, $foreignKey = null)
+    {
+        return $this->prepareRelation(new HasMany($entity, $foreignEntity, $foreignKey));
+    }
+
+    /**
+     * Many entities of type _A_ are associated with many
+     * related entities of type _B_ by a junction table.
+     * The junction table stores associations from entities
+     * of type _A_ to entities of type _B_.
+     *
+     * @param $entity
+     * @param $foreignEntity
+     * @param null $foreignKey
+     * @param null $localKey
+     * @param null $junction
+     * @param null $junctionLocalKey
+     * @param null $junctionForeignKey
+     *
+     * @return Query
+     */
+    public function manyToMany(
+        $entity,
+        $foreignEntity,
+        $foreignKey = null,
+        $localKey = null,
+        $junction = null,
+        $junctionLocalKey = null,
+        $junctionForeignKey = null
+    ) {
+
+        return $this->prepareRelation(
+            new ManyToMany($entity, $foreignEntity, $foreignKey,
+                $localKey, $junction, $junctionLocalKey, $junctionForeignKey)
+        );
+
+    }
+
+    /**
+     * Prepare provider by determining entity type
+     *
      * @param $entity
      * @return Provider
      */
-    public function prepareProvider($entity)
+    private function prepareProvider($entity)
     {
         if (is_array($entity)) {
-            $provider = LocatorFacade::getProvider($this->getEntity());
+            $provider = $this->createProvider($this->getEntity());
 
             //reset entity in provider
-            $provider->setEntity($provider->fromArrayToObject($entity, HydratorInterface::HYDRATE_ENTITY));
+            $provider->setEntity($provider->withData($entity, HydratorInterface::HYDRATE_ENTITY));
         } else {
-            $provider = LocatorFacade::getProvider($entity);
+            $provider = $this->createProvider($entity);
         }
+
         return $provider;
+    }
+
+    /**
+     * Share mapper connection with relation
+     *
+     * @param $relation
+     * @return mixed
+     */
+    private function prepareRelation(RelationInterface $relation)
+    {
+        if ($relation instanceof ConnectionAwareInterface) {
+            $relation->setConnection($this->getConnection());
+        }
+
+        return $relation;
     }
 }
