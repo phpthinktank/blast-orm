@@ -738,39 +738,21 @@ Create from interface
 ```php
 <?php
 
+use Blast\Orm\MapperFactoryInterface;
+use Blast\Orm\MapperFactoryTrait;
 use Blast\Orm\RepositoryInterface;
-use Blast\Orm\Entity\EntityAwareInterface;
-use Blast\Orm\Entity\EntityAwareTrait;
-use Blast\Orm\Entity\Provider;
 use Blast\Orm\Hydrator\HydratorInterface;
 
-class PostRepository implements EntityAwareInterface, RepositoryInterface
+class PostRepository implements implements MapperFactoryInterface, RepositoryInterface
 {
-    use EntityAwareTrait;
+    
+    use MapperFactoryTrait;
     
     /**
-     * Init repository and bind related entity
+     * Get repository entity
      */
-    public function __construct(){
-        $this->setEntity(Post::class);
-    }
-
-    /**
-     * @var \Blast\Orm\Entity\ProviderInterface
-     */
-    protected $provider = null;
-
-    /**
-     * Get adapter for entity
-     *
-     * @return Provider
-     */
-    private function getProvider()
-    {
-        if ($this->provider === null) {
-            $this->provider = new Provider($this->getEntity());
-        }
-        return $this->provider;
+    public function getEntity(){
+        return Post::class;
     }
 
     /**
@@ -780,7 +762,7 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
      */
     public function all()
     {
-        return $this->getProvider()->getMapper()->select()->execute(HydratorInterface::HYDRATE_COLLECTION);
+        return $this->createMapper($this->getEntity())->select()->execute(HydratorInterface::HYDRATE_COLLECTION);
     }
 
     /**
@@ -791,7 +773,7 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
      */
     public function find($primaryKey)
     {
-        return $this->getProvider()->getMapper()->find($primaryKey)->execute(HydratorInterface::HYDRATE_ENTITY);
+        return $this->createMapper($this->getEntity())->find($primaryKey)->execute(HydratorInterface::HYDRATE_ENTITY);
     }
 
     /**
@@ -802,21 +784,29 @@ class PostRepository implements EntityAwareInterface, RepositoryInterface
      */
     public function save($data)
     {
-
-        if (is_array($data)) {
-            // get a new provider with data for valid isNew check
-            $provider = new Provider($this->getProvider()->fromArrayToObject($data));
-        } else {
-            $provider = $this->getProvider();
-        }
-
-        $mapper = $provider->getMapper();
-        $query = $provider->isNew() ? $mapper->create($data) : $mapper->update($data);
-        return $query->execute();
+        return $this->createMapper($data)->save($data)->execute();
     }
 
 }
 
+```
+
+Create repository by abstract
+
+```php
+<?php
+
+use Blast\Orm\AbstractRepository;
+
+class PostRepository extends AbstractRepository {
+    
+    /**
+     * Init repository and bind related entity
+     */
+    public function __construct(){
+        $this->setEntity(Post::class);
+    }
+}
 ```
 
 Create repository instance
