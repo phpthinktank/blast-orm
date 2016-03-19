@@ -8,8 +8,10 @@
 
 namespace Blast\Tests\Orm;
 
+use Blast\Orm\Entity\Definition;
 use Blast\Orm\Entity\Provider;
 use Blast\Orm\Mapper;
+use Blast\Orm\Relations\RelationInterface;
 use Blast\Tests\Orm\Stubs\Entities\Post;
 use Blast\Tests\Orm\Stubs\Entities\PostWithUserRelation;
 use Blast\Tests\Orm\Stubs\Entities\User;
@@ -142,13 +144,16 @@ class MapperTest extends AbstractDbTestCase
         $mapper = new Mapper(PostWithUserRelation::class);
         $result = $mapper->find(1)->execute();
 
-        $provider = new Provider($result);
-        $relations = [];
+        $this->assertInstanceOf(RelationInterface::class, $result['users']);
+    }
 
-        foreach($provider->getRelations() as $relation){
-            $relations[$relation->getName()] = $relation->execute();
-        }
+    public function testUseDefinition(){
+        $definition = new Definition([
+            'tableName' => 'user_role'
+        ]);
+        $mapper = new Mapper(new Provider($definition));
+        $result = $mapper->select()->setMaxResults(1)->execute();
 
-//        $this->assertEquals($result, 1);
+        $this->assertInstanceOf(RelationInterface::class, $result['users']);
     }
 }
