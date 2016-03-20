@@ -96,9 +96,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
      */
     public function createQuery()
     {
-        $query = new Query($this->getConnection(), $this->getEntity());
-
-        return $query;
+        return new Query($this->getConnection(), $this->getEntity());
     }
 
     /**
@@ -106,9 +104,10 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
      */
     public function getProvider()
     {
-        if(null === $this->provider){
+        if (null === $this->provider) {
             $this->provider = $this->createProvider($this->getEntity());
         }
+
         return $this->provider;
     }
 
@@ -120,9 +119,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
      */
     public function delete($identifiers)
     {
-        if (!is_array($identifiers)) {
-            $identifiers = [$identifiers];
-        }
+        $identifiers = is_array($identifiers) ? $identifiers : [$identifiers];
 
         $provider = $this->getProvider();
 
