@@ -94,7 +94,7 @@ entity and mapper or query.
 
 Instead of passing an entity to provider (from mapper, query or direct), blast orm allows to pass a definition instance.
 
-Definition managing schema specific information
+Definition managing entity meta and schema specific configuration.
  
 ### Mappers
 
@@ -403,7 +403,7 @@ On result a query statement
 ```php
 <?php
 
-$query->getEmitter()->addListener('result.select', function (QueryBuilderEvent $event) {
+$query->getEmitter()->addListener('result.select', function (QueryResultEvent $event) {
     $event->setCanceled(true);
 });
 ```
