@@ -121,7 +121,7 @@ class QueryTest extends AbstractDbTestCase
 
         //add additional value to result set
         $query->getEmitter()->addListener('result.select', function (QueryResultEvent $event, Query $builder) {
-            $this->assertInstanceOf($builder, Query::class);
+            $this->assertInstanceOf(Query::class, $builder);
             $result = $event->getResult();
 
             foreach ($result as $key => $value) {
