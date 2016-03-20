@@ -63,10 +63,16 @@ An example can be found in this [blog post](http://bit.ly/php-orm).
 
 ## Features
 
- - Entities as POPO (Plain-old PHP objects)
- - Auto-Suggesting entity definition and custom definition
- - Hydration from data to entity and vice versa
- - Entity aware query builder
+ - Decoupled entities as POPO's (Plain-old PHP objects)
+ - Auto-Suggesting entity definition as well as configure custom definition
+ - Data hydration to entity and vice versa
+ - Repository contracted to a single entity class
+ - Data and relation mapper
+
+## Upcoming in 0.6
+
+ - Unit of Work - Entity-aware transactions
+ - Toggling identity maps - Reduce load by storing entity by primary key 
 
 ## Concept
 
@@ -79,10 +85,16 @@ It is recommended to use accessors (getters) and mutators (setters) for properti
 Entity classes could also be instances of [`stdClass`](http://php.net/manual/en/reserved.classes.php), 
 [`ArrayObject`](http://php.net/manual/de/class.arrayobject.php) or [`DataObject`](src/Data/DataObject.php)
  
-### Provider
+#### Provider
  
 The provider suggests and provides entity definitions and two-way-hydration and entity itself. The provider is a link between independent 
 entity and mapper or query.
+
+#### Definition
+
+Instead of passing an entity to provider (from mapper, query or direct), blast orm allows to pass a definition instance.
+
+Definition managing schema specific information
  
 ### Mappers
 
@@ -327,6 +339,75 @@ Execute query and get raw result as array
 $result = $query->execute(HydratorInterface::RESULT_RAW);
 ```
 
+#### Events
+
+Query is able to execute events for each statement type.
+
+ - select
+ - insert
+ - update
+ - delete
+ 
+##### build.{type}
+
+Fire this event before query executes statement.
+
+```php
+<?php
+
+$query->getEmitter()->addListener('build.select', function (QueryBuilderEvent $event) {
+    $event->getBuilder()->setEntity(Post::class);
+});
+
+$result = $query->select()->from('post')->where('id = 1')->execute();
+
+```
+
+##### result.{type}
+
+Fire this event after query executes statement and receives result.
+
+```php
+<?php
+
+$query->getEmitter()->addListener('result.select', function (QueryResultEvent $event, Query $builder) {
+    $result = $event->getResult();
+
+    foreach ($result as $key => $value) {
+        $result[$key]['contentSize'] = strlen($value['content']);
+    }
+
+    $event->setResult($result);
+});
+
+$result = $query->select()->from('post')->where('id = 1')->execute();
+
+```
+
+###### Canceling query execution
+ 
+Use `setCancel()` method from given event to cancel a query execution.
+
+On build a query statement
+
+```php
+<?php
+
+$query->getEmitter()->addListener('build.select', function (QueryBuilderEvent $event) {
+    $event->setCanceled(true);
+});
+```
+
+On result a query statement
+
+```php
+<?php
+
+$query->getEmitter()->addListener('result.select', function (QueryBuilderEvent $event) {
+    $event->setCanceled(true);
+});
+```
+
 ### Entities
 
 Entity classes are independent of Blast ORM.
@@ -343,17 +424,45 @@ class Post
 
 #### Definition
 
-In addition to auto-suggest definition from provider transformer, it is 
-also possible to use definition instead of entity.
+In addition to auto-suggest definition from provider, it is also possible to use definition instead of entity.
 
 ```php
 <?php
 
-class Post
-{
+use Blast\Orm\Entity\Definition;
+use Blast\Orm\Mapper;
+use Blast\Orm\Query;
 
-}
+$definition = new Definition();
+$definition->setConfiguration([
+    'tableName' => 'user_role'
+]);
 
+//from mapper
+$mapper = new Mapper($definition);
+
+//from query
+$query = new Query($connection, $definition);
+
+```
+
+A list of possible configuration
+
+```php
+<?php
+
+$configuration = [
+        'entity' => \ArrayObject::class,
+        'entityCollection' => \SplStack::class,
+        'events' => [],
+        'fields' => [],
+        'indexes' => [],
+        'primaryKeyName' => ProviderInterface::DEFAULT_PRIMARY_KEY_NAME,
+        'tableName' => '',
+        'mapper' => Mapper::class,
+        'relations' => []
+    ];
+$definition->setConfiguration($configuration);
 ```
 
 #### Provider
@@ -555,7 +664,7 @@ $data = $postProvider->fromObjectToArray();
 ### Mapper
 
 The mapper prepares queries for data persistence and access of a provided entity class. All methods always return a query 
-instance and need to execute manually.
+instance and need to execute manually. It is also possible to add event listeners for query
 
 #### Create a new mapper for entity
 

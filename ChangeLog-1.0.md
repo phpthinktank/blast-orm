@@ -6,6 +6,19 @@ All notable changes of the Blast orm 1.0 release series are documented in this f
 
 ### Fixes
 
+ - Fix bug: Use configured collection from definition instead of always \SplStack
+
+### Altered
+
+ - Add definition tests for mapper and query
+ - Rename query `before` event to `build` 
+ - Rename query `after` event to `result` 
+ - Update readme
+
+## 0.5
+
+### Fixes
+
  - Fix bug where plain object don't get data from hydrator
  - Fix bug throwing exception when attaching relation without name
 
