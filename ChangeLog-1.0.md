@@ -2,6 +2,19 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 0.5.1
+
+### Fixes
+
+ - Fix bug: Use configured collection from definition instead of always \SplStack
+
+### Altered
+
+ - Add definition tests for mapper and query
+ - Rename query `before` event to `build` 
+ - Rename query `after` event to `result` 
+ - Update readme
+
 ## 0.5
 
 ### Fixes

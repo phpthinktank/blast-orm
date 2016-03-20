@@ -14,6 +14,7 @@
 namespace Blast\Tests\Orm\Entity;
 
 
+use Blast\Orm\Entity\Definition;
 use Blast\Orm\Entity\Transformer;
 use Blast\Orm\MapperInterface;
 use Blast\Tests\Orm\Stubs\Entities\Post;

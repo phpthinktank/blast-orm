@@ -162,7 +162,7 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
     private function beforeExecute($entity)
     {
         $builder = $this;
-        $event = $this->getEmitter()->emit(new QueryBuilderEvent('before.' . $this->getTypeName(), $builder));
+        $event = $this->getEmitter()->emit(new QueryBuilderEvent('build.' . $this->getTypeName(), $builder));
 
         if ($entity instanceof EmitterAwareInterface) {
             $event = $entity->getEmitter()->emit($event);
@@ -182,7 +182,7 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
     private function afterExecute($result, $entity, $builder)
     {
 
-        $event = $this->getEmitter()->emit(new QueryResultEvent('after.' . $builder->getTypeName(), $result), $builder);
+        $event = $this->getEmitter()->emit(new QueryResultEvent('result.' . $builder->getTypeName(), $result), $builder);
 
         if ($entity instanceof EmitterAwareInterface) {
             $event = $entity->getEmitter()->emit($event, $builder);
