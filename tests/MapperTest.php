@@ -148,12 +148,14 @@ class MapperTest extends AbstractDbTestCase
     }
 
     public function testUseDefinition(){
-        $definition = new Definition([
+        $definition = new Definition();
+        $definition->setConfiguration([
             'tableName' => 'user_role'
         ]);
-        $mapper = new Mapper(new Provider($definition));
+        $mapper = new Mapper($definition);
         $result = $mapper->select()->setMaxResults(1)->execute();
 
-        $this->assertInstanceOf(RelationInterface::class, $result['users']);
+        $this->assertEquals(1, $result['user_pk']);
+        $this->assertEquals(1, $result['role_id']);
     }
 }
