@@ -27,7 +27,7 @@ abstract class AbstractDbTestCase extends \PHPUnit_Framework_TestCase
             'memory' => 'true'
         ])->get();
 
-        $connection->exec('CREATE TABLE post (id int, user_pk int, title VARCHAR(255), content TEXT)');
+        $connection->exec('CREATE TABLE post (id int, user_pk int, title VARCHAR(255), content TEXT, date DATETIME DEFAULT CURRENT_DATE )');
         $connection->exec('CREATE TABLE users (pk int, name VARCHAR(255))');
         $connection->exec('CREATE TABLE addresses (id int, user_pk int, address TEXT)');
         $connection->exec('CREATE TABLE user_role (user_pk int, role_id int)');

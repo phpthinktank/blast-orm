@@ -8,15 +8,9 @@
 
 namespace Blast\Tests\Orm\Stubs\Entities;
 
-use Blast\Orm\Data\AccessorInterface;
-use Blast\Orm\Data\AccessorTrait;
-use Blast\Orm\Data\DataObjectInterface;
-use Blast\Orm\Data\ImmutableDataObjectTrait;
-use Blast\Orm\Data\MutableDataObjectTrait;
-use Blast\Orm\Data\MutatorInterface;
-use Blast\Orm\Data\MutatorTrait;
-use Blast\Orm\Relations\BelongsTo;
-use Blast\Tests\Orm\Stubs\Data\ArrayObject;
+use Blast\Orm\Mapper;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Types\Type;
 
 /**
  * @codeCoverageIgnore
@@ -32,5 +26,12 @@ class Post extends \ArrayObject
     public static function tablename()
     {
         return 'post';
+    }
+
+    public static function fields($entity, Mapper $mapper)
+    {
+        return [
+            'date' => new Column('date', Type::getType(Type::DATETIME), ['default' => new \DateTime()])
+        ];
     }
 }
