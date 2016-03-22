@@ -10,20 +10,21 @@ Framework agnostic data access and persistence based on Doctrine 2 DBAL.
 
 ## Features
 
- - Decoupled entities as POPO's (Plain-old PHP objects)
- - Auto-Suggesting entity definition as well as configure custom definition
- - Data hydration to entity and vice versa
- - Repository contracted to a single entity class
- - Data and relation mapper
+ - Data and relation mapper _since 0.1_
+ - Decoupled entities as POPO's (Plain-old PHP objects) _since 0.3_
+ - Auto-Suggesting entity definition as well as configure custom definition _since 0.5_
+ - Data hydration to entity and vice versa _since 0.5_
+ - Repository contracted to a single entity class _since 0.5_
+ - Integration of fields from definition _since 0.5.2_
+ - Field type aware converting _since 0.5.2_
 
-## Upcoming in 0.6
+## Upcoming features
 
  - Unit of Work - Entity-aware transactions
  - Identity map - Reduce load by storing entity by primary key 
  - Saveable relations
- - Integration of fields and indexes from definition
- - Field type aware converting
-
+ - Integration of indexes from definition
+ 
 ## Install
 
 ### Using Composer
