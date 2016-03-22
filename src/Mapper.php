@@ -112,46 +112,6 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
     }
 
     /**
-     * Prepare delete query for attached entity by identifiers
-     *
-     * @param array|int|string $identifiers
-     * @return query
-     */
-    public function delete($identifiers)
-    {
-        $identifiers = is_array($identifiers) ? $identifiers : [$identifiers];
-
-        $provider = $this->getProvider();
-
-        //prepare statement
-        $pkName = $provider->getPrimaryKeyName();
-        $query = $this->createQuery();
-        $query->delete($provider->getTableName());
-
-        //add entities by pk to delete
-        foreach ($identifiers as $identifier) {
-            if(is_object($identifier)){
-                $data = $this->createProvider($identifier)->fetchData();
-                $identifier = $data[$pkName];
-            }
-            $query->orWhere($query->expr()->eq($pkName, $query->createPositionalParameter($identifier)));
-        }
-
-        return $query;
-    }
-
-    /**
-     * Create or update an entity
-     *
-     * @param \ArrayObject|\SplStack|\stdClass|object $entity
-     * @return Query
-     */
-    public function save($entity)
-    {
-        return $this->createProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
-    }
-
-    /**
      * Create query for new entity.
      *
      * @param array|\ArrayObject|\stdClass|object $entity
@@ -163,9 +123,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         $provider = $this->prepareProvider($entity);
 
         //disallow differing entities
-        if (get_class($provider->getEntity()) !== get_class($this->getProvider()->getEntity())) {
-            throw new \InvalidArgumentException('Try to create differing entity!');
-        }
+        $this->checkEntity($provider);
 
         //prepare statement
         $query = $this->createQuery();
@@ -201,9 +159,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         $provider = $this->prepareProvider($entity);
 
         //disallow differing entities
-        if (get_class($provider->getEntity()) !== get_class($this->getProvider()->getEntity())) {
-            throw new \InvalidArgumentException('Try to update differing entity!');
-        }
+        $this->checkEntity($provider);
 
         $pkName = $provider->getPrimaryKeyName();
 
@@ -222,6 +178,48 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         }
 
         $query->where($query->expr()->eq($pkName, $data[$pkName]));
+
+        return $query;
+    }
+
+    /**
+     * Create or update an entity
+     *
+     * @param \ArrayObject|\SplStack|\stdClass|object $entity
+     * @return Query
+     */
+    public function save($entity)
+    {
+        return $this->createProvider($entity)->isNew() ? $this->create($entity) : $this->update($entity);
+    }
+
+    /**
+     * Prepare delete query for attached entity by identifiers
+     *
+     * @param array|int|string $identifiers
+     * @return query
+     */
+    public function delete($identifiers)
+    {
+        $identifiers = is_array($identifiers) ? $identifiers : [$identifiers];
+
+        $provider = $this->getProvider();
+
+        //prepare statement
+        $pkName = $provider->getPrimaryKeyName();
+        $query = $this->createQuery();
+        $query->delete($provider->getTableName());
+
+        //add entities by pk to delete
+        foreach ($identifiers as $identifier) {
+            if(is_object($identifier)){
+                $identifierProvider = $this->createProvider($identifier);
+                $this->checkEntity($identifierProvider);
+                $data = $identifierProvider->fetchData();
+                $identifier = $data[$pkName];
+            }
+            $query->orWhere($query->expr()->eq($pkName, $query->createPositionalParameter($identifier)));
+        }
 
         return $query;
     }
@@ -340,5 +338,20 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         }
 
         return $relation;
+    }
+
+    /**
+     * Check if external entity matches mapper entity
+     *
+     * @param $provider
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function checkEntity(ProviderInterface $provider)
+    {
+        $class = get_class($provider->getEntity());
+        if ($class !== get_class($this->getProvider()->getEntity())) {
+            throw new \InvalidArgumentException('Disallowed usage of differing entity!' . $class);
+        }
     }
 }
