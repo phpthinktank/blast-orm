@@ -130,6 +130,10 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
 
         //add entities by pk to delete
         foreach ($identifiers as $identifier) {
+            if(is_object($identifier)){
+                $data = $this->createProvider($identifier)->fetchData();
+                $identifier = $data[$pkName];
+            }
             $query->orWhere($query->expr()->eq($pkName, $query->createPositionalParameter($identifier)));
         }
 
@@ -313,7 +317,8 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         if (is_array($entity)) {
             $provider = $this->createProvider($this->getEntity());
 
-            //reset entity in provider
+            // reset entity in provider and
+            // set data
             $provider->setEntity($provider->withData($entity, HydratorInterface::HYDRATE_ENTITY));
         } else {
             $provider = $this->createProvider($entity);

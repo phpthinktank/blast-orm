@@ -126,6 +126,18 @@ class MapperTest extends AbstractDbTestCase
     public function testDelete()
     {
         $mapper = new Mapper(new Post);
+        $post = $result = $mapper->find(2)->execute();
+        $result = $mapper->delete($post)->execute();
+
+        $this->assertEquals($result, 1);
+    }
+
+    /**
+     * delete entry by pk
+     */
+    public function testDeleteObject()
+    {
+        $mapper = new Mapper(new Post);
         $result = $mapper->delete(1)->execute();
 
         $this->assertEquals($result, 1);
