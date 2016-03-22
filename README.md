@@ -8,13 +8,21 @@
 
 Framework agnostic data access and persistence based on Doctrine 2 DBAL.
 
-## Install
+## Features
 
-Via Composer
+ - Decoupled entities as POPO's (Plain-old PHP objects)
+ - Auto-Suggesting entity definition as well as configure custom definition
+ - Data hydration to entity and vice versa
+ - Repository contracted to a single entity class
+ - Data and relation mapper
 
-``` bash
-$ composer require blast/orm
-```
+## Upcoming in 0.6
+
+ - Unit of Work - Entity-aware transactions
+ - Identity map - Reduce load by storing entity by primary key 
+ - Saveable relations
+ - Integration of fields and indexes from definition
+ - Field type aware converting
 
 ## Install
 
@@ -60,19 +68,6 @@ The following versions of PHP are supported by this version.
 ## Example
 
 An example can be found in this [blog post](http://bit.ly/php-orm).
-
-## Features
-
- - Decoupled entities as POPO's (Plain-old PHP objects)
- - Auto-Suggesting entity definition as well as configure custom definition
- - Data hydration to entity and vice versa
- - Repository contracted to a single entity class
- - Data and relation mapper
-
-## Upcoming in 0.6
-
- - Unit of Work - Entity-aware transactions
- - Toggling identity maps - Reduce load by storing entity by primary key 
 
 ## Concept
 
