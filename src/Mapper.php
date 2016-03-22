@@ -22,6 +22,7 @@ use Blast\Orm\Relations\HasMany;
 use Blast\Orm\Relations\HasOne;
 use Blast\Orm\Relations\ManyToMany;
 use Blast\Orm\Relations\RelationInterface;
+use Doctrine\DBAL\Types\Type;
 use stdClass;
 
 /**
@@ -137,11 +138,17 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
             return false;
         }
 
+        $fields = $provider->getFields();
+
         foreach ($data as $key => $value) {
             if ($value instanceof RelationInterface) {
                 continue;
-            }
-            $query->setValue($key, $query->createPositionalParameter($value));
+            };
+
+            $query->setValue($key, $query->createPositionalParameter(
+                $value, array_key_exists($key, $fields) ?
+                $fields[$key]->getType()->getName() :
+                Type::STRING));
         }
 
         return $query;
@@ -170,11 +177,16 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         //pass data without relations
         $data = $provider->fetchData();
 
+        $fields = $provider->getFields();
+
         foreach ($data as $key => $value) {
             if ($value instanceof RelationInterface) {
                 continue;
             }
-            $query->set($key, $query->createPositionalParameter($value));
+            $query->set($key, $query->createPositionalParameter(
+                $value, array_key_exists($key, $fields) ?
+                $fields[$key]->getType()->getName() :
+                Type::STRING));
         }
 
         $query->where($query->expr()->eq($pkName, $data[$pkName]));
@@ -212,7 +224,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
 
         //add entities by pk to delete
         foreach ($identifiers as $identifier) {
-            if(is_object($identifier)){
+            if (is_object($identifier)) {
                 $identifierProvider = $this->createProvider($identifier);
                 $this->checkEntity($identifierProvider);
                 $data = $identifierProvider->fetchData();
