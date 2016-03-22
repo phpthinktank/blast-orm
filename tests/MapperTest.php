@@ -42,6 +42,8 @@ class MapperTest extends AbstractDbTestCase
 
         $result = $mapper->find(1)->execute();
 
+        $cp = $result->getArrayCopy();
+
         $this->assertInstanceOf(Post::class, $result);
     }
 
@@ -57,6 +59,7 @@ class MapperTest extends AbstractDbTestCase
         $post['user_pk'] = 1;
         $post['title'] = 'first created post';
         $post['content'] = 'A new post!';
+        $post['date'] = new \DateTime();
 
         $result = $mapper->create($post)->execute();
 
