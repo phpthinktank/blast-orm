@@ -487,7 +487,7 @@ $provider = new Provider(Post::class);
 $provider = new Provider('user_roles');
 ```
 
-Add definition to entity by public static property or method.
+Add definition to entity as public static property or method. Method name refers to configuration key, mentioned above.
 
 ##### Table name 
 

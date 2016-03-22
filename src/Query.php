@@ -295,8 +295,11 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
 
         foreach ($result as $index => $items) {
             foreach ($items as $key => $value) {
-                $type = isset($fields[$key]) ? $fields[$key]->getType() : Type::getType(Type::STRING);
-                $result[$index][$key] = $type->convertToPHPValue($value, $this->getConnection()->getDatabasePlatform());
+                $defaultType = Type::getType(is_numeric($value) ? Type::INTEGER : Type::STRING);
+                $type = array_key_exists($key, $fields) ? $fields[$key]->getType() : $defaultType;
+                $result[$index][$key] = $type->convertToPHPValue(
+                    $value, $this->getConnection()->getDatabasePlatform()
+                );
             }
         }
 
