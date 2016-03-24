@@ -11,15 +11,16 @@
  *
  */
 
-namespace Blast\Tests\Orm\Query;
+namespace Blast\Tests\Orm;
 
 
 use Blast\Orm\ConnectionManager;
+use Blast\Orm\Entity\Definition;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
-use Blast\Tests\Orm\AbstractDbTestCase;
+use Blast\Tests\Orm\Stubs\Entities\Post;
 use Doctrine\DBAL\Query\QueryBuilder;
 use stdClass;
 
@@ -81,15 +82,15 @@ class QueryTest extends AbstractDbTestCase
         $query = new Query();
 
         //force entity to be a stdClass
-        $query->getEmitter()->addListener('before.select', function (QueryBuilderEvent $event) {
-            $event->getBuilder()->setEntity(new \stdClass());
+        $query->getEmitter()->addListener('build.select', function (QueryBuilderEvent $event) {
+            $event->getBuilder()->setEntity(Post::class);
         });
 
         $result = $query->select()->from('post')->where('id = 1')->execute();
 
-        $query->getEmitter()->removeAllListeners('before.select');
+        $query->getEmitter()->removeAllListeners('build.select');
 
-        $this->assertInstanceOf(\stdClass::class, $result);
+        $this->assertInstanceOf(Post::class, $result);
     }
 
     /**
@@ -100,14 +101,14 @@ class QueryTest extends AbstractDbTestCase
         $query = new Query();
 
         //force entity to be a stdClass
-        $query->getEmitter()->addListener('before.select', function (QueryBuilderEvent $event) {
+        $query->getEmitter()->addListener('build.select', function (QueryBuilderEvent $event) {
             $event->setCanceled(true);
         });
 
         $result = $query->select()->from('post')->execute();
         $this->assertFalse($result);
 
-        $query->getEmitter()->removeAllListeners('before.select');
+        $query->getEmitter()->removeAllListeners('build.select');
 
     }
 
@@ -119,7 +120,8 @@ class QueryTest extends AbstractDbTestCase
         $query = new Query();
 
         //add additional value to result set
-        $query->getEmitter()->addListener('after.select', function (QueryResultEvent $event, Query $builder) {
+        $query->getEmitter()->addListener('result.select', function (QueryResultEvent $event, Query $builder) {
+            $this->assertInstanceOf(Query::class, $builder);
             $result = $event->getResult();
 
             foreach ($result as $key => $value) {
@@ -134,6 +136,8 @@ class QueryTest extends AbstractDbTestCase
         $data = $result->getArrayCopy();
 
         $this->assertEquals($data['contentSize'], strlen($data['content']));
+
+        $query->getEmitter()->removeAllListeners('result.select');
     }
 
     /**
@@ -144,14 +148,14 @@ class QueryTest extends AbstractDbTestCase
         $query = new Query();
 
         //force entity to be a stdClass
-        $query->getEmitter()->addListener('after.select', function (QueryResultEvent $event) {
+        $query->getEmitter()->addListener('result.select', function (QueryResultEvent $event) {
             $event->setCanceled(true);
         });
 
         $result = $query->select()->from('post')->execute();
         $this->assertFalse($result);
 
-        $query->getEmitter()->removeAllListeners('after.select');
+        $query->getEmitter()->removeAllListeners('result.select');
 
     }
 
@@ -170,7 +174,6 @@ class QueryTest extends AbstractDbTestCase
     public function testMagicCallQueryBuilderMethods()
     {
         $query = new Query();
-        $this->assertEquals($query->__call('getType'), $query->getBuilder()->getType());
         $this->assertEquals($query->getType(), $query->getBuilder()->getType());
     }
 
@@ -203,5 +206,31 @@ class QueryTest extends AbstractDbTestCase
         $query = new Query($connection);
         $query->setBuilder($connection->createQueryBuilder());
         $this->assertEquals($builder, $query->getBuilder());
+    }
+
+
+    public function testUseDefinition()
+    {
+        $definition = new Definition();
+        $definition->setConfiguration([
+            'tableName' => 'user_role'
+        ]);
+        $query = new Query(ConnectionManager::getInstance()->get(), $definition);
+        $result = $query->select()->from($definition->getTableName())->setMaxResults(1)->execute();
+
+        if (false === $result) {
+            $this->markTestIncomplete('This should not return false');
+
+            return;
+        }
+
+        if ($result instanceof \SplStack) {
+            $this->markTestIncomplete('This should not return \SplStack');
+
+            return;
+        }
+
+        $this->assertEquals(1, $result['user_pk']);
+        $this->assertEquals(1, $result['role_id']);
     }
 }

@@ -16,11 +16,13 @@ use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Entity\ProviderFactoryInterface;
 use Blast\Orm\Entity\ProviderFactoryTrait;
+use Blast\Orm\Entity\ProviderInterface;
 use Blast\Orm\Hydrator\ArrayToObjectHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Doctrine\DBAL\Types\Type;
 use League\Event\EmitterAwareInterface;
 use League\Event\EmitterAwareTrait;
 use stdClass;
@@ -146,7 +148,8 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
             return false;
         }
 
-        $result = $event->getResult();
+        $result = $this->convertTypesToPHPValues($provider, $event->getResult());
+
         $data = (new ArrayToObjectHydrator($provider))->hydrate($result, $option);
         gc_collect_cycles();
 
@@ -162,7 +165,7 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
     private function beforeExecute($entity)
     {
         $builder = $this;
-        $event = $this->getEmitter()->emit(new QueryBuilderEvent('before.' . $this->getTypeName(), $builder));
+        $event = $this->getEmitter()->emit(new QueryBuilderEvent('build.' . $this->getTypeName(), $builder));
 
         if ($entity instanceof EmitterAwareInterface) {
             $event = $entity->getEmitter()->emit($event);
@@ -182,7 +185,7 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
     private function afterExecute($result, $entity, $builder)
     {
 
-        $event = $this->getEmitter()->emit(new QueryResultEvent('after.' . $builder->getTypeName(), $result), $builder);
+        $event = $this->getEmitter()->emit(new QueryResultEvent('result.' . $builder->getTypeName(), $result), $builder);
 
         if ($entity instanceof EmitterAwareInterface) {
             $event = $entity->getEmitter()->emit($event, $builder);
@@ -275,6 +278,32 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
                 throw new \Exception('Unknown query type ' . $this->getType());
         }
         // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @param $provider
+     * @param $result
+     * @return mixed
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function convertTypesToPHPValues(ProviderInterface $provider, $result)
+    {
+        if(!is_array($result)){
+            return $result;
+        }
+        $fields = $provider->getFields();
+
+        foreach ($result as $index => $items) {
+            foreach ($items as $key => $value) {
+                $defaultType = Type::getType(is_numeric($value) ? Type::INTEGER : Type::STRING);
+                $type = array_key_exists($key, $fields) ? $fields[$key]->getType() : $defaultType;
+                $result[$index][$key] = $type->convertToPHPValue(
+                    $value, $this->getConnection()->getDatabasePlatform()
+                );
+            }
+        }
+
+        return $result;
     }
 
 }

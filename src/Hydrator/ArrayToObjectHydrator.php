@@ -21,7 +21,7 @@ class ArrayToObjectHydrator implements HydratorInterface
 {
 
     /**
-     * @var \Blast\Orm\Entity\ProviderInterface
+     * @var \Blast\Orm\Entity\Provider
      */
     private $provider;
 
@@ -94,7 +94,7 @@ class ArrayToObjectHydrator implements HydratorInterface
      */
     protected function hydrateCollection($data)
     {
-        $stack = new \SplStack();
+        $stack = $this->provider->getDefinition()->getEntityCollection();
         foreach ($data as $key => $value) {
             $stack->push($this->hydrateEntity($value));
         }
