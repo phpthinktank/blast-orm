@@ -29,7 +29,7 @@ Framework agnostic data access and persistence based on Doctrine 2 DBAL.
 
 ### Using Composer
 
-Plates is available on [Packagist](https://packagist.org/packages/blast/orm) and can be installed using [Composer](https://getcomposer.org/). This can be done by running the following command or by updating your `composer.json` file.
+Blast ORM is available on [Packagist](https://packagist.org/packages/blast/orm) and can be installed using [Composer](https://getcomposer.org/). This can be done by running the following command or by updating your `composer.json` file.
 
 ```bash
 composer require blast/orm
