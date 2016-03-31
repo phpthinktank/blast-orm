@@ -36,11 +36,6 @@
       "Blast\\Tests\\Orm\\": "tests"
     }
   },
-  "extra": {
-    "branch-alias": {
-      "dev-master": "1.0.0"
-    }
-  },
   "scripts": {
     "test": [
       "cd vendor/phpunit/phpunit",
