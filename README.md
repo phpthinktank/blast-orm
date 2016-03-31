@@ -8,19 +8,28 @@
 
 Framework agnostic data access and persistence based on Doctrine 2 DBAL.
 
-## Install
+## Features
 
-Via Composer
+ - Data and relation mapper _since 0.1_
+ - Decoupled entities as POPO's (Plain-old PHP objects) _since 0.3_
+ - Auto-Suggesting entity definition as well as configure custom definition _since 0.5_
+ - Data hydration to entity and vice versa _since 0.5_
+ - Repository contracted to a single entity class _since 0.5_
+ - Integration of fields from definition _since 0.5.2_
+ - Field type aware converting _since 0.5.2_
 
-``` bash
-$ composer require blast/orm
-```
+## Upcoming features
 
+ - Unit of Work - Entity-aware transactions
+ - Identity map - Reduce load by storing entity by primary key 
+ - Saveable relations
+ - Integration of indexes from definition
+ 
 ## Install
 
 ### Using Composer
 
-Plates is available on [Packagist](https://packagist.org/packages/blast/orm) and can be installed using [Composer](https://getcomposer.org/). This can be done by running the following command or by updating your `composer.json` file.
+Blast ORM is available on [Packagist](https://packagist.org/packages/blast/orm) and can be installed using [Composer](https://getcomposer.org/). This can be done by running the following command or by updating your `composer.json` file.
 
 ```bash
 composer require blast/orm
@@ -61,19 +70,6 @@ The following versions of PHP are supported by this version.
 
 An example can be found in this [blog post](http://bit.ly/php-orm).
 
-## Features
-
- - Decoupled entities as POPO's (Plain-old PHP objects)
- - Auto-Suggesting entity definition as well as configure custom definition
- - Data hydration to entity and vice versa
- - Repository contracted to a single entity class
- - Data and relation mapper
-
-## Upcoming in 0.6
-
- - Unit of Work - Entity-aware transactions
- - Toggling identity maps - Reduce load by storing entity by primary key 
-
 ## Concept
 
 ### Entities
@@ -94,7 +90,7 @@ entity and mapper or query.
 
 Instead of passing an entity to provider (from mapper, query or direct), blast orm allows to pass a definition instance.
 
-Definition managing schema specific information
+Definition managing entity meta and schema specific configuration.
  
 ### Mappers
 
@@ -403,7 +399,7 @@ On result a query statement
 ```php
 <?php
 
-$query->getEmitter()->addListener('result.select', function (QueryBuilderEvent $event) {
+$query->getEmitter()->addListener('result.select', function (QueryResultEvent $event) {
     $event->setCanceled(true);
 });
 ```
@@ -492,7 +488,7 @@ $provider = new Provider(Post::class);
 $provider = new Provider('user_roles');
 ```
 
-Add definition to entity by public static property or method.
+Add definition to entity as public static property or method. Method name refers to configuration key, mentioned above.
 
 ##### Table name 
 
