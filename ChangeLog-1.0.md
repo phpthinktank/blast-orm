@@ -2,6 +2,14 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 0.5.2
+
+### Altered
+
+ - Consider fields
+ - Convert result from sql select to php value
+ - Convert values from sql update or create to sql value
+
 ## 0.5.1
 
 ### Fixes
