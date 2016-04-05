@@ -6,6 +6,12 @@ All notable changes of the Blast orm 1.0 release series are documented in this f
 
 ### Altered
 
+ - Upgrade minimum requirements and dependecies
+
+## 0.5.2
+
+### Altered
+
  - Consider fields
  - Convert result from sql select to php value
  - Convert values from sql update or create to sql value
