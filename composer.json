@@ -4,6 +4,9 @@
   "keywords": [
     "sql",
     "database",
+    "mapper",
+    "repository",
+    "entity",
     "orm",
     "query"
   ],
