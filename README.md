@@ -61,7 +61,7 @@ This project is also available for download as a `.zip` file on GitHub. Visit th
 
 The following versions of PHP are supported by this version.
 
-* PHP 5.5
+* PHP >= 5.5.9
 * PHP 5.6
 * PHP 7.0
 * HHVM
