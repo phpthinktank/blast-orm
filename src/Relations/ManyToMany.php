@@ -16,6 +16,7 @@ namespace Blast\Orm\Relations;
 
 use Blast\Orm\ConnectionAwareInterface;
 use Blast\Orm\ConnectionAwareTrait;
+use Blast\Orm\Entity\Definition;
 use Blast\Orm\Entity\ProviderFactoryInterface;
 use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
@@ -148,9 +149,14 @@ class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, 
 
         //get relations by through db object
         if (isset($data[$localKey])) {
-            $junctionProvider = is_string($junction) ? $this->createProvider($junction) : $junction;
+            $junctionProvider = is_string($junction) ? 
+                $this->createProvider($junction) : 
+                $junction;
             $junctionMapper = $junctionProvider->getDefinition()->getMapper();
             $junctionMapper->setConnection($this->getConnection());
+            if(true){
+
+            }
             $results = $junctionMapper
                 ->select([$junctionForeignKey])
                 ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))

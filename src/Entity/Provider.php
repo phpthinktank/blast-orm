@@ -14,16 +14,8 @@
 namespace Blast\Orm\Entity;
 
 
-use Blast\Orm\Hydrator\ArrayToObjectHydrator;
+use Blast\Orm\Hydrator\Hydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\Hydrator\ObjectToArrayHydrator;
-use Blast\Orm\Mapper;
-use Blast\Orm\MapperFactoryInterface;
-use Blast\Orm\MapperFactoryTrait;
-use Blast\Orm\MapperInterface;
-use Blast\Orm\Relations\RelationInterface;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Index;
 
 class Provider implements ProviderInterface
 {
@@ -68,7 +60,7 @@ class Provider implements ProviderInterface
      */
     public function withData(array $data = [], $option = HydratorInterface::HYDRATE_AUTO)
     {
-        return (new ArrayToObjectHydrator($this))->hydrate($data, $option);
+        return (new Hydrator($this))->hydrate($data, $option);
     }
 
     /**
@@ -79,7 +71,7 @@ class Provider implements ProviderInterface
      */
     public function fetchData(array $additionalData = [])
     {
-        return (new ObjectToArrayHydrator($this))->hydrate($additionalData);
+        return (new Hydrator($this))->extract($additionalData);
     }
 
     /**
@@ -90,6 +82,7 @@ class Provider implements ProviderInterface
     public function isNew()
     {
         $data = $this->fetchData();
+
         return isset($data[$this->getDefinition()->getPrimaryKeyName()]) ? empty($data[$this->getDefinition()->getPrimaryKeyName()]) : true;
     }
 }

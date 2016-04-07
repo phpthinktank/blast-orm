@@ -14,7 +14,9 @@
 namespace Blast\Orm\Hydrator;
 
 
-interface HydratorInterface
+use Zend\Hydrator\ExtractionInterface;
+
+interface HydratorInterface extends ExtractionInterface
 {
     /**
      *

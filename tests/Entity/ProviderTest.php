@@ -103,6 +103,10 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(Role::class, $provider->getEntity());
         $this->assertInstanceOf(\SplStack::class, $provider->getDefinition()->getEntityCollection());
     }
+    
+    public function testGetTableNameFromGeneric(){
+        
+    }
 
 
 }
