@@ -115,7 +115,7 @@ class ArrayToObjectHydrator implements HydratorInterface
         $entity = clone $this->provider->getEntity();
 
         //add relations
-        foreach($this->provider->getRelations() as $name => $relation){
+        foreach($this->provider->getDefinition()->getRelations() as $name => $relation){
             if(is_numeric($name)){
                 $name = $relation->getName();
             }

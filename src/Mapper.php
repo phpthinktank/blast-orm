@@ -70,7 +70,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
     public function find($primaryKey)
     {
         $query = $this->select();
-        $field = $this->getProvider()->getPrimaryKeyName();
+        $field = $this->getProvider()->getDefinition()->getPrimaryKeyName();
         $query->where($query->expr()->eq($field, $query->createPositionalParameter($primaryKey)));
 
         return $query;
@@ -86,7 +86,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
     {
         $query = $this->createQuery();
         $query->select($selects);
-        $query->from($this->getProvider()->getTableName());
+        $query->from($this->getProvider()->getDefinition()->getTableName());
 
         return $query;
     }
@@ -128,7 +128,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
 
         //prepare statement
         $query = $this->createQuery();
-        $query->insert($provider->getTableName());
+        $query->insert($provider->getDefinition()->getTableName());
 
         //pass data without relations
         $data = $provider->fetchData();
@@ -138,7 +138,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
             return false;
         }
 
-        $fields = $provider->getFields();
+        $fields = $provider->getDefinition()->getFields();
 
         foreach ($data as $key => $value) {
             if ($value instanceof RelationInterface) {
@@ -168,16 +168,16 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         //disallow differing entities
         $this->checkEntity($provider);
 
-        $pkName = $provider->getPrimaryKeyName();
+        $pkName = $provider->getDefinition()->getPrimaryKeyName();
 
         //prepare statement
         $query = $this->createQuery();
-        $query->update($provider->getTableName());
+        $query->update($provider->getDefinition()->getTableName());
 
         //pass data without relations
         $data = $provider->fetchData();
 
-        $fields = $provider->getFields();
+        $fields = $provider->getDefinition()->getFields();
 
         foreach ($data as $key => $value) {
             if ($value instanceof RelationInterface) {
@@ -218,9 +218,9 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         $provider = $this->getProvider();
 
         //prepare statement
-        $pkName = $provider->getPrimaryKeyName();
+        $pkName = $provider->getDefinition()->getPrimaryKeyName();
         $query = $this->createQuery();
-        $query->delete($provider->getTableName());
+        $query->delete($provider->getDefinition()->getTableName());
 
         //add entities by pk to delete
         foreach ($identifiers as $identifier) {

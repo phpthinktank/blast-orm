@@ -2,6 +2,12 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 0.6.0
+
+### Removed
+
+ - remove definition data getters from provider, you need to use `$provider->getDefiniton()->get*()`
+
 ## 0.5.3
 
 ### Altered

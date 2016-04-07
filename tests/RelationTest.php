@@ -31,7 +31,7 @@ class RelationTest extends AbstractDbTestCase
     public function testBelongsTo()
     {
         $provider = new Provider(Post::class);
-        $post = $provider->getMapper()->find(1)->execute();
+        $post = $provider->getDefinition()->getMapper()->find(1)->execute();
         $relation = new BelongsTo($post, User::class);
 
         $query = $relation->getQuery();
@@ -44,7 +44,7 @@ class RelationTest extends AbstractDbTestCase
     public function testHasMany()
     {
         $provider = new Provider(User::class);
-        $user = $provider->getMapper()->find(1)->execute();
+        $user = $provider->getDefinition()->getMapper()->find(1)->execute();
         $relation = new HasMany($user, Post::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
         $posts = $relation->execute();
@@ -56,7 +56,7 @@ class RelationTest extends AbstractDbTestCase
     public function testHasOne()
     {
         $provider = new Provider(User::class);
-        $user = $provider->getMapper()->find(1)->execute();
+        $user = $provider->getDefinition()->getMapper()->find(1)->execute();
 
         $relation = new HasOne($user, Address::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
@@ -69,7 +69,7 @@ class RelationTest extends AbstractDbTestCase
     public function testManyToMany()
     {
         $provider = new Provider(User::class);
-        $user = $provider->getMapper()->find(1)->execute();
+        $user = $provider->getDefinition()->getMapper()->find(1)->execute();
         $relation = new ManyToMany($user, Role::class);
         $this->assertInstanceOf(QueryInterface::class, $relation->getQuery());
 

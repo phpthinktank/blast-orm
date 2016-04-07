@@ -60,54 +60,6 @@ class Provider implements ProviderInterface
     }
 
     /**
-     * @return \Doctrine\DBAL\Schema\Column[]
-     */
-    public function getFields()
-    {
-        return $this->getDefinition()->getFields();
-    }
-
-    /**
-     * @return \Doctrine\DBAL\Schema\Index[]
-     */
-    public function getIndexes()
-    {
-        return $this->getDefinition()->getIndexes();
-    }
-
-    /**
-     * @return MapperInterface|Mapper
-     */
-    public function getMapper()
-    {
-        return $this->getDefinition()->getMapper();
-    }
-
-    /**
-     * @return \Blast\Orm\Relations\RelationInterface[]
-     */
-    public function getRelations()
-    {
-        return $this->getDefinition()->getRelations();
-    }
-
-    /**
-     * @return string
-     */
-    public function getTableName()
-    {
-        return $this->getDefinition()->getTableName();
-    }
-
-    /**
-     * @return string
-     */
-    public function getPrimaryKeyName()
-    {
-        return $this->getDefinition()->getPrimaryKeyName();
-    }
-
-    /**
      * Convert data array to entity with data
      *
      * @param array $data
@@ -138,6 +90,6 @@ class Provider implements ProviderInterface
     public function isNew()
     {
         $data = $this->fetchData();
-        return isset($data[$this->getPrimaryKeyName()]) ? empty($data[$this->getPrimaryKeyName()]) : true;
+        return isset($data[$this->getDefinition()->getPrimaryKeyName()]) ? empty($data[$this->getDefinition()->getPrimaryKeyName()]) : true;
     }
 }

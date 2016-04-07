@@ -57,7 +57,7 @@ trait RelationTrait
     public function getName()
     {
         if($this instanceof ProviderFactoryInterface){
-            $this->name = $this->createProvider($this->getForeignEntity())->getTableName();
+            $this->name = $this->createProvider($this->getForeignEntity())->getDefinition()->getTableName();
         }
         return $this->name;
     }

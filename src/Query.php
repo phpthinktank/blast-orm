@@ -291,7 +291,7 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
         if(!is_array($result)){
             return $result;
         }
-        $fields = $provider->getFields();
+        $fields = $provider->getDefinition()->getFields();
 
         foreach ($result as $index => $items) {
             foreach ($items as $key => $value) {

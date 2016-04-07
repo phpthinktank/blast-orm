@@ -36,25 +36,25 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
     public function testProvideEntityByTableName()
     {
         $provider = new Provider('testTable');
-        $this->assertEquals('testTable', $provider->getTableName());
+        $this->assertEquals('testTable', $provider->getDefinition()->getTableName());
     }
 
     public function testProvideEntityByClassName()
     {
         $provider = new Provider(Post::class);
-        $this->assertEquals('post', $provider->getTableName());
+        $this->assertEquals('post', $provider->getDefinition()->getTableName());
     }
 
     public function testProvideEntityByObject()
     {
         $provider = new Provider(new Post);
-        $this->assertEquals('post', $provider->getTableName());
+        $this->assertEquals('post', $provider->getDefinition()->getTableName());
     }
 
     public function testProvideEntityByIoCContainer()
     {
         $provider = new Provider('post');
-        $this->assertEquals('post', $provider->getTableName());
+        $this->assertEquals('post', $provider->getDefinition()->getTableName());
     }
 
     public function testProvideEntityByArray()
@@ -62,7 +62,7 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
         $provider = new Provider([
             'tableName' => 'post'
         ]);
-        $this->assertEquals('post', $provider->getTableName());
+        $this->assertEquals('post', $provider->getDefinition()->getTableName());
     }
 
     public function testProvideRelation()
@@ -76,8 +76,8 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
                 ];
             },
         ]);
-        $this->assertEquals('post', $provider->getTableName());
-        $relations = $provider->getRelations();
+        $this->assertEquals('post', $provider->getDefinition()->getTableName());
+        $relations = $provider->getDefinition()->getRelations();
         $this->assertInternalType('array', $relations);
         $relation = array_shift($relations);
         $this->assertInstanceOf(RelationInterface::class, $relation);
@@ -85,8 +85,8 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
 
     public function testProvidePrimaryKeyField()
     {
-        $this->assertEquals('id', (new Provider(Post::class))->getPrimaryKeyName());
-        $this->assertEquals('pk', (new Provider(User::class))->getPrimaryKeyName());
+        $this->assertEquals('id', (new Provider(Post::class))->getDefinition()->getPrimaryKeyName());
+        $this->assertEquals('pk', (new Provider(User::class))->getDefinition()->getPrimaryKeyName());
     }
 
     public function testAddDefinition()
@@ -99,7 +99,7 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
 
         $provider = new Provider($definition);
 
-        $this->assertEquals('my_role', $provider->getTableName());
+        $this->assertEquals('my_role', $provider->getDefinition()->getTableName());
         $this->assertInstanceOf(Role::class, $provider->getEntity());
         $this->assertInstanceOf(\SplStack::class, $provider->getDefinition()->getEntityCollection());
     }
