@@ -74,23 +74,18 @@ An example can be found in this [blog post](http://bit.ly/php-orm).
 
 ### Entities
 
-Entity classes are a memory representation of a database entity. Entity classes are plain objects and don't need to 
-match contracts. You could use prepared traits and classes of `Blast\Orm\Data` component for convenient data handling. 
+An entity object is an in-memory representations of a database entity. Entity object are plain objects (aka POPO). 
 It is recommended to use accessors (getters) and mutators (setters) for properties on plain objects.
-
-Entity classes could also be instances of [`stdClass`](http://php.net/manual/en/reserved.classes.php), 
-[`ArrayObject`](http://php.net/manual/de/class.arrayobject.php) or [`DataObject`](src/Data/DataObject.php)
  
 #### Provider
  
-The provider suggests and provides entity definitions and two-way-hydration and entity itself. The provider is a link between independent 
-entity and mapper or query.
+The provider is a link between independent data entity and data access. The provider is also able to hydrate data to 
+entity object and extract data from entity object
 
 #### Definition
 
-Instead of passing an entity to provider (from mapper, query or direct), blast orm allows to pass a definition instance.
-
-Definition managing entity meta and schema specific configuration.
+Definition managing entity meta and schema specific configuration. Definition could be passed to mapper or provider, 
+instead of an entity.
  
 ### Mappers
 
@@ -123,6 +118,8 @@ Create a new connection
 
 ```php
 <?php
+
+use Blast\Orm\ConnectionManager;
 
 $connection = ConnectionManager::create('mysql://root:root@localhost/defaultdb?charset=UTF-8');
 ```
@@ -173,14 +170,6 @@ $connections->setDefaultConnection('another');
 
 ```
 
-Get a connection collection instance.
-
-```php
-<?php
-$connections = $connections->__instance();
-
-```
-
 ### Query
 
 The query object is is providing high level API methods of [doctrine 2 query builder](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/query-builder.html#security-safely-preventing-sql-injection).
@@ -201,6 +190,7 @@ or create a new query with a custom connection
 <?php
 
 use Blast\Orm\Query;
+use Blast\Orm\ConnectionManager;
 
 $query = new Query(ConnectionManager::create('mysql://root:root@localhost/acme'));
 ```
@@ -220,7 +210,7 @@ Custom connection for the query
 ```php
 <?php
 
-use Blast\Orm\Connection;
+use Blast\Orm\ConnectionManager;
 
 $query->setConnection(ConnectionManager::create('mysql://root:root@localhost/acme'));
 
@@ -245,8 +235,8 @@ Get all posts as collection `\SplStack` containing post as `\ArrayObject`
 $result = $query->select()->from('post', 'p')->execute();
 
 //get data from result
-$title = $result->get('title');
-$content = $result->get('content');
+$title = $result['title'];
+$content = $result['content'];
 ```
 
 Get post by id as `\ArrayObject`
@@ -263,8 +253,8 @@ $results = $query->select()
 
 //loop results and get data 
 foreach($results as $result){
-    $title = $result->get('title');
-    $content = $result->get('content');
+    $title = $result['title'];
+    $content = $result['content'];
 }
 
 ```
@@ -316,7 +306,7 @@ Execute query and get result as entity
 ```php
 <?php
 
-$post = $query->execute(HydratorInterface::RESULT_ENTITY);
+$post = $query->execute(\Blast\Orm\Hydrator\HydratorInterface::HYDRATE_ENTITY);
 ```
 
 Execute query and get result as collection
@@ -324,7 +314,7 @@ Execute query and get result as collection
 ```php
 <?php
 
-$posts = $query->execute(HydratorInterface::RESULT_COLLECTION);
+$posts = $query->execute(\Blast\Orm\Hydrator\HydratorInterface::HYDRATE_COLLECTION);
 ```
 
 Execute query and get raw result as array
@@ -332,7 +322,7 @@ Execute query and get raw result as array
 ```php
 <?php
 
-$result = $query->execute(HydratorInterface::RESULT_RAW);
+$result = $query->execute(\Blast\Orm\Hydrator\HydratorInterface::HYDRATE_RAW);
 ```
 
 #### Events
@@ -351,6 +341,8 @@ Fire this event before query executes statement.
 ```php
 <?php
 
+use Blast\Orm\Query\Events\QueryBuilderEvent;
+
 $query->getEmitter()->addListener('build.select', function (QueryBuilderEvent $event) {
     $event->getBuilder()->setEntity(Post::class);
 });
@@ -365,6 +357,9 @@ Fire this event after query executes statement and receives result.
 
 ```php
 <?php
+
+use Blast\Orm\Query\Events\QueryResultEvent;
+use Blast\Orm\Query;
 
 $query->getEmitter()->addListener('result.select', function (QueryResultEvent $event, Query $builder) {
     $result = $event->getResult();
@@ -389,6 +384,8 @@ On build a query statement
 ```php
 <?php
 
+use Blast\Orm\Query\Events\QueryBuilderEvent;
+
 $query->getEmitter()->addListener('build.select', function (QueryBuilderEvent $event) {
     $event->setCanceled(true);
 });
@@ -398,6 +395,8 @@ On result a query statement
 
 ```php
 <?php
+use Blast\Orm\Query\Events\QueryResultEvent;
+use Blast\Orm\Query;
 
 $query->getEmitter()->addListener('result.select', function (QueryResultEvent $event) {
     $event->setCanceled(true);
@@ -587,7 +586,7 @@ class Post
      */
     public static function relations(EntityWithRelation $entity,  Mapper $mapper){
         return [
-            new HasOne($entity, 'otherTable')
+            $mapper->hasOne($entity, 'otherTable')
         ];
     }
 }
@@ -645,7 +644,7 @@ Hydrate data as array to entity
 
 ```php
 <?php
-$entity = $postProvider->fromArrayToObject(['title' => 'Hello World']);
+$entity = $postProvider->hydrate(['title' => 'Hello World']);
 
 ```
 
@@ -653,7 +652,7 @@ Hydrate data as entity to array
 
 ```php
 <?php
-$data = $postProvider->fromObjectToArray();
+$data = $postProvider->extract();
 
 ```
 
@@ -664,24 +663,15 @@ instance and need to execute manually. It is also possible to add event listener
 
 #### Create a new mapper for entity
 
-Create mapper for entity
+Get entity specific mapper from provider
 
 ```php
 <?php
 
-use Blast\Orm\Mapper;
-
-$mapper = new Mapper($post);
-
-```
-
-Create mapper from provider
-
-```php
-<?php
+use Blast\Orm\Entity\Provider;
 
 $provider = new Provider($post);
-$mapper = $provider->getMapper();
+$mapper = $provider->getDefinition()->getMapper();
 
 ```
 
@@ -735,7 +725,7 @@ Relations provide access to related, parent and child entity from another entity
 
 #### Passing relations
 
-Pass relations as `array` by computed static relation method in entity class 
+Pass relations as `array` by computed static relation method in entity class. Relations are automatically mapped to entity.
 
 ```php
 <?php
@@ -744,18 +734,21 @@ use Blast\Orm\Mapper;
 
 class Post {
 
+    private $comments = null;
+    
+    public function getComments(){
+        return $this->comments;
+    }
+
     public static function relation(Post $entity, Mapper $mapper){
         return [
-            HasMany($entity, Comments::class)
-        ]
+            $mapper->hasMany($entity, Comments::class)
+        ];
     }
 }
 
 $post = $mapper->find(1);
-$postProvider = new Provider($post);
-
-$relations = $postProvider->getRelations();
-$comments = $relations['comment']->execute();
+$comments = $post->getComments()->execute();
 
 ```
 
@@ -776,7 +769,7 @@ One user has one address.
 ```php
 <?php
 
-$relation = HasOne($user, Address::class, 'user_id');
+$relation = $mapper->hasOne($user, Address::class, 'user_id');
 
 ```
 
@@ -795,7 +788,7 @@ One post has many comments
 ```php
 <?php
 
-$relation = HasOne($post, Comments::class, 'post_id');
+$relation = $mapper->hasMany($post, Comments::class, 'post_id');
 
 ```
 
@@ -816,7 +809,7 @@ One post has one or many comments
 ```php
 <?php
 
-$relation = BelongsTo($comment, Post::class, 'post_id');
+$relation = $mapper->belongsTo($comment, Post::class, 'post_id');
 
 ```
 
@@ -841,7 +834,7 @@ One user has many roles, and one role has many users. Users primary key name is 
 ```php
 <?php
 
-$relation = ManyToMany($user, Role::class, 'pk', 'id', 'user_role', 'user_id', 'role_id');
+$relation = $mapper->manyToMany($user, Role::class, 'pk', 'id', 'user_role', 'user_id', 'role_id');
 
 ```
 
@@ -920,6 +913,8 @@ use Blast\Orm\AbstractRepository;
 
 class PostRepository extends AbstractRepository {
     
+    use \Blast\Orm\Entity\EntityAwareTrait;
+    
     /**
      * Init repository and bind related entity
      */
@@ -975,9 +970,9 @@ Save is determining if the entity is new and executes `Blast\Orm\Mapper::update`
 
 $post = new Post();
 
-$post->title = 'Hello World';
-$post->content = 'Some content about hello world.';
-$post->date = new \DateTime();
+$post['title'] = 'Hello World';
+$post['content'] = 'Some content about hello world.';
+$post['date'] = new \DateTime();
 
 //create or update entity
 $repository->save($post);
