@@ -32,7 +32,7 @@ class ArrayToObjectHydratorTest extends \PHPUnit_Framework_TestCase
         ];
         $provider = new Provider($entity);
 
-        $entityClone = $provider->withData($data);
+        $entityClone = $provider->hydrate($data);
 
         $this->assertEquals($data['pk'], $entityClone->getPk());
         $this->assertEquals($data['name'], $entityClone->getName());
@@ -49,7 +49,7 @@ class ArrayToObjectHydratorTest extends \PHPUnit_Framework_TestCase
         ];
         $provider = new Provider($entity);
 
-        $entityClone = $provider->withData($data);
+        $entityClone = $provider->hydrate($data);
         $cp = $entityClone->getArrayCopy();
 
         $this->assertEquals($data['id'], $entityClone['id']);

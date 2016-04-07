@@ -116,7 +116,7 @@ class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, 
         $junctionLocalKey = $this->getJunctionLocalKey();
         $junctionForeignKey = $this->getJunctionForeignKey();
 
-        $data = $provider->fetchData();
+        $data = $provider->extract();
 
         $localKey = $provider->getDefinition()->getPrimaryKeyName();
 

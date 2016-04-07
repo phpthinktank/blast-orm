@@ -14,7 +14,7 @@
 namespace Blast\Orm\Entity;
 
 
-use Blast\Orm\Hydrator\Hydrator;
+use Blast\Orm\Hydrator\EntityHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
 
 class Provider implements ProviderInterface
@@ -58,9 +58,9 @@ class Provider implements ProviderInterface
      * @param string $option
      * @return object|\ArrayObject
      */
-    public function withData(array $data = [], $option = HydratorInterface::HYDRATE_AUTO)
+    public function hydrate(array $data = [], $option = HydratorInterface::HYDRATE_AUTO)
     {
-        return (new Hydrator($this))->hydrate($data, $option);
+        return (new EntityHydrator($this))->hydrate($data, $option);
     }
 
     /**
@@ -69,9 +69,9 @@ class Provider implements ProviderInterface
      * @param array $additionalData
      * @return object
      */
-    public function fetchData(array $additionalData = [])
+    public function extract(array $additionalData = [])
     {
-        return (new Hydrator($this))->extract($additionalData);
+        return (new EntityHydrator($this))->extract($additionalData);
     }
 
     /**
@@ -81,7 +81,7 @@ class Provider implements ProviderInterface
      */
     public function isNew()
     {
-        $data = $this->fetchData();
+        $data = $this->extract();
 
         return isset($data[$this->getDefinition()->getPrimaryKeyName()]) ? empty($data[$this->getDefinition()->getPrimaryKeyName()]) : true;
     }

@@ -78,7 +78,7 @@ class HasMany implements ConnectionAwareInterface, ProviderFactoryInterface, Rel
         $foreignProvider = $this->createProvider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
 
-        $data = $provider->fetchData();
+        $data = $provider->extract();
 
         //find primary key
         if ($foreignKey === null) {

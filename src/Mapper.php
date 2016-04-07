@@ -154,7 +154,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         $query->insert($provider->getDefinition()->getTableName());
 
         //pass data without relations
-        $data = $provider->fetchData();
+        $data = $provider->extract();
 
         //cancel if $data has no entries
         if (count($data) < 1) {
@@ -198,7 +198,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         $query->update($provider->getDefinition()->getTableName());
 
         //pass data without relations
-        $data = $provider->fetchData();
+        $data = $provider->extract();
 
         $fields = $provider->getDefinition()->getFields();
 
@@ -249,7 +249,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
             if (is_object($identifier)) {
                 $identifierProvider = $this->createProvider($identifier);
                 $this->checkEntity($identifierProvider);
-                $data = $identifierProvider->fetchData();
+                $data = $identifierProvider->extract();
                 $identifier = $data[$pkName];
             }
             $query->orWhere($query->expr()->eq($pkName, $query->createPositionalParameter($identifier)));
@@ -351,7 +351,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
 
             // reset entity in provider and
             // set data
-            $provider->setEntity($provider->withData($entity, HydratorInterface::HYDRATE_ENTITY));
+            $provider->setEntity($provider->hydrate($entity, HydratorInterface::HYDRATE_ENTITY));
         } else {
             $provider = $this->createProvider($entity);
         }

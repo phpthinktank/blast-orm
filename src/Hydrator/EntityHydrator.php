@@ -19,7 +19,7 @@ use Zend\Hydrator\ArraySerializable;
 use Zend\Hydrator\ClassMethods;
 use Zend\Hydrator\ObjectProperty;
 
-class Hydrator implements HydratorInterface
+class EntityHydrator implements HydratorInterface
 {
 
     /**
@@ -32,7 +32,12 @@ class Hydrator implements HydratorInterface
         $this->provider = $provider;
     }
 
-    public function extract($object)
+    /**
+     * Extract values from given object
+     *
+     * @return array
+     */
+    public function extract()
     {
         $entity = clone $this->provider->getEntity();
 

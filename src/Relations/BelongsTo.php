@@ -81,7 +81,7 @@ class BelongsTo implements ConnectionAwareInterface, RelationInterface, Provider
             $localKey = Inflector::singularize($foreignProvider->getDefinition()->getTableName()) . '_' . $foreignProvider->getDefinition()->getPrimaryKeyName();
         }
 
-        $data = $provider->fetchData();
+        $data = $provider->extract();
 
         //find primary key
         $primaryKey = $data[$localKey];

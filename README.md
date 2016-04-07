@@ -37,7 +37,7 @@ composer require blast/orm
 
 composer.json
 
-```javascript
+```json
 {
     "require": {
         "blast/orm": "~1.0"

@@ -16,7 +16,7 @@ namespace Blast\Orm\Hydrator;
 
 use Zend\Hydrator\ExtractionInterface;
 
-interface HydratorInterface extends ExtractionInterface
+interface HydratorInterface
 {
     /**
      *
@@ -38,9 +38,18 @@ interface HydratorInterface extends ExtractionInterface
     const HYDRATE_AUTO = 'auto';
 
     /**
+     * Hydrate values to given object
+     * 
      * @param array $data
      * @param string $option
      * @return mixed
      */
     public function hydrate($data = [], $option = self::HYDRATE_AUTO);
+
+    /**
+     * Extract values from given object
+     *
+     * @return array
+     */
+    public function extract();
 }
