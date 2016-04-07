@@ -12,7 +12,6 @@
 
 namespace Blast\Orm\Hydrator;
 
-use Adamlc\LetterCase\LetterCase;
 use Blast\Orm\Entity\ProviderInterface;
 use Doctrine\Common\Inflector\Inflector;
 use Doctrine\DBAL\Driver\Statement;
@@ -48,6 +47,7 @@ class ArrayToObjectHydrator implements HydratorInterface
             //if entity has one item, return the entity
             case self::HYDRATE_ENTITY:
                 $data = $this->isCollectable($data) ? array_shift($data) : $data;
+
                 return $this->hydrateEntity($data);
         }
 
@@ -61,7 +61,7 @@ class ArrayToObjectHydrator implements HydratorInterface
      */
     protected function determineOption($data, $option)
     {
-        if ($option === self::HYDRATE_RAW ||
+        if ( $option === self::HYDRATE_RAW ||
             $data instanceof Statement ||
             is_scalar($data) ||
             is_bool($data) ||
@@ -69,7 +69,7 @@ class ArrayToObjectHydrator implements HydratorInterface
         ) {
             return self::HYDRATE_RAW;
         }
-        if ($option === self::HYDRATE_AUTO) {
+        if ( $option === self::HYDRATE_AUTO ) {
             $option = $this->isCollectable($data) && (count($data) === 0 || count($data) > 1) ? self::HYDRATE_COLLECTION : self::HYDRATE_ENTITY;
         }
 
@@ -82,9 +82,10 @@ class ArrayToObjectHydrator implements HydratorInterface
      */
     public function isCollectable($data)
     {
-        if (!is_array($data)) {
+        if ( ! is_array($data) ) {
             return false;
         }
+
         return is_array(reset($data));
     }
 
@@ -115,18 +116,18 @@ class ArrayToObjectHydrator implements HydratorInterface
         $entity = clone $this->provider->getEntity();
 
         //add relations
-        foreach($this->provider->getDefinition()->getRelations() as $name => $relation){
-            if(is_numeric($name)){
+        foreach ($this->provider->getDefinition()->getRelations() as $name => $relation) {
+            if ( is_numeric($name) ) {
                 $name = $relation->getName();
             }
             // disallow overwriting existing data
-            if(isset($data[$name])){
+            if ( isset($data[$name]) ) {
                 continue;
             }
             $data[$name] = $relation;
         }
 
-        if ($entity instanceof \ArrayObject) {
+        if ( $entity instanceof \ArrayObject ) {
             $entity->exchangeArray($data);
         }
 
@@ -136,12 +137,12 @@ class ArrayToObjectHydrator implements HydratorInterface
         $arrayReflection = new \ReflectionClass(\ArrayObject::class);
 
         foreach ($properties as $property) {
-            if ($property->isStatic() || isset($data[$property->getName()])) {
+            if ( $property->isStatic() || isset($data[$property->getName()]) ) {
                 continue;
             }
 
             $fieldName = $property->getName();
-            if (isset($data[$fieldName])) {
+            if ( isset($data[$fieldName]) ) {
                 $property->setValue($entity, $data[$fieldName]);
             }
         }
@@ -163,7 +164,7 @@ class ArrayToObjectHydrator implements HydratorInterface
 
             $fieldName = Inflector::tableize($key);
 
-            if (isset($data[$fieldName])) {
+            if ( isset($data[$fieldName]) ) {
                 $method->invokeArgs($entity, [$data[$fieldName]]);
             }
         }
