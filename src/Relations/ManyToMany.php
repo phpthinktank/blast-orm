@@ -16,6 +16,7 @@ namespace Blast\Orm\Relations;
 
 use Blast\Orm\ConnectionAwareInterface;
 use Blast\Orm\ConnectionAwareTrait;
+use Blast\Orm\Entity\Definition;
 use Blast\Orm\Entity\ProviderFactoryInterface;
 use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
@@ -115,42 +116,47 @@ class ManyToMany implements ConnectionAwareInterface, ProviderFactoryInterface, 
         $junctionLocalKey = $this->getJunctionLocalKey();
         $junctionForeignKey = $this->getJunctionForeignKey();
 
-        $data = $provider->fetchData();
+        $data = $provider->extract();
 
-        $localKey = $provider->getPrimaryKeyName();
+        $localKey = $provider->getDefinition()->getPrimaryKeyName();
 
         //determine foreign key
         if ($foreignKey === null) {
-            $foreignKey = $foreignProvider->getPrimaryKeyName();
+            $foreignKey = $foreignProvider->getDefinition()->getPrimaryKeyName();
         }
 
         //determine through
         if (!is_string($junction) || $junction === null) {
-            $junction = Inflector::singularize($provider->getTableName()) . '_' . Inflector::singularize($foreignProvider->getTableName());
+            $junction = Inflector::singularize($provider->getDefinition()->getTableName()) . '_' . Inflector::singularize($foreignProvider->getDefinition()->getTableName());
         }
 
         //determine through local key
         if ($junctionLocalKey === null) {
-            $junctionLocalKey = Inflector::singularize($provider->getTableName()) . '_' . $localKey;
+            $junctionLocalKey = Inflector::singularize($provider->getDefinition()->getTableName()) . '_' . $localKey;
         }
 
         //determine through foreign key
         if ($junctionForeignKey === null) {
-            $junctionForeignKey = Inflector::singularize($foreignProvider->getTableName()) . '_' . $foreignKey;
+            $junctionForeignKey = Inflector::singularize($foreignProvider->getDefinition()->getTableName()) . '_' . $foreignKey;
         }
 
-        $query = new Query($provider->getMapper()->getConnection());
+        $query = new Query($provider->getDefinition()->getMapper()->getConnection());
 
         //prepare query for foreign table
-        $foreignQuery = $foreignProvider->getMapper()
+        $foreignQuery = $foreignProvider->getDefinition()->getMapper()
             ->setConnection($this->getConnection())
             ->select();
 
         //get relations by through db object
         if (isset($data[$localKey])) {
-            $junctionProvider = is_string($junction) ? $this->createProvider($junction) : $junction;
-            $junctionMapper = $junctionProvider->getMapper();
+            $junctionProvider = is_string($junction) ? 
+                $this->createProvider($junction) : 
+                $junction;
+            $junctionMapper = $junctionProvider->getDefinition()->getMapper();
             $junctionMapper->setConnection($this->getConnection());
+            if(true){
+
+            }
             $results = $junctionMapper
                 ->select([$junctionForeignKey])
                 ->where($query->expr()->eq($junctionLocalKey, $data[$localKey]))

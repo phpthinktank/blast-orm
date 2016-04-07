@@ -78,15 +78,15 @@ class BelongsTo implements ConnectionAwareInterface, RelationInterface, Provider
         $localKey = $this->getLocalKey();
 
         if ($localKey === null) {
-            $localKey = Inflector::singularize($foreignProvider->getTableName()) . '_' . $foreignProvider->getPrimaryKeyName();
+            $localKey = Inflector::singularize($foreignProvider->getDefinition()->getTableName()) . '_' . $foreignProvider->getDefinition()->getPrimaryKeyName();
         }
 
-        $data = $provider->fetchData();
+        $data = $provider->extract();
 
         //find primary key
         $primaryKey = $data[$localKey];
 
-        $mapper = $foreignProvider->getMapper()->setConnection($this->getConnection());
+        $mapper = $foreignProvider->getDefinition()->getMapper()->setConnection($this->getConnection());
 
         //if no primary key is available, return a select
         $this->query = $primaryKey === null ? $mapper->select() : $mapper->find($primaryKey);

@@ -14,16 +14,8 @@
 namespace Blast\Orm\Entity;
 
 
-use Blast\Orm\Hydrator\ArrayToObjectHydrator;
+use Blast\Orm\Hydrator\EntityHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
-use Blast\Orm\Hydrator\ObjectToArrayHydrator;
-use Blast\Orm\Mapper;
-use Blast\Orm\MapperFactoryInterface;
-use Blast\Orm\MapperFactoryTrait;
-use Blast\Orm\MapperInterface;
-use Blast\Orm\Relations\RelationInterface;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Index;
 
 class Provider implements ProviderInterface
 {
@@ -60,63 +52,15 @@ class Provider implements ProviderInterface
     }
 
     /**
-     * @return \Doctrine\DBAL\Schema\Column[]
-     */
-    public function getFields()
-    {
-        return $this->getDefinition()->getFields();
-    }
-
-    /**
-     * @return \Doctrine\DBAL\Schema\Index[]
-     */
-    public function getIndexes()
-    {
-        return $this->getDefinition()->getIndexes();
-    }
-
-    /**
-     * @return MapperInterface|Mapper
-     */
-    public function getMapper()
-    {
-        return $this->getDefinition()->getMapper();
-    }
-
-    /**
-     * @return \Blast\Orm\Relations\RelationInterface[]
-     */
-    public function getRelations()
-    {
-        return $this->getDefinition()->getRelations();
-    }
-
-    /**
-     * @return string
-     */
-    public function getTableName()
-    {
-        return $this->getDefinition()->getTableName();
-    }
-
-    /**
-     * @return string
-     */
-    public function getPrimaryKeyName()
-    {
-        return $this->getDefinition()->getPrimaryKeyName();
-    }
-
-    /**
      * Convert data array to entity with data
      *
      * @param array $data
      * @param string $option
      * @return object|\ArrayObject
      */
-    public function withData(array $data = [], $option = HydratorInterface::HYDRATE_AUTO)
+    public function hydrate(array $data = [], $option = HydratorInterface::HYDRATE_AUTO)
     {
-        return (new ArrayToObjectHydrator($this))->hydrate($data, $option);
+        return (new EntityHydrator($this))->hydrate($data, $option);
     }
 
     /**
@@ -125,9 +69,9 @@ class Provider implements ProviderInterface
      * @param array $additionalData
      * @return object
      */
-    public function fetchData(array $additionalData = [])
+    public function extract(array $additionalData = [])
     {
-        return (new ObjectToArrayHydrator($this))->hydrate($additionalData);
+        return (new EntityHydrator($this))->extract($additionalData);
     }
 
     /**
@@ -137,7 +81,8 @@ class Provider implements ProviderInterface
      */
     public function isNew()
     {
-        $data = $this->fetchData();
-        return isset($data[$this->getPrimaryKeyName()]) ? empty($data[$this->getPrimaryKeyName()]) : true;
+        $data = $this->extract();
+
+        return isset($data[$this->getDefinition()->getPrimaryKeyName()]) ? empty($data[$this->getDefinition()->getPrimaryKeyName()]) : true;
     }
 }

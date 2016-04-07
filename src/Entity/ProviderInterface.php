@@ -19,33 +19,14 @@ use Blast\Orm\Relations\RelationsAwareInterface;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
 
-interface ProviderInterface extends MapperAwareInterface, EntityAwareInterface, RelationsAwareInterface
+interface ProviderInterface extends EntityAwareInterface
 {
 
     const DEFAULT_PRIMARY_KEY_NAME = 'id';
 
     /**
-     * @return Column[]
+     * @return DefinitionInterface
      */
-    public function getFields();
-
-    /**
-     * @return Index[]
-     */
-    public function getIndexes();
-
-    /**
-     * Name of primary key
-     *
-     * @return string
-     */
-    public function getPrimaryKeyName();
-
-    /**
-     * Table name
-     *
-     * @return string
-     */
-    public function getTableName();
+    public function getDefinition();
 
 }

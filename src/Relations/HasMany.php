@@ -78,16 +78,16 @@ class HasMany implements ConnectionAwareInterface, ProviderFactoryInterface, Rel
         $foreignProvider = $this->createProvider($this->getForeignEntity());
         $foreignKey = $this->getForeignKey();
 
-        $data = $provider->fetchData();
+        $data = $provider->extract();
 
         //find primary key
         if ($foreignKey === null) {
-            $foreignKey = Inflector::singularize($provider->getTableName()) . '_' . $provider->getPrimaryKeyName();
+            $foreignKey = Inflector::singularize($provider->getDefinition()->getTableName()) . '_' . $provider->getDefinition()->getPrimaryKeyName();
         }
 
-        $mapper = $foreignProvider->getMapper()->setConnection($this->getConnection());
+        $mapper = $foreignProvider->getDefinition()->getMapper()->setConnection($this->getConnection());
 
-        $foreignKeyValue = isset($data[$provider->getPrimaryKeyName()]) ? $data[$provider->getPrimaryKeyName()] : false;
+        $foreignKeyValue = isset($data[$provider->getDefinition()->getPrimaryKeyName()]) ? $data[$provider->getDefinition()->getPrimaryKeyName()] : false;
 
         //if no primary key is available, return a select
         $query = $mapper->select();

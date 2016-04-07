@@ -17,7 +17,7 @@ use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Entity\ProviderFactoryInterface;
 use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Entity\ProviderInterface;
-use Blast\Orm\Hydrator\ArrayToObjectHydrator;
+use Blast\Orm\Hydrator\EntityHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
@@ -150,7 +150,7 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
 
         $result = $this->convertTypesToPHPValues($provider, $event->getResult());
 
-        $data = (new ArrayToObjectHydrator($provider))->hydrate($result, $option);
+        $data = (new EntityHydrator($provider))->hydrate($result, $option);
         gc_collect_cycles();
 
         return $data;
@@ -291,7 +291,7 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
         if(!is_array($result)){
             return $result;
         }
-        $fields = $provider->getFields();
+        $fields = $provider->getDefinition()->getFields();
 
         foreach ($result as $index => $items) {
             foreach ($items as $key => $value) {

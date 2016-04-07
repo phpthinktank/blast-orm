@@ -2,6 +2,17 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 0.6.0
+
+### Altered
+
+ - add `\Blast\Orm\Entity\DefinitionInterface` and use definition instead of provider
+ - Refactor hydrators use [`zendframework/zend-hydrator`](http://framework.zend.com/manual/current/en/modules/zend.stdlib.hydrator.html) for internal logic.
+
+### Removed
+
+ - remove definition data getters from provider, you need to use `$provider->getDefiniton()->get*()`
+
 ## 0.5.3
 
 ### Altered

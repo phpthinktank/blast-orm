@@ -40,7 +40,7 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
         'primaryKeyName' => ProviderInterface::DEFAULT_PRIMARY_KEY_NAME,
         'tableName' => '',
         'mapper' => Mapper::class,
-        'relations' => []
+        'relations' => [],
     ];
 
     /**
@@ -165,7 +165,7 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
     public function getMapper()
     {
         if (!($this->configuration['mapper'] instanceof MapperInterface)) {
-            $this->configuration['mapper'] = $this->createMapper($this->getEntity());
+            $this->configuration['mapper'] = $this->createMapper($this);
         }
         return $this->configuration['mapper'];
     }

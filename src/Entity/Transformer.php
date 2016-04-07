@@ -13,7 +13,6 @@
 
 namespace Blast\Orm\Entity;
 
-use Adamlc\LetterCase\LetterCase;
 use Doctrine\Common\Inflector\Inflector;
 
 class Transformer implements TransformerInterface, EntityAwareInterface
