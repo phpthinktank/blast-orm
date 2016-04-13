@@ -23,7 +23,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
  *
  * @package Blast\Orm
  */
-class Connection extends DbalConnection implements MapperFactoryInterface
+class Connection extends DbalConnection implements MapperFactoryInterface, QueryFactoryInterface
 {
 
     use MapperFactoryTrait {
@@ -55,9 +55,9 @@ class Connection extends DbalConnection implements MapperFactoryInterface
      *
      * @param \Doctrine\DBAL\Query\QueryBuilder $builder
      *
-     * @return Mapper
+     * @return \Blast\Orm\Query
      */
-    public function createQuery($entity, QueryBuilder $builder = null)
+    public function createQuery($entity = null, QueryBuilder $builder = null)
     {
         $query = new Query($this, $entity);
         $query->setBuilder(null === $builder ? parent::createQueryBuilder() : $builder);

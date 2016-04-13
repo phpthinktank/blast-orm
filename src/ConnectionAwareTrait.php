@@ -17,14 +17,14 @@ trait ConnectionAwareTrait
 {
 
     /**
-     * @var \Doctrine\DBAL\Connection
+     * @var \Doctrine\DBAL\Connection|\Blast\Orm\Connection
      */
     private $connection = null;
 
     /**
      * Get current connection
      *
-     * @return \Doctrine\DBAL\Driver\Connection|\Doctrine\DBAL\Connection
+     * @return \Doctrine\DBAL\Driver\Connection|\Doctrine\DBAL\Connection|\Blast\Orm\Connection
      */
     public function getConnection()
     {
@@ -35,7 +35,7 @@ trait ConnectionAwareTrait
     }
 
     /**
-     * @param \Doctrine\DBAL\Driver\Connection|null $connection
+     * @param \Doctrine\DBAL\Driver\Connection|\Blast\Orm\Connection|null $connection
      *
      * @return $this
      */

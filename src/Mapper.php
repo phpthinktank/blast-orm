@@ -148,33 +148,14 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
 
         //disallow differing entities
         $this->checkEntity($provider);
-
-        //prepare statement
-        $query = $this->createQuery();
-        $query->insert($provider->getDefinition()->getTableName());
-
+        
         //pass data without relations
         $data = $provider->extract();
 
-        //cancel if $data has no entries
-        if (count($data) < 1) {
-            return false;
-        }
-
         $fields = $provider->getDefinition()->getFields();
-
-        foreach ($data as $key => $value) {
-            if ($value instanceof RelationInterface) {
-                continue;
-            };
-
-            $query->setValue($key, $query->createPositionalParameter(
-                $value, array_key_exists($key, $fields) ?
-                $fields[$key]->getType()->getName() :
-                Type::STRING));
-        }
-
-        return $query;
+        $gateway = new Gateway($provider->getDefinition()->getTableName());
+        
+        return $gateway->insert($data, $fields);
     }
 
     /**
@@ -192,15 +173,15 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
         $this->checkEntity($provider);
 
         $pkName = $provider->getDefinition()->getPrimaryKeyName();
+        //pass data without relations
+        $data = $provider->extract();
+        $fields = $provider->getDefinition()->getFields();
 
+        
         //prepare statement
         $query = $this->createQuery();
         $query->update($provider->getDefinition()->getTableName());
 
-        //pass data without relations
-        $data = $provider->extract();
-
-        $fields = $provider->getDefinition()->getFields();
 
         foreach ($data as $key => $value) {
             if ($value instanceof RelationInterface) {
