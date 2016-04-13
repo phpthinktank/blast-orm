@@ -23,5 +23,5 @@ interface QueryFactoryInterface
      * 
      * @return Mapper
      */
-    public function createQuery($entity);
+    public function createQuery($entity = null);
 }
