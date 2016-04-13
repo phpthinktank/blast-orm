@@ -2,6 +2,17 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 0.6.1
+
+### Added
+
+ - `\Blast\Orm\QueryFactoryInterface` act as contract for query creation
+ - `\Blast\Orm\Connection` acts as connection wrapper for doctrine connection and is able to create connection-aware mappers and queries. createQueryBuilder is still creating doctrine SQL query builder!
+
+### Altered
+
+ - `\Blast\Orm\MapperFactoryInterface` is not forcing to add a connection
+
 ## 0.6.0
 
 ### Altered

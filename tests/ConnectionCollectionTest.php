@@ -11,6 +11,9 @@ namespace Blast\Tests\Orm;
 
 use Blast\Orm\ConnectionManager;
 use Blast\Orm\ConnectionManagerInterface;
+use Blast\Orm\Mapper;
+use Blast\Orm\Query;
+use Blast\Tests\Orm\Stubs\Entities\Post;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Driver\Connection;
@@ -67,6 +70,16 @@ class ConnectionCollectionTest extends \PHPUnit_Framework_TestCase
 
         $this->assertInternalType('array', ConnectionManager::getInstance()->getPrevious());
         $this->assertInstanceOf(Connection::class, ConnectionManager::getInstance()->get());
+    }
+
+    /**
+     * Test orm own connection and access to query and mapper
+     */
+    public function testOrmConnection(){
+        $connection = ConnectionManager::create($this->dsn);
+
+        $this->assertInstanceOf(Mapper::class, $connection->createMapper(Post::class));
+        $this->assertInstanceOf(Query::class, $connection->createQuery(Post::class));
     }
 
     public function testExceptionWhenSetUnknownDefaultConnection()

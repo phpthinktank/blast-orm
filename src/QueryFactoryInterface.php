@@ -6,22 +6,22 @@
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
  *
- * Date: 16.03.2016
- * Time: 17:25
+ * Date: 13.04.2016
+ * Time: 08:34
  *
  */
 
 namespace Blast\Orm;
 
 
-interface MapperFactoryInterface
+interface QueryFactoryInterface
 {
     /**
-     * Create a new Mapper for given entity.
+     * Create a new query for given entity.
      *
      * @param $entity
+     * 
      * @return Mapper
      */
-    public function createMapper($entity);
-
+    public function createQuery($entity);
 }
