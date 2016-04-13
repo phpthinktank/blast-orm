@@ -9,6 +9,7 @@
 namespace Blast\Orm;
 
 use Doctrine\DBAL\Connection;
+use Blast\Orm\Connection as ConnectionWrapper;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\DriverManager;
 
@@ -61,7 +62,7 @@ class ConnectionManager implements ConnectionManagerInterface
      * class from container.
      *
      * @param $definition
-     * @return Connection
+     * @return \Doctrine\DBAL\Connection|\Blast\Orm\Connection
      *
      * @throws \Doctrine\DBAL\DBALException
      */
@@ -80,6 +81,10 @@ class ConnectionManager implements ConnectionManagerInterface
 
         if (!is_array($definition)) {
             throw new DBALException('Unable to determine parameter array from definition');
+        }
+
+        if(!array_key_exists('wrapperClass', $definition)){
+            $definition['wrapperClass'] = ConnectionWrapper::class;
         }
 
         $connection = DriverManager::getConnection($definition);
@@ -147,9 +152,7 @@ class ConnectionManager implements ConnectionManagerInterface
             throw new DBALException(sprintf('Connection with name %s already exists!', $name));
         }
 
-        $connection = static::create($connection);
-
-        $this->connections[$name] = $connection;
+        $this->connections[$name] = static::create($connection);
 
         //set first connection as active connection
         if (count($this->connections) === 1) {
@@ -200,7 +203,7 @@ class ConnectionManager implements ConnectionManagerInterface
      *
      * @param $name
      *
-     * @return \Doctrine\DBAL\Connection
+     * @return \Doctrine\DBAL\Connection|\Blast\Orm\Connection
      *
      * @throws \Doctrine\DBAL\DBALException
      */

@@ -174,7 +174,32 @@ $connections->setDefaultConnection('another');
 
 The query object is is providing high level API methods of [doctrine 2 query builder](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/query-builder.html#security-safely-preventing-sql-injection).
 
-The query is automatically determining current active connection from connection manager.
+Create query from connection
+
+```php
+<?php
+
+$query = $connection->createQuery();
+```
+
+with entity
+
+```php
+<?php
+
+$query = $connection->createQuery(Post::class);
+```
+
+with definition
+
+```php
+<?php
+
+$query = $connection->createQuery($definition);
+
+```
+
+Create a new query instance, the query is automatically determining current active connection from connection manager.
 
 ```php
 <?php
@@ -662,6 +687,15 @@ The mapper prepares queries for data persistence and access of a provided entity
 instance and need to execute manually. It is also possible to add event listeners for query
 
 #### Create a new mapper for entity
+
+Get entity specific mapper from connection 
+
+```php
+<?php
+
+$mapper = $connection->getMapper($post);
+
+```
 
 Get entity specific mapper from provider
 
