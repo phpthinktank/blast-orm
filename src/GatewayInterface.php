@@ -30,30 +30,33 @@ interface GatewayInterface
 
     /**
      * Prepare insert statement
-     * 
+     *
      * @param $data
+     * @param \Doctrine\DBAL\Schema\Column[] $fields
      * 
      * @return $this
      */
-    public function insert($data);
+    public function insert($data, $fields = []);
 
     /**
      * Prepare update statement
-     * 
-     * @param $primaryKey
+     *
+     * @param $primaryKeyName
      * @param $data
+     * @param \Doctrine\DBAL\Schema\Column[] $fields
      * 
      * @return mixed
      */
-    public function update($primaryKey, $data);
+    public function update($primaryKeyName, $data, $fields = []);
 
     /**
      * Prepare delete statement
-     * 
+     *
+     * @param $primaryKeyName
      * @param $primaryKey
      * 
      * @return mixed
      */
-    public function delete($primaryKey);
+    public function delete($primaryKeyName, $primaryKey);
     
 }

@@ -23,7 +23,6 @@ use Blast\Orm\Relations\HasMany;
 use Blast\Orm\Relations\HasOne;
 use Blast\Orm\Relations\ManyToMany;
 use Blast\Orm\Relations\RelationInterface;
-use Doctrine\DBAL\Types\Type;
 use stdClass;
 
 /**
@@ -59,10 +58,10 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
     public function __construct($entity, $connection = null)
     {
         $this->connection = $connection;
-        if ($entity instanceof DefinitionInterface) {
+        if ( $entity instanceof DefinitionInterface ) {
             $this->setEntity($entity->getEntity());
             $this->definition = $entity;
-        }elseif ($entity instanceof ProviderInterface) {
+        } elseif ( $entity instanceof ProviderInterface ) {
             $this->setEntity($entity->getEntity());
             $this->provider = $entity;
         } else {
@@ -79,9 +78,10 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
     public function find($primaryKey)
     {
         $query = $this->select();
-        $definition = $this->getDefinition();
-        $field = $definition->getPrimaryKeyName();
-        $query->where($query->expr()->eq($field, $query->createPositionalParameter($primaryKey)));
+        $query->where($query->expr()->eq(
+            $this->getDefinition()->getPrimaryKeyName(),
+            $query->createPositionalParameter($primaryKey))
+        );
 
         return $query;
     }
@@ -94,18 +94,14 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
      */
     public function select($selects = ['*'])
     {
-        $query = $this->createQuery();
-        $query->select($selects);
-        $definition = $this->getDefinition();
-        $tableName = $definition->getTableName();
-        $query->from($tableName);
-
-        return $query;
+        return $this->createQuery()
+            ->select($selects)
+            ->from($this->getDefinition()->getTableName());
     }
 
     /**
      * Create a new Query instance
-     * @return Query
+     * @return \Blast\Orm\Query
      */
     public function createQuery()
     {
@@ -113,11 +109,23 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
     }
 
     /**
+     * Create a new Query instance
+     * @return \Blast\Orm\Gateway
+     */
+    public function createGateway($tableName)
+    {
+        $gateway = new Gateway($tableName);
+        $gateway->setConnection($this->getConnection());
+
+        return $gateway;
+    }
+
+    /**
      * @return ProviderInterface
      */
     public function getProvider()
     {
-        if (null === $this->provider) {
+        if ( null === $this->provider ) {
             $this->provider = $this->createProvider($this->getEntity());
         }
 
@@ -129,9 +137,10 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
      */
     public function getDefinition()
     {
-        if (null === $this->definition) {
+        if ( null === $this->definition ) {
             $this->definition = $this->createProvider($this->getEntity())->getDefinition();
         }
+
         return $this->definition;
     }
 
@@ -145,17 +154,12 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
     {
         //load entity provider
         $provider = $this->prepareProvider($entity);
+        $definition = $provider->getDefinition();
 
         //disallow differing entities
-        $this->checkEntity($provider);
-        
-        //pass data without relations
-        $data = $provider->extract();
-
-        $fields = $provider->getDefinition()->getFields();
-        $gateway = new Gateway($provider->getDefinition()->getTableName());
-        
-        return $gateway->insert($data, $fields);
+        return $this->checkEntity($definition->getEntity())
+            ->createGateway($definition->getTableName())
+            ->insert($provider->extract(), $definition->getFields());
     }
 
     /**
@@ -168,34 +172,16 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
     {
         //load entity provider
         $provider = $this->prepareProvider($entity);
+        $definition = $provider->getDefinition();
 
         //disallow differing entities
-        $this->checkEntity($provider);
-
-        $pkName = $provider->getDefinition()->getPrimaryKeyName();
-        //pass data without relations
-        $data = $provider->extract();
-        $fields = $provider->getDefinition()->getFields();
-
-        
-        //prepare statement
-        $query = $this->createQuery();
-        $query->update($provider->getDefinition()->getTableName());
-
-
-        foreach ($data as $key => $value) {
-            if ($value instanceof RelationInterface) {
-                continue;
-            }
-            $query->set($key, $query->createPositionalParameter(
-                $value, array_key_exists($key, $fields) ?
-                $fields[$key]->getType()->getName() :
-                Type::STRING));
-        }
-
-        $query->where($query->expr()->eq($pkName, $data[$pkName]));
-
-        return $query;
+        return $this->checkEntity($definition->getEntity())
+            ->createGateway($definition->getTableName())
+            ->update(
+                $definition->getPrimaryKeyName(),
+                $provider->extract(),
+                $definition->getFields()
+            );
     }
 
     /**
@@ -212,31 +198,26 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
     /**
      * Prepare delete query for attached entity by identifiers
      *
-     * @param array|int|string $identifiers
+     * @param int|string $identifier
      * @return query
      */
-    public function delete($identifiers)
+    public function delete($identifier)
     {
-        $identifiers = is_array($identifiers) ? $identifiers : [$identifiers];
         $definition = $this->getDefinition();
 
         //prepare statement
-        $pkName = $definition->getPrimaryKeyName();
-        $query = $this->createQuery();
-        $query->delete($definition->getTableName());
+        $primaryKeyName = $definition->getPrimaryKeyName();
 
-        //add entities by pk to delete
-        foreach ($identifiers as $identifier) {
-            if (is_object($identifier)) {
-                $identifierProvider = $this->createProvider($identifier);
-                $this->checkEntity($identifierProvider);
-                $data = $identifierProvider->extract();
-                $identifier = $data[$pkName];
-            }
-            $query->orWhere($query->expr()->eq($pkName, $query->createPositionalParameter($identifier)));
+        if ( is_object($identifier) ) {
+            $identifierProvider = $this->createProvider($identifier);
+            $this->checkEntity($identifierProvider->getEntity());
+            $data = $identifierProvider->extract();
+            $identifier = $data[$primaryKeyName];
         }
 
-        return $query;
+        return $this
+            ->createGateway($definition->getTableName())
+            ->delete($primaryKeyName, $identifier);
     }
 
     /**
@@ -327,7 +308,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
      */
     private function prepareProvider($entity)
     {
-        if (is_array($entity)) {
+        if ( is_array($entity) ) {
             $provider = $this->createProvider($this->getEntity());
 
             // reset entity in provider and
@@ -348,7 +329,7 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
      */
     private function prepareRelation(RelationInterface $relation)
     {
-        if ($relation instanceof ConnectionAwareInterface) {
+        if ( $relation instanceof ConnectionAwareInterface ) {
             $relation->setConnection($this->getConnection());
         }
 
@@ -358,15 +339,18 @@ class Mapper implements EntityAwareInterface, ConnectionAwareInterface, MapperIn
     /**
      * Check if external entity matches mapper entity
      *
-     * @param $provider
+     * @param $entity
+     *
+     * @return $this
      *
      * @throws \InvalidArgumentException
      */
-    private function checkEntity(ProviderInterface $provider)
+    private function checkEntity($entity)
     {
-        $class = get_class($provider->getEntity());
-        if ($class !== get_class($this->getDefinition()->getEntity())) {
-            throw new \InvalidArgumentException('Disallowed usage of differing entity!' . $class);
+        if ( get_class($entity) !== get_class($this->getDefinition()->getEntity()) ) {
+            throw new \InvalidArgumentException('Disallowed usage of differing entity!' . get_class($entity));
         }
+
+        return $this;
     }
 }

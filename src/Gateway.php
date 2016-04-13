@@ -43,7 +43,7 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
      *
      * @param $data
      *
-     * @param Column[] $fields
+     * @param \Doctrine\DBAL\Schema\Column[] $fields
      * @return $this
      */
     public function insert($data, $fields = [])
@@ -60,7 +60,7 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
         foreach ($data as $key => $value) {
             if ($value instanceof RelationInterface) {
                 continue;
-            };
+            }
 
             $query->setValue($key, $query->createPositionalParameter(
                 $value, array_key_exists($key, $fields) ?
@@ -74,25 +74,47 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
     /**
      * Prepare update statement
      *
-     * @param $primaryKey
+     * @param $primaryKeyName
      * @param $data
+     * @param \Doctrine\DBAL\Schema\Column[] $fields
      *
      * @return mixed
      */
-    public function update($primaryKey, $data)
+    public function update($primaryKeyName, $data, $fields = [])
     {
-        // TODO: Implement update() method.
+        //prepare statement
+        $query = $this->getConnection()->createQuery();
+        $query->update($this->table);
+        
+        foreach ($data as $key => $value) {
+            if ($value instanceof RelationInterface) {
+                continue;
+            }
+            $query->set($key, $query->createPositionalParameter(
+                $value, array_key_exists($key, $fields) ?
+                $fields[$key]->getType()->getName() :
+                Type::STRING));
+        }
+
+        return $query->where($query->expr()->eq($primaryKeyName, $data[$primaryKeyName]));
     }
 
     /**
      * Prepare delete statement
      *
+     * @param $primaryKeyName
      * @param $primaryKey
      *
      * @return mixed
      */
-    public function delete($primaryKey)
+    public function delete($primaryKeyName, $primaryKey)
     {
-        // TODO: Implement delete() method.
+        $query = $this->getConnection()->createQuery();
+        $query
+            ->delete($this->table)
+            ->where($query->expr()->eq($primaryKeyName, $query->createPositionalParameter($primaryKey)));
+
+        return $query;
+
     }
 }
