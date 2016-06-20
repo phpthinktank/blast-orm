@@ -71,7 +71,7 @@ class Provider implements ProviderInterface
      */
     public function extract(array $additionalData = [])
     {
-        return (new EntityHydrator($this))->extract($additionalData);
+        return array_replace_recursive($additionalData, (new EntityHydrator($this))->extract());
     }
 
     /**
