@@ -67,7 +67,7 @@ class Provider implements ProviderInterface
      * Convert object properties or object getter to data array
      *
      * @param array $additionalData
-     * @return object
+     * @return array|\ArrayObject
      */
     public function extract(array $additionalData = [])
     {
