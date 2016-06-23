@@ -11,6 +11,7 @@ namespace Blast\Tests\Orm;
 
 use Blast\Orm\ConnectionManager;
 use Blast\Orm\ConnectionManagerInterface;
+use Blast\Orm\Entity\Provider;
 use Blast\Orm\Mapper;
 use Blast\Orm\Query;
 use Blast\Tests\Orm\Stubs\Entities\Post;
@@ -82,6 +83,8 @@ class ConnectionCollectionTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(Query::class, $connection->createQuery(Post::class));
     }
 
+
+
     public function testExceptionWhenSetUnknownDefaultConnection()
     {
         $this->setExpectedException(DBALException::class);
@@ -105,5 +108,14 @@ class ConnectionCollectionTest extends \PHPUnit_Framework_TestCase
     {
         $this->setExpectedException(DBALException::class);
         ConnectionManager::getInstance()->add(1234, 'invalid');
+    }
+
+    public function testPrefix()
+    {
+        $connection = ConnectionManager::getInstance()->get();
+        $connection->setPrefix('test');
+        $provider = new Provider('testTable');
+        $this->assertEquals('test_testTable', $provider->getDefinition()->getTableName());
+        $connection->setPrefix('');
     }
 }

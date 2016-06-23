@@ -26,6 +26,12 @@ use Doctrine\DBAL\Query\QueryBuilder;
 class Connection extends DbalConnection implements MapperFactoryInterface, QueryFactoryInterface
 {
 
+    /**
+     * Table name prefix for connections
+     * @var null|string
+     */
+    private $prefix = null;
+    
     use MapperFactoryTrait {
         createMapper as protected internalCreateMapper;
     }
@@ -62,6 +68,24 @@ class Connection extends DbalConnection implements MapperFactoryInterface, Query
         $query = new Query($this, $entity);
         $query->setBuilder(null === $builder ? parent::createQueryBuilder() : $builder);
         return $query;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getPrefix()
+    {
+        return $this->prefix;
+    }
+
+    /**
+     * @param null|string $prefix
+     * @return $this
+     */
+    public function setPrefix($prefix)
+    {
+        $this->prefix = $prefix;
+        return $this;
     }
 
 }
