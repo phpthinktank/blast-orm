@@ -80,7 +80,7 @@ It is recommended to use accessors (getters) and mutators (setters) for properti
 #### Provider
  
 The provider is a link between independent data entity and data access. The provider is also able to hydrate data to 
-entity object and extract data from entity object
+entity object and extract data from entity object.
 
 #### Definition
 
@@ -430,7 +430,8 @@ $query->getEmitter()->addListener('result.select', function (QueryResultEvent $e
 
 ### Entities
 
-Entity classes are independent of Blast ORM.
+Entity classes are independent of Blast ORM. Entity fields are translated to underscore for database field mapping. 
+Database fields are translated to camelcase for entity field mapping.  
 
 ```php
 <?php
