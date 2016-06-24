@@ -8,8 +8,8 @@
 
 namespace Blast\Orm;
 
-use Doctrine\DBAL\Connection;
 use Blast\Orm\Connection as ConnectionWrapper;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\DriverManager;
 
@@ -42,14 +42,14 @@ class ConnectionManager implements ConnectionManagerInterface
      *
      * @return \Blast\Orm\ConnectionManager
      */
-    public static function getInstance(){
-        if(null === static::$instance){
+    public static function getInstance()
+    {
+        if (null === static::$instance) {
             static::$instance = new self;
         }
 
         return static::$instance;
     }
-
 
 
     /**
@@ -83,7 +83,7 @@ class ConnectionManager implements ConnectionManagerInterface
             throw new DBALException('Unable to determine parameter array from definition');
         }
 
-        if(!array_key_exists('wrapperClass', $definition)){
+        if (!array_key_exists('wrapperClass', $definition)) {
             $definition['wrapperClass'] = ConnectionWrapper::class;
         }
 
@@ -91,6 +91,13 @@ class ConnectionManager implements ConnectionManagerInterface
 
         if (!($connection instanceof Connection)) {
             throw new \RuntimeException(sprintf('Connection needs to be an instance of %s', Connection::class));
+        }
+
+        //setup special configuration for blast connections
+        if ($connection instanceof \Blast\Orm\Connection) {
+            if (array_key_exists('prefix', $definition)) {
+                $connection->setPrefix($definition['prefix']);
+            }
         }
 
         return $connection;
