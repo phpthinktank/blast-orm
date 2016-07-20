@@ -486,6 +486,46 @@ $configuration = [
 $definition->setConfiguration($configuration);
 ```
 
+A definition could also be declared on an entity as FQCN by property
+
+```php
+<?php
+
+class Post
+{
+    public static $definition = '\Acme\Domain\Entities\Definition\PostDefinition';
+}
+
+```
+
+or by method.
+
+```php
+<?php
+
+class Post
+{
+    public static function definition(){
+        return '\Acme\Domain\Entities\Definition\PostDefinition';
+    }
+}
+
+```
+
+Mention you could also pass an definition object instead of a FQCN.
+
+```php
+<?php
+
+class Post
+{
+    public static function definition(){
+        return new PostDefinition;
+    }
+}
+
+```
+
 #### Provider
 
 Providers are used to determine the entity definition and hydrate data to entity and vice versa. You could pass an 

@@ -106,15 +106,10 @@ class Transformer implements TransformerInterface, EntityAwareInterface
      */
     private function transformEntityToDefinition($entity, $definition = null)
     {
-        if(null === $definition){
-            $definition = new Definition();
-        }
-        $configuration = $definition->getConfiguration();
+        // find definition class in entity by property or method
+        $definition = $this->loadDefinitionFromEntity($entity, $definition);
         $reflection = new \ReflectionObject($entity);
-
-        $configuration['entity'] = $entity;
-
-        $configuration = $definition->setConfiguration($configuration)->getConfiguration();
+        $configuration = $definition->getConfiguration();
 
         //mapper is needed to for events, therefore we need to fetch mapper first
         if ($reflection->hasMethod('mapper')) {
@@ -158,5 +153,33 @@ class Transformer implements TransformerInterface, EntityAwareInterface
         }
 
         return $definition->setConfiguration($configuration);
+    }
+
+    /**
+     * @param $entity
+     * @param Definition|null $definition
+     * @return Definition|null
+     */
+    private function loadDefinitionFromEntity($entity, $definition = null)
+    {
+        $definitionClass = null;
+        if (property_exists($entity, 'definition')) {
+            $definitionClass = $entity::definition;
+        }
+        if (method_exists($entity, 'definition')) {
+            $definitionClass = $entity::definition();
+        }
+        if (null !== $definitionClass) {
+            $definition = is_object($definitionClass) ? $definitionClass : new $definitionClass;
+        }
+        if (null === $definition) {
+            $definition = new Definition();
+        }
+
+        $configuration = $definition->getConfiguration();
+        $configuration['entity'] = $entity;
+        $definition->setConfiguration($configuration);
+
+        return $definition;
     }
 }

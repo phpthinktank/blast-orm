@@ -7,6 +7,7 @@ All notable changes of the Blast orm 1.0 release series are documented in this f
 ### Altered
 
  - Add table prefixes when accessing tablename from provider
+ - Add accessor for definitions in entities
 
 ## 0.6.3
 
