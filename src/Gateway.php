@@ -44,17 +44,19 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
      * @param $data
      *
      * @param \Doctrine\DBAL\Schema\Column[] $fields
-     * @return $this
+     * @return Query
      */
     public function insert($data, $fields = [])
     {
-        //cancel if $data has no entries
-        if (count($data) < 1) {
-            return false;
-        }
-
         //prepare statement
         $query = $this->getConnection()->createQuery();
+
+        //cancel if $data has no entries
+        if (count($data) < 1) {
+            return $query;
+        }
+
+
         $query->insert($this->table);
 
         foreach ($data as $key => $value) {
@@ -85,7 +87,7 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
         //prepare statement
         $query = $this->getConnection()->createQuery();
         $query->update($this->table);
-        
+
         foreach ($data as $key => $value) {
             if ($value instanceof RelationInterface) {
                 continue;
