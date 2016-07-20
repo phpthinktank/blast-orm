@@ -306,4 +306,25 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
         return $result;
     }
 
+    /**
+     * Add a value for column on update or insert statement
+     *
+     * @param $column
+     * @param $value
+     *
+     * @return $this
+     */
+    public function addColumnValue($column, $value){
+        switch($this->getTypeName()){
+            case QueryBuilder::INSERT:
+                $this->setValue($column, $value);
+                break;
+            case QueryBuilder::UPDATE:
+                $this->setValue($column, $value);
+                break;
+        }
+
+        return $this;
+    }
+
 }

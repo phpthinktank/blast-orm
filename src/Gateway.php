@@ -48,6 +48,7 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
      */
     public function insert($data, $fields = [])
     {
+        // TODO: Save relations first
         //prepare statement
         $query = $this->getConnection()->createQuery();
 
@@ -59,16 +60,7 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
 
         $query->insert($this->table);
 
-        foreach ($data as $key => $value) {
-            if ($value instanceof RelationInterface) {
-                continue;
-            }
-
-            $query->setValue($key, $query->createPositionalParameter(
-                $value, array_key_exists($key, $fields) ?
-                $fields[$key]->getType()->getName() :
-                Type::STRING));
-        }
+        $this->addDataToQuery($data, $fields, $query);
 
         return $query;
     }
@@ -84,19 +76,12 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
      */
     public function update($primaryKeyName, $data, $fields = [])
     {
+        // TODO: Save relations first
         //prepare statement
         $query = $this->getConnection()->createQuery();
         $query->update($this->table);
 
-        foreach ($data as $key => $value) {
-            if ($value instanceof RelationInterface) {
-                continue;
-            }
-            $query->set($key, $query->createPositionalParameter(
-                $value, array_key_exists($key, $fields) ?
-                $fields[$key]->getType()->getName() :
-                Type::STRING));
-        }
+        $this->addDataToQuery($data, $fields, $query);
 
         return $query->where($query->expr()->eq($primaryKeyName, $data[$primaryKeyName]));
     }
@@ -118,5 +103,27 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
 
         return $query;
 
+    }
+
+    /**
+     *
+     * @todo determin exclusion from gateway and integration into query similar to php value convert
+     *
+     * @param $data
+     * @param \Doctrine\DBAL\Schema\Column[] $fields
+     * @param Query $query
+     */
+    protected function addDataToQuery($data, $fields, Query $query)
+    {
+        foreach ($data as $key => $value) {
+            if ($value instanceof RelationInterface) {
+                // TODO: Add the primary key value of an saved relation
+                continue;
+            }
+            $query->addColumnValue($key, $query->createPositionalParameter(
+                $value, array_key_exists($key, $fields) ?
+                $fields[$key]->getType()->getName() :
+                Type::STRING));
+        }
     }
 }
