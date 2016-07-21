@@ -164,7 +164,7 @@ class Transformer implements TransformerInterface, EntityAwareInterface
     {
         $definitionClass = null;
         if (property_exists($entity, 'definition')) {
-            $definitionClass = $entity::definition;
+            $definitionClass = $entity::$definition;
         }
         if (method_exists($entity, 'definition')) {
             $definitionClass = $entity::definition();
