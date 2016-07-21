@@ -15,7 +15,6 @@ namespace Blast\Orm;
 
 
 use Blast\Orm\Relations\RelationInterface;
-use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
 
 class Gateway implements GatewayInterface, ConnectionAwareInterface
@@ -48,18 +47,14 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
      */
     public function insert($data, $fields = [])
     {
-        // TODO: Save relations first
-        //prepare statement
-        $query = $this->getConnection()->createQuery();
-
         //cancel if $data has no entries
         if (count($data) < 1) {
             return false;
         }
 
-
+        //prepare statement
+        $query = $this->getConnection()->createQuery();
         $query->insert($this->table);
-
         $this->addDataToQuery($data, $fields, $query);
 
         return $query;
@@ -76,7 +71,6 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
      */
     public function update($primaryKeyName, $data, $fields = [])
     {
-        // TODO: Save relations first
         //prepare statement
         $query = $this->getConnection()->createQuery();
         $query->update($this->table);
@@ -107,7 +101,7 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
 
     /**
      *
-     * @todo determin exclusion from gateway and integration into query similar to php value convert
+     * @todo determine exclusion from gateway and integration into query similar to php value convert
      *
      * @param $data
      * @param \Doctrine\DBAL\Schema\Column[] $fields
@@ -116,8 +110,9 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
     protected function addDataToQuery($data, $fields, Query $query)
     {
         foreach ($data as $key => $value) {
+
+            // should not handle any relations
             if ($value instanceof RelationInterface) {
-                // TODO: Add the primary key value of an saved relation
                 continue;
             }
             $query->addColumnValue($key, $query->createPositionalParameter(
