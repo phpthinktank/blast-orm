@@ -31,13 +31,13 @@ class Connection extends DbalConnection implements MapperFactoryInterface, Query
      * @var null|string
      */
     private $prefix = null;
-    
+
     use MapperFactoryTrait {
         createMapper as protected internalCreateMapper;
     }
 
     /**
-     * Create a new Mapper for given entity.
+     * Factory method for create a new Mapper for given entity.
      *
      *  * ```php
      *
@@ -55,7 +55,7 @@ class Connection extends DbalConnection implements MapperFactoryInterface, Query
     }
 
     /**
-     * Create a new query for given entity with optional custom query builder.
+     * Factory method for create a new query for given entity with optional custom query builder.
      *
      * @param $entity
      *
