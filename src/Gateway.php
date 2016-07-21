@@ -44,7 +44,7 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
      * @param $data
      *
      * @param \Doctrine\DBAL\Schema\Column[] $fields
-     * @return Query
+     * @return Query|bool
      */
     public function insert($data, $fields = [])
     {
@@ -54,7 +54,7 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
 
         //cancel if $data has no entries
         if (count($data) < 1) {
-            return $query;
+            return false;
         }
 
 
