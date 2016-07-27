@@ -14,7 +14,12 @@
 namespace Blast\Orm;
 
 
+use Doctrine\Common\Cache\ArrayCache;
+use Doctrine\Common\Cache\Cache;
+use Doctrine\Common\EventManager;
+use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection as DbalConnection;
+use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Query\QueryBuilder;
 
 /**
@@ -32,9 +37,34 @@ class Connection extends DbalConnection implements MapperFactoryInterface, Query
      */
     private $prefix = null;
 
+    /**
+     *
+     * @var null|\Doctrine\Common\Cache\Cache
+     */
+    private $internalCache = null;
+
+    /**
+     *
+     * @var null|\Doctrine\Common\Cache\Cache
+     */
+    private $metaDataCache = null;
+
+
+    /**
+     *
+     * @var null|\Doctrine\Common\Cache\Cache
+     */
+    private $reflectionCache = null;
+
     use MapperFactoryTrait {
         createMapper as protected internalCreateMapper;
     }
+
+    public function __construct(array $params, Driver $driver, $config, $eventManager)
+    {
+        parent::__construct($params, $driver, $config, $eventManager);
+    }
+
 
     /**
      * Factory method for create a new Mapper for given entity.
@@ -86,6 +116,39 @@ class Connection extends DbalConnection implements MapperFactoryInterface, Query
     {
         $this->prefix = $prefix;
         return $this;
+    }
+
+    private function getInternalCache()
+    {
+        if (null === $this->internalCache) {
+            $this->internalCache = new ArrayCache();
+        }
+
+        return $this->internalCache;
+    }
+
+    /**
+     * @return Cache|null
+     */
+    public function getMetaDataCache()
+    {
+        if(null === $this->metaDataCache){
+            $cache = $this->getInternalCache();
+            $this->metaDataCache = clone $cache;
+        }
+        return $this->metaDataCache;
+    }
+
+    /**
+     * @return Cache|null
+     */
+    public function getReflectionCache()
+    {
+        if(null === $this->reflectionCache){
+            $cache = $this->getInternalCache();
+            $this->reflectionCache = clone $cache;
+        }
+        return $this->reflectionCache;
     }
 
 }

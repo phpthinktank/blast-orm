@@ -133,7 +133,7 @@ class ConnectionManager implements ConnectionManagerInterface
     /**
      * Get all connections
      *
-     * @return \Doctrine\DBAL\Connection[]
+     * @return \Doctrine\DBAL\Connection[]|\Blast\Orm\Connection[]
      */
     public function all()
     {

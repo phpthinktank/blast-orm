@@ -13,12 +13,15 @@
 
 namespace Blast\Orm\Entity;
 
+use Blast\Orm\CacheAwareTrait;
+use Blast\Orm\Support;
 use Doctrine\Common\Inflector\Inflector;
 
 class Transformer implements TransformerInterface, EntityAwareInterface
 {
 
     use EntityAwareTrait;
+    use CacheAwareTrait;
 
     /**
      * @var \Blast\Orm\Entity\DefinitionInterface
@@ -108,10 +111,12 @@ class Transformer implements TransformerInterface, EntityAwareInterface
     {
         // find definition class in entity by property or method
         $definition = $this->loadDefinitionFromEntity($entity, $definition);
-        $reflection = new \ReflectionObject($entity);
+
+        $reflection = Support::getCachedReflectionClass($entity, $this->getReflectionCache());
         $configuration = $definition->getConfiguration();
 
-        //mapper is needed to for events, therefore we need to fetch mapper first
+        // mapper is a dependency for all other entity services
+        // fetch mapper first
         if ($reflection->hasMethod('mapper')) {
             $mapperMethod = $reflection->getMethod('mapper');
             if($mapperMethod->isStatic() && $mapperMethod->isPublic()){
