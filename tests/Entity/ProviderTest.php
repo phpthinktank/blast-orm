@@ -106,7 +106,8 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(\SplStack::class, $provider->getDefinition()->getEntityCollection());
     }
 
-    public function testDefinitionClassAwareEntity(){
+    public function testDefinitionClassAwareEntity()
+    {
         $provider = new Provider(DefinitionClassAwareEntity::class);
         $this->assertInstanceOf(ProjectDefinition::class, $provider->getDefinition());
         $this->assertEquals('uid', $provider->getDefinition()->getPrimaryKeyName());

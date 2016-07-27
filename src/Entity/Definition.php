@@ -150,9 +150,10 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
 
     /**
      * Get table name
-     * 
+     *
      * Add prefix if if $withPrefix is true and a prefix exists
      *
+     * @param bool $withPrefix
      * @return string
      */
     public function getTableName($withPrefix = true)
