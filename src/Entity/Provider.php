@@ -18,6 +18,7 @@ use Blast\Orm\CacheAwareTrait;
 use Blast\Orm\Hydrator\EntityHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Support;
+use Doctrine\Common\Inflector\Inflector;
 
 class Provider implements ProviderInterface
 {
@@ -110,11 +111,11 @@ class Provider implements ProviderInterface
         $cacheId = $transformer->getDefinition()->getTableName(false);
         $cache->save($cacheId, $transformer);
 
-        $transformer = $cache->fetch($cacheId);
         return $transformer;
     }
 
     /**
+     * Todo rewrite this horrobile piece of code...
      * @param $tableName
      * @return bool|string
      */
@@ -128,19 +129,26 @@ class Provider implements ProviderInterface
             return false;
         }
         if (is_string($tableName)) {
-            return $tableName;
+            return
+                (class_exists($tableName) && false === Support::isPHPInternalClass($tableName))
+                ? Inflector::pluralize(Inflector::tableize(Support::getCachedReflectionClass($tableName, $this->getReflectionCache())->getShortName()))
+                : $tableName;
         }
         if (is_array($tableName)) {
             return false;
         }
+        if(Support::isPHPInternalClass($tableName)){
+            return false;
+        }
         if ($tableName instanceof EntityAwareInterface) {
-            $compTableName = Support::getEntityName($tableName->getEntity());
+            $compTableName = Inflector::pluralize(Inflector::tableize(Support::getCachedReflectionClass(Support::getEntityName($tableName->getEntity()), $this->getReflectionCache())->getShortName()));
             if (is_string($compTableName)) {
                 return $compTableName;
             }
         }
         if (is_object($tableName)) {
-            $compTableName = Support::getEntityName($tableName);
+            $compTableName = Inflector::pluralize(Inflector::tableize(Support::getCachedReflectionClass(Support::getEntityName($tableName), $this->getReflectionCache())->getShortName()));
+
             if (is_string($compTableName)) {
                 return $compTableName;
             }
