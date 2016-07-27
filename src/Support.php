@@ -54,7 +54,7 @@ class Support
      */
     public static function getCachedReflectionClass($entity, Cache $cache)
     {
-        $entityFQCN = self::getClass($entity);
+        $entityFQCN = static::getClass($entity);
         $isPHPInternalClass = static::isPHPInternalClass($entityFQCN);
 
         // load from cache if entity is a valid and no internal php class
@@ -81,8 +81,8 @@ class Support
      * @return bool|string
      */
     public static function getEntityName($entity){
-        $fqcn = Support::getClass($entity);
-        return false === Support::isPHPInternalClass($fqcn) && false !== $fqcn ?
+        $fqcn = static::getClass($entity);
+        return false === static::isPHPInternalClass($fqcn) && false !== $fqcn ?
             $fqcn : false;
     }
 
