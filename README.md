@@ -19,6 +19,7 @@ Framework agnostic data access and persistence based on Doctrine 2 DBAL.
  - Field type aware converting _since 0.5.2_
  - Integration of indexes from definition _since 0.6.4_
  - entity independent and connection dependent table prefixes _since 0.6.4_
+ - entity reflection and meta data caching _since 0.6.4_
 
 ## Upcoming features
 
