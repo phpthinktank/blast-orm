@@ -17,13 +17,13 @@ Framework agnostic data access and persistence based on Doctrine 2 DBAL.
  - Repository contracted to a single entity class _since 0.5_
  - Integration of fields from definition _since 0.5.2_
  - Field type aware converting _since 0.5.2_
+ - Integration of indexes from definition _since 0.6.4_
+ - entity independent and connection dependent table prefixes _since 0.6.4_
 
 ## Upcoming features
 
  - Unit of Work - Entity-aware transactions
  - Identity map - Reduce load by storing entity by primary key 
- - Saveable relations
- - Integration of indexes from definition
  
 ## Install
 
