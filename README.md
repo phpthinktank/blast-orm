@@ -17,13 +17,14 @@ Framework agnostic data access and persistence based on Doctrine 2 DBAL.
  - Repository contracted to a single entity class _since 0.5_
  - Integration of fields from definition _since 0.5.2_
  - Field type aware converting _since 0.5.2_
+ - Integration of indexes from definition _since 0.6.4_
+ - entity independent and connection dependent table prefixes _since 0.6.4_
+ - entity reflection and meta data caching _since 0.6.4_
 
 ## Upcoming features
 
  - Unit of Work - Entity-aware transactions
  - Identity map - Reduce load by storing entity by primary key 
- - Saveable relations
- - Integration of indexes from definition
  
 ## Install
 
@@ -484,6 +485,46 @@ $configuration = [
         'relations' => []
     ];
 $definition->setConfiguration($configuration);
+```
+
+A definition could also be declared on an entity as FQCN by property
+
+```php
+<?php
+
+class Post
+{
+    public static $definition = '\Acme\Domain\Entities\Definition\PostDefinition';
+}
+
+```
+
+or by method.
+
+```php
+<?php
+
+class Post
+{
+    public static function definition(){
+        return '\Acme\Domain\Entities\Definition\PostDefinition';
+    }
+}
+
+```
+
+Mention you could also pass an definition object instead of a FQCN.
+
+```php
+<?php
+
+class Post
+{
+    public static function definition(){
+        return new PostDefinition;
+    }
+}
+
 ```
 
 #### Provider

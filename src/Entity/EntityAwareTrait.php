@@ -33,9 +33,6 @@ trait EntityAwareTrait
      */
     public function setEntity($entity)
     {
-//        if (is_string($entity)) {
-//            $entity = (new \ReflectionClass($entity))->newInstance();
-//        }
         $this->entity = $entity;
         return $this;
     }

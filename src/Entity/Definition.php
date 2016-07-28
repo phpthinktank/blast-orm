@@ -14,6 +14,7 @@
 namespace Blast\Orm\Entity;
 
 
+use Blast\Orm\ConnectionManager;
 use Blast\Orm\EventEmitterFactoryInterface;
 use Blast\Orm\EventEmitterFactoryTrait;
 use Blast\Orm\Mapper;
@@ -150,11 +151,15 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
     /**
      * Get table name
      *
+     * Add prefix if if $withPrefix is true and a prefix exists
+     *
+     * @param bool $withPrefix
      * @return string
      */
-    public function getTableName()
+    public function getTableName($withPrefix = true)
     {
-        return $this->configuration['tableName'];
+        $prefix = ConnectionManager::getInstance()->get()->getPrefix();
+        return (true === $withPrefix && strlen($prefix) > 0 ? rtrim($prefix, '_') . '_' : '') . $this->configuration['tableName'];
     }
 
     /**

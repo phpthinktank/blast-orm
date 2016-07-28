@@ -15,7 +15,6 @@ namespace Blast\Orm;
 
 
 use Blast\Orm\Relations\RelationInterface;
-use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
 
 class Gateway implements GatewayInterface, ConnectionAwareInterface
@@ -44,7 +43,7 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
      * @param $data
      *
      * @param \Doctrine\DBAL\Schema\Column[] $fields
-     * @return $this
+     * @return Query|bool
      */
     public function insert($data, $fields = [])
     {
@@ -56,17 +55,7 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
         //prepare statement
         $query = $this->getConnection()->createQuery();
         $query->insert($this->table);
-
-        foreach ($data as $key => $value) {
-            if ($value instanceof RelationInterface) {
-                continue;
-            }
-
-            $query->setValue($key, $query->createPositionalParameter(
-                $value, array_key_exists($key, $fields) ?
-                $fields[$key]->getType()->getName() :
-                Type::STRING));
-        }
+        $this->addDataToQuery($data, $fields, $query);
 
         return $query;
     }
@@ -85,16 +74,8 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
         //prepare statement
         $query = $this->getConnection()->createQuery();
         $query->update($this->table);
-        
-        foreach ($data as $key => $value) {
-            if ($value instanceof RelationInterface) {
-                continue;
-            }
-            $query->set($key, $query->createPositionalParameter(
-                $value, array_key_exists($key, $fields) ?
-                $fields[$key]->getType()->getName() :
-                Type::STRING));
-        }
+
+        $this->addDataToQuery($data, $fields, $query);
 
         return $query->where($query->expr()->eq($primaryKeyName, $data[$primaryKeyName]));
     }
@@ -116,5 +97,28 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
 
         return $query;
 
+    }
+
+    /**
+     *
+     * @todo determine exclusion from gateway and integration into query similar to php value convert
+     *
+     * @param $data
+     * @param \Doctrine\DBAL\Schema\Column[] $fields
+     * @param Query $query
+     */
+    protected function addDataToQuery($data, $fields, Query $query)
+    {
+        foreach ($data as $key => $value) {
+
+            // should not handle any relations
+            if ($value instanceof RelationInterface) {
+                continue;
+            }
+            $query->addColumnValue($key, $query->createPositionalParameter(
+                $value, array_key_exists($key, $fields) ?
+                $fields[$key]->getType()->getName() :
+                Type::STRING));
+        }
     }
 }

@@ -13,12 +13,15 @@
 
 namespace Blast\Orm\Entity;
 
+use Blast\Orm\CacheAwareTrait;
+use Blast\Orm\Support;
 use Doctrine\Common\Inflector\Inflector;
 
 class Transformer implements TransformerInterface, EntityAwareInterface
 {
 
     use EntityAwareTrait;
+    use CacheAwareTrait;
 
     /**
      * @var \Blast\Orm\Entity\DefinitionInterface
@@ -106,17 +109,14 @@ class Transformer implements TransformerInterface, EntityAwareInterface
      */
     private function transformEntityToDefinition($entity, $definition = null)
     {
-        if(null === $definition){
-            $definition = new Definition();
-        }
+        // find definition class in entity by property or method
+        $definition = $this->loadDefinitionFromEntity($entity, $definition);
+
+        $reflection = Support::getCachedReflectionClass($entity, $this->getReflectionCache());
         $configuration = $definition->getConfiguration();
-        $reflection = new \ReflectionObject($entity);
 
-        $configuration['entity'] = $entity;
-
-        $configuration = $definition->setConfiguration($configuration)->getConfiguration();
-
-        //mapper is needed to for events, therefore we need to fetch mapper first
+        // mapper is a dependency for all other entity services
+        // fetch mapper first
         if ($reflection->hasMethod('mapper')) {
             $mapperMethod = $reflection->getMethod('mapper');
             if($mapperMethod->isStatic() && $mapperMethod->isPublic()){
@@ -158,5 +158,33 @@ class Transformer implements TransformerInterface, EntityAwareInterface
         }
 
         return $definition->setConfiguration($configuration);
+    }
+
+    /**
+     * @param $entity
+     * @param Definition|null $definition
+     * @return Definition|null
+     */
+    private function loadDefinitionFromEntity($entity, $definition = null)
+    {
+        $definitionClass = null;
+        if (property_exists($entity, 'definition')) {
+            $definitionClass = $entity::$definition;
+        }
+        if (method_exists($entity, 'definition')) {
+            $definitionClass = $entity::definition();
+        }
+        if (null !== $definitionClass) {
+            $definition = is_object($definitionClass) ? $definitionClass : new $definitionClass;
+        }
+        if (null === $definition) {
+            $definition = new Definition();
+        }
+
+        $configuration = $definition->getConfiguration();
+        $configuration['entity'] = $entity;
+        $definition->setConfiguration($configuration);
+
+        return $definition;
     }
 }

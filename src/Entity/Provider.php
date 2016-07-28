@@ -14,12 +14,16 @@
 namespace Blast\Orm\Entity;
 
 
+use Blast\Orm\CacheAwareTrait;
 use Blast\Orm\Hydrator\EntityHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
+use Blast\Orm\Support;
+use Doctrine\Common\Inflector\Inflector;
 
 class Provider implements ProviderInterface
 {
 
+    use CacheAwareTrait;
     use EntityAwareTrait;
 
     /**
@@ -36,8 +40,7 @@ class Provider implements ProviderInterface
      */
     public function __construct($tableName)
     {
-        $transformer = new Transformer();
-        $transformer->transform($tableName);
+        $transformer = $this->loadMetaData($tableName);
 
         $this->entity = $transformer->getEntity();
         $this->definition = $transformer->getDefinition();
@@ -84,5 +87,85 @@ class Provider implements ProviderInterface
         $data = $this->extract();
 
         return isset($data[$this->getDefinition()->getPrimaryKeyName()]) ? empty($data[$this->getDefinition()->getPrimaryKeyName()]) : true;
+    }
+
+    /**
+     * @param $tableName
+     * @return Transformer
+     */
+    private function loadMetaData($tableName)
+    {
+        $cacheId = $this->determineCacheId($tableName);
+        $cache = $this->getMetaDataCache();
+
+        if(false === $cacheId){
+            return $this->transform($tableName);
+        }
+
+        if($cache->contains($cacheId)){
+            $transformer = $cache->fetch($cacheId);
+            return $transformer;
+        }
+
+        $transformer = $this->transform($tableName);
+        $cacheId = $transformer->getDefinition()->getTableName(false);
+        $cache->save($cacheId, $transformer);
+
+        return $transformer;
+    }
+
+    /**
+     * Todo rewrite this horrobile piece of code...
+     * @param $tableName
+     * @return bool|string
+     */
+    private function determineCacheId($tableName)
+    {
+        /** @var string|bool $compTableName */
+        if ($tableName instanceof DefinitionInterface) {
+            return $tableName->getTableName();
+        }
+        if (null === $tableName) {
+            return false;
+        }
+        if (is_string($tableName)) {
+            return
+                (class_exists($tableName) && false === Support::isPHPInternalClass($tableName))
+                ? Inflector::pluralize(Inflector::tableize(Support::getCachedReflectionClass($tableName, $this->getReflectionCache())->getShortName()))
+                : $tableName;
+        }
+        if (is_array($tableName)) {
+            return false;
+        }
+        if(Support::isPHPInternalClass($tableName)){
+            return false;
+        }
+        if ($tableName instanceof EntityAwareInterface) {
+            $compTableName = Inflector::pluralize(Inflector::tableize(Support::getCachedReflectionClass(Support::getEntityName($tableName->getEntity()), $this->getReflectionCache())->getShortName()));
+            if (is_string($compTableName)) {
+                return $compTableName;
+            }
+        }
+        if (is_object($tableName)) {
+            $compTableName = Inflector::pluralize(Inflector::tableize(Support::getCachedReflectionClass(Support::getEntityName($tableName), $this->getReflectionCache())->getShortName()));
+
+            if (is_string($compTableName)) {
+                return $compTableName;
+            }
+        }
+
+        return false;
+
+    }
+
+    /**
+     * @param $tableName
+     * @return Transformer
+     */
+    private function transform($tableName)
+    {
+        $transformer = new Transformer();
+        $transformer->transform($tableName);
+        return $transformer;
     }
 }

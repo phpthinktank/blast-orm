@@ -24,7 +24,9 @@
     "php": "^5.5 || ^7.0",
     "doctrine/dbal": "2.5.*",
     "doctrine/inflector": "1.*",
+    "doctrine/cache": "1.*",
     "league/event": "2.*",
+    "minime/annotations": "^2.3",
     "zendframework/zend-hydrator": "2.*"
   },
   "require-dev": {

@@ -17,6 +17,8 @@ use Blast\Orm\Entity\Definition;
 use Blast\Orm\Entity\Provider;
 use Blast\Orm\Relations\HasOne;
 use Blast\Orm\Relations\RelationInterface;
+use Blast\Tests\Orm\Stubs\Definition\ProjectDefinition;
+use Blast\Tests\Orm\Stubs\Entities\DefinitionClassAwareEntity;
 use Blast\Tests\Orm\Stubs\Entities\Post;
 use Blast\Tests\Orm\Stubs\Entities\Role;
 use Blast\Tests\Orm\Stubs\Entities\User;
@@ -103,10 +105,11 @@ class ProviderTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(Role::class, $provider->getEntity());
         $this->assertInstanceOf(\SplStack::class, $provider->getDefinition()->getEntityCollection());
     }
-    
-    public function testGetTableNameFromGeneric(){
-        
+
+    public function testDefinitionClassAwareEntity()
+    {
+        $provider = new Provider(DefinitionClassAwareEntity::class);
+        $this->assertInstanceOf(ProjectDefinition::class, $provider->getDefinition());
+        $this->assertEquals('uid', $provider->getDefinition()->getPrimaryKeyName());
     }
-
-
 }

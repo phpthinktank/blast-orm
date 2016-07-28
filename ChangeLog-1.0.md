@@ -2,6 +2,16 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 0.6.4
+
+### Altered
+
+ - Add table prefixes when accessing tablename from provider
+ - Add accessor for definitions in entities
+ - Fix typo and return type
+ - Refactor adding data to query statement
+ - Add array caching backend for entity reflection and entity meta data
+
 ## 0.6.3
 
 ### Altered

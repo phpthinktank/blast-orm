@@ -54,7 +54,8 @@ interface DefinitionInterface extends EmitterAwareInterface, MapperAwareInterfac
     /**
      * Table name
      *
+     * @param bool $withPrefix
      * @return string
      */
-    public function getTableName();
+    public function getTableName($withPrefix = true);
 }
