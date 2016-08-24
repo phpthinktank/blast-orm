@@ -16,6 +16,7 @@ namespace Blast\Orm\Relations;
 
 use Blast\Orm\ConnectionAwareInterface;
 use Blast\Orm\ConnectionAwareTrait;
+use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Entity\ProviderFactoryInterface;
 use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Hydrator\HydratorInterface;
@@ -25,13 +26,10 @@ use Doctrine\Common\Inflector\Inflector;
 class BelongsTo implements ConnectionAwareInterface, RelationInterface, ProviderFactoryInterface
 {
     use ConnectionAwareTrait;
+    use EntityAwareTrait;
     use ProviderFactoryTrait;
     use RelationTrait;
 
-    /**
-     * @var
-     */
-    private $entity;
     /**
      * @var
      */
@@ -92,14 +90,6 @@ class BelongsTo implements ConnectionAwareInterface, RelationInterface, Provider
         $this->query = $primaryKey === null ? $mapper->select() : $mapper->find($primaryKey);
 
         return $this->query;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getEntity()
-    {
-        return $this->entity;
     }
 
     /**

@@ -2,14 +2,33 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 0.6.6
+
+### Altered
+
+ - Allow relations to replace their entity via `Blast\Orm\Entity\EntityAwareInterface`
+
+### Fixed
+
+ - Fix empty entities in relations when entities relation definition is used
+
+## 0.6.5
+
+### Altered
+
+ - avoid plurilize for table name defined via property or method in entity
+
 ## 0.6.4
 
 ### Altered
 
- - Add table prefixes when accessing tablename from provider
- - Add accessor for definitions in entities
  - Fix typo and return type
  - Refactor adding data to query statement
+
+### Added
+
+ - Add table prefixes when accessing tablename from provider
+ - Add accessor for definitions in entities
  - Add array caching backend for entity reflection and entity meta data
 
 ## 0.6.3

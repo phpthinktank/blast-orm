@@ -13,9 +13,10 @@
 
 namespace Blast\Orm\Relations;
 
+use Blast\Orm\Entity\EntityAwareInterface;
 use Blast\Orm\Query;
 
-interface RelationInterface
+interface RelationInterface extends EntityAwareInterface
 {
     /**
      * @return Query
