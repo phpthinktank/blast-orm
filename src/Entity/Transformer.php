@@ -148,6 +148,22 @@ class Transformer implements TransformerInterface, EntityAwareInterface
         $configuration['entityClassName'] = $reflection->getName();
         $configuration['entityShortName'] = $reflection->getShortName();
 
+        // fetch table name from table property
+        if($reflection->hasProperty('table')){
+            $reflectionProperty = $reflection->getProperty('table');
+            if($reflectionProperty->isStatic()){
+                $configuration['tableName'] = $reflectionProperty->getValue($entity);
+            }
+        }
+
+        // fetch table name from table method
+        if($reflection->hasMethod('table')){
+            $reflectionMethod = $reflection->getMethod('table');
+            if($reflectionMethod->isStatic()){
+                $configuration['tableName'] = $reflectionMethod->invoke($entity);
+            }
+        }
+
         $definition->setConfiguration($configuration);
 
         // set table name from reflection short name
