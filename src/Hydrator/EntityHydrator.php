@@ -148,6 +148,10 @@ class EntityHydrator implements HydratorInterface
         if ( method_exists($entity, 'populate') || method_exists($entity, 'exchangeArray') ) {
             $hydrator = $this->getArraySerizableHydrator();
             $entity = $hydrator->hydrate($data, $entity);
+
+            //add relations
+            $data = $this->addRelationsToData($data, $entity);
+            $entity = $hydrator->hydrate($data, $entity);
         }
 
         $this->camelizeKeys($data);
