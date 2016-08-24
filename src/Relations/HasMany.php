@@ -15,6 +15,7 @@ namespace Blast\Orm\Relations;
 
 use Blast\Orm\ConnectionAwareInterface;
 use Blast\Orm\ConnectionAwareTrait;
+use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Entity\Provider;
 use Blast\Orm\Entity\ProviderFactoryInterface;
 use Blast\Orm\Entity\ProviderFactoryTrait;
@@ -26,13 +27,10 @@ class HasMany implements ConnectionAwareInterface, ProviderFactoryInterface, Rel
 {
 
     use ConnectionAwareTrait;
+    use EntityAwareTrait;
     use ProviderFactoryTrait;
     use RelationTrait;
 
-    /**
-     * @var
-     */
-    private $entity;
     /**
      * @var
      */
@@ -97,14 +95,6 @@ class HasMany implements ConnectionAwareInterface, ProviderFactoryInterface, Rel
         $this->query = $query;
 
         return $this->query;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getEntity()
-    {
-        return $this->entity;
     }
 
     /**
