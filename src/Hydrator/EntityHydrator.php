@@ -120,7 +120,7 @@ class EntityHydrator implements HydratorInterface
 
     /**
      * @param $data
-     * @return array
+     * @return object|\SplStack
      */
     protected function hydrateCollection($data)
     {
@@ -144,9 +144,6 @@ class EntityHydrator implements HydratorInterface
     {
         $entity = clone $this->provider->getEntity();
 
-        //add relations
-        $data = $this->addRelationsToData($data);
-
         // hydrate to array object
         if ( method_exists($entity, 'populate') || method_exists($entity, 'exchangeArray') ) {
             $hydrator = $this->getArraySerizableHydrator();
@@ -158,6 +155,16 @@ class EntityHydrator implements HydratorInterface
         $classMethodHydrator = $this->getClassMethodsHydrator();
         $propertyHydrator = $this->getObjectPropertyHydrator();
 
+        // hydrate entity data
+        $entity = $classMethodHydrator->hydrate(
+            $data,
+            $propertyHydrator->hydrate($data, $entity)
+        );
+
+        //add relations
+        $data = $this->addRelationsToData($data, $entity);
+
+        // hydrate entity with relation data to add hydrated entity to relation
         return $classMethodHydrator->hydrate(
             $data,
             $propertyHydrator->hydrate($data, $entity)
@@ -168,9 +175,10 @@ class EntityHydrator implements HydratorInterface
      * Add relations to data
      *
      * @param $data
+     * @param $entity
      * @return mixed
      */
-    protected function addRelationsToData($data)
+    protected function addRelationsToData($data, $entity)
     {
         foreach ($this->provider->getDefinition()->getRelations() as $name => $relation) {
             if ( is_numeric($name) ) {
@@ -179,6 +187,12 @@ class EntityHydrator implements HydratorInterface
             // disallow overwriting existing data
             if ( isset($data[$name]) ) {
                 continue;
+            }
+
+            // only attached entity is allowed!
+            $entityClass = get_class($entity);
+            if($relation->getEntity() instanceof $entityClass){
+                $relation->setEntity($entity);
             }
             $data[$name] = $relation;
         }
@@ -202,6 +216,12 @@ class EntityHydrator implements HydratorInterface
         return $result;
     }
 
+    /**
+     * Convert keys to underscore
+     *
+     * @param $data
+     * @return array
+     */
     protected function underscorizeKeys($data)
     {
         $result = [];
@@ -225,49 +245,7 @@ class EntityHydrator implements HydratorInterface
      */
     protected function getClassMethodsHydrator()
     {
-        $hydrator = new ClassMethods(false);
-//        $hydrator->addFilter('disallowArrayObjectMethods', function ($property) {
-//
-//            $arrayObjectClass = \ArrayObject::class;
-//            $class = '';
-//            $key = '';
-//
-//            $delimiterPos = strpos($property, '::');
-//            if ( $delimiterPos !== false ) {
-//                $class = substr($property, 0, $delimiterPos);
-//                $key = substr($property, $delimiterPos+2);
-//            }else{
-//                $key = $property;
-//            }
-//
-//            // valid if class is no instance of array object
-//            if (            ! (
-//                is_subclass_of($class, $arrayObjectClass) ||
-//                trim($arrayObjectClass, '\\') === trim($class, '\\')
-//            )) {
-//                return true;
-//            }
-//
-//            $disallowed = get_class_methods($arrayObjectClass);
-//            $method = Inflector::camelize($key);
-//
-//            $result = ! (
-//                in_array($method, $disallowed) ||
-//                in_array('get' . ucfirst($method), $disallowed)
-//            );
-//
-//            if ( true ) {
-//
-//            }
-//
-//            return $result;
-//        });
-//
-//        $hydrator->removeFilter('parameter');
-//        $hydrator->removeFilter('has');
-//        $hydrator->removeFilter('is');
-
-        return $hydrator;
+        return new ClassMethods(false);
     }
 
     /**
