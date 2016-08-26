@@ -45,7 +45,7 @@ class MutatorTest extends \PHPUnit_Framework_TestCase
 
         $data = $hydrator->extract();
 
-        $this->assertEquals($entity->getUserId(), $data['user_id']);
+        $this->assertEquals($entity->getUserId(), $data['userId']);
         $this->assertEquals($entity->getFullName(), $data['fullName']);
     }
 

@@ -22,6 +22,7 @@ use Blast\Orm\MapperFactoryInterface;
 use Blast\Orm\MapperFactoryTrait;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Relations\RelationInterface;
+use Doctrine\Common\Inflector\Inflector;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
 use League\Event\EmitterAwareInterface;
@@ -262,7 +263,11 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
 
             // skip dynamic column declaration
             $fieldName = $value->getName();
-            if(array_key_exists($fieldName, $fields)){
+            if(
+                array_key_exists($fieldName, $fields)
+                || array_key_exists(Inflector::camelize($fieldName), $fields)
+                || array_key_exists(Inflector::tableize($fieldName), $fields)
+            ){
                 continue;
             }
 

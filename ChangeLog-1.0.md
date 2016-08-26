@@ -2,6 +2,18 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 0.6.7
+
+### Altered
+
+ - Transforming of fields from entity to definition is respecting defined fields and automatically declaring columns of 
+   type string and with original property name of entity for undefined fields
+ - Hydrator extraction respects field names and entity names and accurate assignment of field names to data.
+
+### Fixed 
+
+ - underscorized fields are now correctly assigned their camelcased mutators and accessors in entity 
+
 ## 0.6.6
 
 ### Altered
