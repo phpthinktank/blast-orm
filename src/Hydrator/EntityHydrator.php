@@ -52,10 +52,26 @@ class EntityHydrator implements HydratorInterface
         $propertyHydrator = $this->getObjectPropertyHydrator();
         $classMethodHydrator = $this->getClassMethodsHydrator();
 
-        return array_replace(
+        // get a full set of original names, camelize keys and underscrorize keys
+        $extractedDataSet = array_replace(
+            $propertyHydrator->extract($entity),
+            $classMethodHydrator->extract($entity),
+            $this->camelizeKeys($propertyHydrator->extract($entity)),
+            $this->camelizeKeys($classMethodHydrator->extract($entity)),
             $this->underscorizeKeys($propertyHydrator->extract($entity)),
             $this->underscorizeKeys($classMethodHydrator->extract($entity))
         );
+
+        $fields = $this->provider->getDefinition()->getFields();
+        $extractedData = [];
+
+        foreach ($extractedDataSet as $key => $value){
+            if(array_key_exists($key, $fields)){
+                $extractedData[$key] = $value;
+            }
+        }
+
+        return $extractedData;
     }
 
     /**
@@ -154,7 +170,7 @@ class EntityHydrator implements HydratorInterface
             $entity = $hydrator->hydrate($data, $entity);
         }
 
-        $this->camelizeKeys($data);
+        $data = $this->camelizeKeys($data);
 
         $classMethodHydrator = $this->getClassMethodsHydrator();
         $propertyHydrator = $this->getObjectPropertyHydrator();
@@ -257,6 +273,8 @@ class EntityHydrator implements HydratorInterface
      */
     protected function getObjectPropertyHydrator()
     {
-        return new ObjectProperty();
+        $hydrator = new ObjectProperty();
+
+        return $hydrator;
     }
 }

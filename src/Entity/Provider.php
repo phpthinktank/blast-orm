@@ -40,7 +40,7 @@ class Provider implements ProviderInterface
      */
     public function __construct($tableName)
     {
-        $transformer = $this->loadMetaData($tableName);
+        $transformer = $transformer = $this->transform($tableName);
 
         $this->entity = $transformer->getEntity();
         $this->definition = $transformer->getDefinition();
@@ -87,31 +87,6 @@ class Provider implements ProviderInterface
         $data = $this->extract();
 
         return isset($data[$this->getDefinition()->getPrimaryKeyName()]) ? empty($data[$this->getDefinition()->getPrimaryKeyName()]) : true;
-    }
-
-    /**
-     * @param $tableName
-     * @return Transformer
-     */
-    private function loadMetaData($tableName)
-    {
-        $cacheId = $this->determineCacheId($tableName);
-        $cache = $this->getMetaDataCache();
-
-        if(false === $cacheId){
-            return $this->transform($tableName);
-        }
-
-        if($cache->contains($cacheId)){
-            $transformer = $cache->fetch($cacheId);
-            return $transformer;
-        }
-
-        $transformer = $this->transform($tableName);
-        $cacheId = $transformer->getDefinition()->getTableName(false);
-        $cache->save($cacheId, $transformer);
-
-        return $transformer;
     }
 
     /**

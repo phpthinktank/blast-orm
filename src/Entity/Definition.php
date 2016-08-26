@@ -22,6 +22,8 @@ use Blast\Orm\MapperFactoryInterface;
 use Blast\Orm\MapperFactoryTrait;
 use Blast\Orm\MapperInterface;
 use Blast\Orm\Relations\RelationInterface;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Types\Type;
 use League\Event\EmitterAwareInterface;
 use League\Event\EmitterAwareTrait;
 
@@ -221,6 +223,53 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
             }
         }
 
+        $this->processFields();
+
         return $this;
+    }
+
+    /**
+     * Setup entity fields and determine undefined fields from entity with type string
+     */
+    private function processFields()
+    {
+        /** @var Column[] $internalFields */
+        $internalFields = $this->configuration['fields'];
+        $fields = [];
+
+        foreach ($internalFields as $name => $field){
+            // skip if field is no instance of Column
+            if(!($field instanceof Column)){
+                continue;
+            }
+
+            //set table name as key
+            if($field->getName() !== $name){
+                $name = $field->getName();
+            }
+
+            $fields[$name] = $field;
+        }
+
+        $reflectionClass = new \ReflectionClass($this->getEntity());
+        $entityProperties = $reflectionClass->getProperties();
+
+        foreach ($entityProperties as $key => $value){
+            // disallow static properties
+            if($value->isStatic()){
+                continue;
+            }
+
+            // skip dynamic column declaration
+            $fieldName = $value->getName();
+            if(array_key_exists($fieldName, $fields)){
+                continue;
+            }
+
+            $fields[$fieldName] = new Column($fieldName, Type::getType(Type::STRING));
+
+        }
+
+        $this->configuration['fields'] = $fields;
     }
 }

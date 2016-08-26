@@ -12,12 +12,15 @@
  */
 
 namespace Blast\Tests\Orm\Stubs\Entities;
+use Blast\Tests\Orm\Stubs\Definition\AddressDefinition;
 
 /**
  * @codeCoverageIgnore
  */
 class Address
 {
+
+    public static $definition = AddressDefinition::class;
 
     /**
      * @var int
@@ -28,6 +31,11 @@ class Address
      * @var int
      */
     private $user_id;
+
+    /**
+     * @var int
+     */
+    private $fullName;
 
     /**
      * @var string
@@ -80,6 +88,24 @@ class Address
     public function setAddress($address)
     {
         $this->address = $address;
+    }
+
+    /**
+     * @return int
+     */
+    public function getFullName()
+    {
+        return $this->fullName;
+    }
+
+    /**
+     * @param int $fullName
+     * @return Address
+     */
+    public function setFullName($fullName)
+    {
+        $this->fullName = $fullName;
+        return $this;
     }
 
 }
