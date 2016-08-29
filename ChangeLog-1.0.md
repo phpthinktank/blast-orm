@@ -2,6 +2,12 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 0.6.8
+
+### Fixed 
+
+ - Fix assigning relations. Conflicts between camelcase and underscore are resolved.
+
 ## 0.6.7
 
 ### Altered

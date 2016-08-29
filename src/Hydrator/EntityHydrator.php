@@ -215,6 +215,8 @@ class EntityHydrator implements HydratorInterface
                 $relation->setEntity($entity);
             }
             $data[$name] = $relation;
+            $data[Inflector::camelize($name)] = $relation;
+            $data[Inflector::tableize($name)] = $relation;
         }
 
         return $data;
