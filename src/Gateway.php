@@ -110,11 +110,6 @@ class Gateway implements GatewayInterface, ConnectionAwareInterface
     protected function addDataToQuery($data, $fields, Query $query)
     {
         foreach ($data as $key => $value) {
-
-            // should not handle any relations
-            if ($value instanceof RelationInterface) {
-                continue;
-            }
             $query->addColumnValue($key, $query->createPositionalParameter(
                 $value, array_key_exists($key, $fields) ?
                 $fields[$key]->getType()->getName() :

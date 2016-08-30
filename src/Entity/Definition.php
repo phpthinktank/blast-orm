@@ -275,6 +275,14 @@ class Definition implements DefinitionInterface, EventEmitterFactoryInterface, M
 
         }
 
+        //remove all relations
+        $relations = $this->getRelations();
+        foreach($fields as $key => $value){
+            if(array_key_exists($key, $relations)){
+                unset($fields[$key]);
+            }
+        }
+
         $this->configuration['fields'] = $fields;
     }
 }

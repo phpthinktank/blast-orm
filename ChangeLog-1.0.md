@@ -2,6 +2,12 @@
 
 All notable changes of the Blast orm 1.0 release series are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## 0.6.9
+
+### Fixed
+
+ - Relations ignored while determining field data automatically
+
 ## 0.6.8
 
 ### Fixed 
