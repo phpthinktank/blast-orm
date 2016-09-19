@@ -15,7 +15,7 @@ namespace Blast\Orm;
 
 /**
  * The gateway is accessing a single table or view and interacts with database
- * 
+ *
  * @package Blast\Orm
  */
 interface GatewayInterface
@@ -23,7 +23,7 @@ interface GatewayInterface
 
     /**
      * Create a new gateway for a single table
-     * 
+     *
      * @param $table
      */
     public function __construct($table);
@@ -31,32 +31,31 @@ interface GatewayInterface
     /**
      * Prepare insert statement
      *
+     * @param array $primaryKeyNames list of primary key or primary composite key
      * @param $data
      * @param \Doctrine\DBAL\Schema\Column[] $fields
-     * 
-     * @return $this
+     * @return Query
      */
-    public function insert($data, $fields = []);
+    public function insert(array $primaryKeyNames, array $data, $fields = []);
 
     /**
      * Prepare update statement
      *
-     * @param $primaryKeyName
+     * @param array $primaryKeyNames Primary Key or primary composite key as keyName => value
      * @param $data
      * @param \Doctrine\DBAL\Schema\Column[] $fields
-     * 
-     * @return mixed
+     *
+     * @return Query
      */
-    public function update($primaryKeyName, $data, $fields = []);
+    public function update(array $primaryKeyNames, array $data, $fields = []);
 
     /**
      * Prepare delete statement
      *
-     * @param $primaryKeyName
-     * @param $primaryKey
-     * 
-     * @return mixed
+     * @param array $primaryKeys Primary Key or primary composite key as keyName => value
+     *
+     * @return Query
      */
-    public function delete($primaryKeyName, $primaryKey);
-    
+    public function delete(array $primaryKeys);
+
 }

@@ -22,4 +22,23 @@ interface ResultSetInterface extends \Countable, \IteratorAggregate
      */
     public function __construct($name, Query $query, array $results = []);
 
+    /**
+     * @param $position
+     * @return Result
+     */
+    public function get($position);
+
+    /**
+     * Return database object name
+     *
+     * @param $name
+     * @return string
+     */
+    public function getName($name);
+
+    /**
+     * @return Query
+     */
+    public function getQuery();
+
 }

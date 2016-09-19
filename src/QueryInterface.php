@@ -14,15 +14,15 @@
 namespace Blast\Orm;
 
 use Blast\Orm\Hydrator\HydratorInterface;
+use Blast\Orm\Query\ResultSet;
 
 interface QueryInterface
 {
     /**
      * Fetch data for entity
      *
-     * @param string $option
-     * @return array|\SplStack|\ArrayObject|object
+     * @return ResultSet
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function execute($option = HydratorInterface::HYDRATE_AUTO);
+    public function execute();
 }

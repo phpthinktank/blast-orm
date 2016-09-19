@@ -17,10 +17,12 @@ use Blast\Orm\Entity\EntityAwareTrait;
 use Blast\Orm\Entity\ProviderFactoryInterface;
 use Blast\Orm\Entity\ProviderFactoryTrait;
 use Blast\Orm\Entity\ProviderInterface;
+use Blast\Orm\Exception\ExceptionFactory;
 use Blast\Orm\Hydrator\EntityHydrator;
 use Blast\Orm\Hydrator\HydratorInterface;
 use Blast\Orm\Query\Events\QueryBuilderEvent;
 use Blast\Orm\Query\Events\QueryResultEvent;
+use Blast\Orm\Query\ResultSet;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type;
 use League\Event\EmitterAwareInterface;
@@ -78,12 +80,10 @@ use stdClass;
  *
  * @package Blast\Db\Orm
  */
-class Query implements ConnectionAwareInterface, EmitterAwareInterface,
-    EntityAwareInterface, ProviderFactoryInterface, QueryInterface
+class Query implements ConnectionAwareInterface, EmitterAwareInterface, ProviderFactoryInterface, QueryInterface
 {
     use ConnectionAwareTrait;
     use EmitterAwareTrait;
-    use EntityAwareTrait;
     use ProviderFactoryTrait;
 
     /**
@@ -92,38 +92,46 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
     private $builder;
 
     /**
+     * @var ResultSet|null
+     */
+    private $resultSet;
+
+    /**
      * Statement constructor.
      *
      * @param \Doctrine\DBAL\Connection $connection
-     * @param array|stdClass|\ArrayObject|object|string $entity
+     * @param ResultSet|string $resultSet
      */
-    public function __construct($connection = null, $entity = null)
+    public function __construct($connection = null, $resultSet = null)
     {
         $this->setConnection($connection);
-        $this->setEntity($entity);
+        $this->registerResultSet($resultSet);
+    }
+
+    /**
+     * @return ResultSet|null
+     */
+    public function getResultSet()
+    {
+        return $this->resultSet;
     }
 
     /**
      * Fetch data for entity
      *
-     * @param string $option
-     * @return array|\SplStack|\ArrayObject|bool
+     * @return ResultSet
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function execute($option = HydratorInterface::HYDRATE_AUTO)
+    public function execute()
     {
         //execute before events and proceed with builder from event
-        $provider = $this->createProvider($this->getEntity());
-        $event = $this->beforeExecute($provider->getEntity());
+        $event = $this->beforeExecute();
 
         if ($event->isCanceled()) {
-            return false;
+            ExceptionFactory::queryCanceledException($event->getName(), $this);
         }
 
         $builder = $event->getBuilder();
-
-        //convert entity to adapter again
-        $provider = $this->createProvider($builder->getEntity());
 
         $connection = $this->getConnection();
         $isSelect = $builder->getType() === QueryBuilder::SELECT;
@@ -137,59 +145,49 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
             //execute query and receive a count of affected rows
             $connection->executeUpdate($sql, $this->getParameters(), $this->getParameterTypes());
 
+        $resultSet = new ResultSet($isSelect ?
+            $statement->fetchAll() :
+            $statement, $this);
+
         //execute after events and proceed with result from event
-        $event = $this->afterExecute(
-            $isSelect ?
-                $statement->fetchAll() :
-                $statement,
-            $provider->getEntity(), $builder);
+        $event = $this->afterExecute($resultSet, $builder);
 
         if ($event->isCanceled()) {
-            return false;
+            ExceptionFactory::queryCanceledException($event->getName(), $this);
         }
 
-        $result = $this->convertTypesToPHPValues($provider, $event->getResult());
-
-        $data = (new EntityHydrator($provider))->hydrate($result, $option);
         gc_collect_cycles();
 
-        return $data;
+        return $resultSet;
     }
 
     /**
      * Emit events before query handling and if entity is able to emit events execute entity events
      *
-     * @param $entity
      * @return QueryBuilderEvent
      */
-    private function beforeExecute($entity)
+    private function beforeExecute()
     {
         $builder = $this;
+
+        /** @var QueryBuilderEvent $event */
         $event = $this->getEmitter()->emit(new QueryBuilderEvent('build.' . $this->getTypeName(), $builder));
-
-        if ($entity instanceof EmitterAwareInterface) {
-            $event = $entity->getEmitter()->emit($event);
-        }
-
         return $event;
     }
 
     /**
      * Emit events after query handling and if entity is able to emit events execute entity events
      *
-     * @param mixed $result Raw result
-     * @param mixed $entity Entity which contains the events
+     * @param ResultSet $result
      * @param Query $builder
      * @return QueryResultEvent
+     * @internal param set $Result $result Raw result
      */
-    private function afterExecute($result, $entity, $builder)
+    private function afterExecute(ResultSet $result, $builder)
     {
 
+        /** @var QueryResultEvent $event */
         $event = $this->getEmitter()->emit(new QueryResultEvent('result.' . $builder->getTypeName(), $result), $builder);
-
-        if ($entity instanceof EmitterAwareInterface) {
-            $event = $entity->getEmitter()->emit($event, $builder);
-        }
 
         return $event;
     }
@@ -323,6 +321,23 @@ class Query implements ConnectionAwareInterface, EmitterAwareInterface,
                 $this->set($column, $value);
                 break;
         }
+
+        return $this;
+    }
+
+    /**
+     * @param $resultSet
+     * @return $this
+     */
+    protected function registerResultSet($resultSet)
+    {
+        $class = is_object($resultSet) ? get_class($resultSet) : $resultSet;
+
+        if (!($class instanceof ResultSet)) {
+            throw ExceptionFactory::invalidClassInstanceException($class, ResultSet::class);
+        }
+
+        $this->resultSet = $class;
 
         return $this;
     }

@@ -11,7 +11,7 @@
  *
  */
 
-namespace Blast\Orm;
+namespace Blast\Orm\Query;
 
 
 interface QueryFactoryInterface
@@ -20,7 +20,7 @@ interface QueryFactoryInterface
      * Create a new query for given entity.
      *
      * @param $entity
-     * 
+     *
      * @return Mapper
      */
     public function createQuery($entity = null);

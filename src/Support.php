@@ -33,9 +33,10 @@ class Support
      * Get class of given FQCN or Object
      *
      * @param $nameOrObject
+     * @param bool $strict
      * @return bool|string
      */
-    public static function getClass($nameOrObject){
+    public static function getClass($nameOrObject, $strict = true){
         if(is_string($nameOrObject) && class_exists($nameOrObject)){
             return $nameOrObject;
         }
@@ -44,7 +45,7 @@ class Support
             return get_class($nameOrObject);
         }
 
-        return false;
+        return $strict ? false : gettype($nameOrObject);
     }
 
     /**

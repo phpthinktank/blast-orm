@@ -14,6 +14,8 @@
 namespace Blast\Orm\Query\Events;
 
 
+use Blast\Orm\Query\ResultSet;
+
 class QueryResultEvent extends AbstractQueryEvent
 {
     /**
@@ -29,7 +31,7 @@ class QueryResultEvent extends AbstractQueryEvent
     /**
      * ResultEvent constructor.
      * @param string $name
-     * @param boolean|array $result
+     * @param ResultSet $result
      */
     public function __construct($name, $result)
     {

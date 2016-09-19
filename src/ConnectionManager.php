@@ -32,7 +32,7 @@ class ConnectionManager implements ConnectionManagerInterface
     protected $defaultConnection = null;
 
     /**
-     * @var self
+     * @var ConnectionManager
      */
     private static $instance = null;
 
@@ -49,58 +49,6 @@ class ConnectionManager implements ConnectionManagerInterface
         }
 
         return static::$instance;
-    }
-
-
-    /**
-     * Create a new connection from definition.
-     *
-     * If definition is a string, the manager tries to get definition from ioc container,
-     * otherwise the manager assumes a valid dsn string and converts definition to an array.
-     *
-     * If definition is a string manager is determining wrapper class and tries to get wrapper
-     * class from container.
-     *
-     * @param $definition
-     * @return \Doctrine\DBAL\Connection|\Blast\Orm\Connection
-     *
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    public static function create($definition)
-    {
-        // create connection from definition
-        if ($definition instanceof Connection) {
-            return $definition;
-        }
-
-        // assume a valid service from IoC container
-        // or assume a valid dsn and convert to connection array
-        if (is_string($definition)) {
-            $definition = ['url' => $definition];
-        }
-
-        if (!is_array($definition)) {
-            throw new DBALException('Unable to determine parameter array from definition');
-        }
-
-        if (!array_key_exists('wrapperClass', $definition)) {
-            $definition['wrapperClass'] = ConnectionWrapper::class;
-        }
-
-        $connection = DriverManager::getConnection($definition);
-
-        if (!($connection instanceof Connection)) {
-            throw new \RuntimeException(sprintf('Connection needs to be an instance of %s', Connection::class));
-        }
-
-        //setup special configuration for blast connections
-        if ($connection instanceof \Blast\Orm\Connection) {
-            if (array_key_exists('prefix', $definition)) {
-                $connection->setPrefix($definition['prefix']);
-            }
-        }
-
-        return $connection;
     }
 
     /**
